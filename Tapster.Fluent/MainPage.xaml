@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Tapster_Fluent.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Tapster_Fluent"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Tab Buttons -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+            <Button x:Name="TabTyper" Content="Auto Typer" Click="TabTyper_Click" Style="{StaticResource AccentButtonStyle}"/>
+            <Button x:Name="TabHolder" Content="Key Holder" Click="TabHolder_Click"/>
+            <Button x:Name="TabClicker" Content="Auto Clicker" Click="TabClicker_Click"/>
+        </StackPanel>
+
+        <!-- Content Panels -->
+        <Grid Grid.Row="1">
+            <!-- Auto Typer Panel -->
+            <Grid x:Name="TyperPanel" Padding="16" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Text to type into VNC:"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" Margin="0,0,0,8"/>
+
+                <TextBox x:Name="TypeTextBox" Grid.Row="1"
+                         AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="Cascadia Code, Consolas" FontSize="12"
+                         Padding="12,10"/>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,4">
+                    <Button Content="Paste" Click="Paste_Click" Margin="0,0,4,0"/>
+                    <Button Content="Clear" Click="ClearText_Click" Margin="0,0,12,0"/>
+                    <TextBlock Text="Interval (s/char):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <NumberBox x:Name="TypeIntervalBox" Width="80" Value="0.03"
+                               FontSize="12" SpinButtonPlacementMode="Compact"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Margin="0,4,0,0">
+                    <TextBlock Text="History" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" Margin="0,0,0,4"/>
+                    <ListView x:Name="HistoryList" MaxHeight="80"
+                              FontFamily="Cascadia Code, Consolas" FontSize="11"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Key Holder Panel -->
+            <Grid x:Name="HolderPanel" Padding="16" CornerRadius="8"
+                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Visibility="Collapsed">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Key Holder" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Virtual keyboard and key holding features will be here."
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Auto Clicker Panel -->
+            <Grid x:Name="ClickerPanel" Padding="16" CornerRadius="8"
+                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Visibility="Collapsed">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Auto Clicker" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Mouse clicking features will be here."
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="2" Margin="0,12,0,0">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock Text="Delay (s):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           VerticalAlignment="Center"/>
+                <NumberBox x:Name="DelayBox" Width="60" Value="3"
+                           FontSize="12" Margin="8,0,0,0" SpinButtonPlacementMode="Compact"/>
+            </StackPanel>
+            <TextBlock x:Name="StatusText" Text="Ready"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+            <ProgressBar x:Name="ProgressBar" Margin="0,0,0,12"/>
+            <Button x:Name="ActionBtn" Content="Start" Click="ActionBtn_Click"
+                    HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"/>
+        </StackPanel>
+    </Grid>
+</Page>
