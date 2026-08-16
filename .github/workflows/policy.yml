@@ -1,0 +1,151 @@
+name: Repository Policy
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  # Write is needed to auto-assign the PR author when no assignee is set.
+  pull-requests: write
+
+jobs:
+  conventional-policy:
+    name: PR and commit policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title and commit subjects
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const allowedTypes = [
+              "feat",
+              "fix",
+              "refactor",
+              "docs",
+              "test",
+              "chore",
+              "style",
+              "perf",
+              "security",
+            ];
+            const allowedScopes = [
+              "core",
+              "fluent",
+              "launcher",
+              "cli",
+              "msix",
+              "tray",
+              "macro",
+              "docs",
+              "ci",
+              "deps",
+              "store",
+              "agent",
+              "packaging",
+              "build",
+              "tapster",
+            ];
+            const typePattern = allowedTypes.join("|");
+            const scopePattern = allowedScopes.join("|");
+            const pattern = new RegExp(
+              `^(${typePattern})(?:\\((${scopePattern})\\))?: [a-z0-9].*$`,
+            );
+
+            function validateSubject(subject, label, maxLength = 72) {
+              subject = subject.trim();
+              const errors = [];
+              if (!pattern.test(subject)) {
+                errors.push(
+                  `${label} must match <type>(<scope>): <description> or <type>: <description> with an allowed type/scope.`,
+                );
+              }
+              if (subject.endsWith(".")) {
+                errors.push(`${label} must not end with a period.`);
+              }
+              if (subject.length > maxLength) {
+                errors.push(`${label} must be ${maxLength} characters or less.`);
+              }
+              const description = subject.replace(
+                new RegExp(`^(${typePattern})(?:\\((${scopePattern})\\))?:\\s+`),
+                "",
+              );
+              if (/^(update|misc|stuff|changes|fix bug|bug fix)$/i.test(description)) {
+                errors.push(`${label} description is too vague.`);
+              }
+              return errors;
+            }
+
+            const failures = [];
+            failures.push(...validateSubject(context.payload.pull_request.title, "PR title", 72));
+
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+
+            for (const commit of commits) {
+              const subject = commit.commit.message.split("\n")[0];
+              for (const error of validateSubject(subject, `Commit ${commit.sha.slice(0, 7)}`, 72)) {
+                failures.push(`${error}\n  subject: ${subject}`);
+              }
+            }
+
+            if (failures.length > 0) {
+              core.setFailed(failures.join("\n\n"));
+            }
+
+      - name: Validate PR metadata (assignee, labels, milestone)
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const failures = [];
+
+            // Auto-assign author if empty
+            if (!pr.assignees || pr.assignees.length === 0) {
+              let assigned = false;
+              for (let attempt = 1; attempt <= 3 && !assigned; attempt++) {
+                try {
+                  await github.rest.issues.addAssignees({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    assignees: [pr.user.login],
+                  });
+                  assigned = true;
+                } catch (err) {
+                  if (attempt === 3) {
+                    core.warning(
+                      `Could not auto-assign ${pr.user.login} after 3 attempts: ${err.message}`,
+                    );
+                  } else {
+                    await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+                  }
+                }
+              }
+            }
+
+            // Labels validation
+            if (!pr.labels || pr.labels.length === 0) {
+              failures.push(
+                "PR must have at least one label matching scope (core, fluent, launcher, cli, msix, tray, macro, docs, ci, deps, store, agent, packaging, build).",
+              );
+            }
+
+            // Milestone validation
+            const milestoneExempt = (pr.labels || []).some((label) =>
+              /^(release|hotfix|deps|dependencies|docs)$/i.test(label.name),
+            );
+            if (!pr.milestone && !milestoneExempt) {
+              failures.push(
+                "PR must be linked to a GitHub Milestone (roadmap phase or target version). " +
+                  "Release / hotfix / dependency / docs PRs are exempt.",
+              );
+            }
+
+            if (failures.length > 0) {
+              core.setFailed(failures.join("\n\n"));
+            }

@@ -1,0 +1,63 @@
+#!/bin/sh
+# Tapster Git Commit-Msg Hook
+# Enforces Conventional Commits and numbered English list in commit body.
+
+COMMIT_MSG_FILE="$1"
+FIRST_LINE=$(head -n 1 "$COMMIT_MSG_FILE")
+
+# Allowed types and scopes
+TYPES="feat|fix|refactor|docs|test|chore|style|perf|security"
+SCOPES="core|fluent|launcher|cli|msix|tray|macro|docs|ci|deps|store|agent|packaging|build|tapster"
+
+HEADER_REGEX="^($TYPES)(\(($SCOPES)\))?: [a-z0-9].*$"
+
+# Skip merge / fixup / squash commits
+if echo "$FIRST_LINE" | grep -qE "^(Merge|fixup!|squash!)"; then
+  exit 0
+fi
+
+# Validate Header Format
+if ! echo "$FIRST_LINE" | grep -qE "$HEADER_REGEX"; then
+  echo "========================================= [COMMIT BLOCKED] ========================================="
+  echo "ERROR: Invalid commit message header format."
+  echo "Header must follow Conventional Commits: 'type(scope): subject' or 'type: subject'"
+  echo "Valid types: $TYPES"
+  echo "Valid scopes: $SCOPES"
+  echo "Given header: '$FIRST_LINE'"
+  echo "===================================================================================================="
+  exit 1
+fi
+
+# Validate Header Length
+if [ ${#FIRST_LINE} -gt 72 ]; then
+  echo "========================================= [COMMIT BLOCKED] ========================================="
+  echo "ERROR: Commit header is too long (${#FIRST_LINE} chars). Maximum allowed is 72."
+  echo "===================================================================================================="
+  exit 1
+fi
+
+# Validate No Trailing Period
+if echo "$FIRST_LINE" | grep -qE "\.$"; then
+  echo "========================================= [COMMIT BLOCKED] ========================================="
+  echo "ERROR: Commit header must not end with a period."
+  echo "===================================================================================================="
+  exit 1
+fi
+
+# Validate Body: must contain a numbered list starting with '1. '
+BODY=$(tail -n +2 "$COMMIT_MSG_FILE" | grep -v '^[[:space:]]*#' | tr -d '\r')
+if [ -n "$BODY" ]; then
+  if ! echo "$BODY" | grep -qE "^[[:space:]]*1\.[[:space:]]"; then
+    echo "========================================= [COMMIT BLOCKED] ========================================="
+    echo "ERROR: Commit message body must contain a numbered list in English starting with '1. '"
+    echo "Example:"
+    echo "  feat(fluent): add dedicated action card"
+    echo "  "
+    echo "  1. Introduce per-panel execution action card."
+    echo "  2. Connect live progress bar callback."
+    echo "===================================================================================================="
+    exit 1
+  fi
+fi
+
+exit 0
