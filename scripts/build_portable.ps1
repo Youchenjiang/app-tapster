@@ -3,47 +3,47 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/build_common.ps1"
 
 $root = "$PSScriptRoot/.."
-$publishDir = "$root/publish/Tapster-Portable"
-$zipPath = "$root/publish/Tapster-Portable-v1.1.0.zip"
+$publishDir = "$root/publish"
+$tempGuiDir = "$root/publish/gui-temp"
+$tempCliDir = "$root/publish/cli-temp"
+$targetExe = "$publishDir/Tapster.exe"
+$targetCli = "$publishDir/Tapster.Cli.exe"
 
 Write-Host "==========================================" -ForegroundColor Cyan
-Write-Host " Building Tapster Portable Release (v1.1.0)" -ForegroundColor Cyan
+Write-Host " Building Tapster Standalone Single-File EXE (v1.1.0)" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
-# 1. Clean previous publish folder
-if (Test-Path $publishDir) { Remove-Item -Recurse -Force $publishDir }
-if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
-New-Item -ItemType Directory -Path $publishDir | Out-Null
+# 1. Clean previous publish artifacts
+if (!(Test-Path $publishDir)) { New-Item -ItemType Directory -Path $publishDir | Out-Null }
+if (Test-Path $tempGuiDir) { Remove-Item -Recurse -Force $tempGuiDir }
+if (Test-Path $tempCliDir) { Remove-Item -Recurse -Force $tempCliDir }
+Remove-Item -Recurse -Force "$publishDir/single-test" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "$publishDir/Tapster-Portable" -ErrorAction SilentlyContinue
+Remove-Item -Force "$publishDir/*.zip" -ErrorAction SilentlyContinue
 
-# 2. Publish WinUI 3 Fluent GUI (Self-Contained)
-Write-Host "[Build] Publishing Tapster.Fluent (Self-Contained WinUI 3)..." -ForegroundColor Yellow
+# 2. Publish WinUI 3 Fluent GUI as True Single-File Executable
+Write-Host "[Build] Publishing Tapster as True Standalone Single-File EXE..." -ForegroundColor Yellow
 dotnet publish "$root/Tapster.Fluent/Tapster.Fluent.csproj" `
     -c Release `
     -r win-x64 `
     --self-contained true `
-    -o $publishDir
+    -p:PublishSingleFile=true `
+    -p:IncludeNativeLibrariesForSelfExtract=true `
+    -p:EnableCompressionInSingleFile=true `
+    -o $tempGuiDir
 
 Assert-NativeSuccess
 
-# 3. Publish NativeAOT CLI into same folder
-Write-Host "[Build] Publishing Tapster.Core (NativeAOT CLI)..." -ForegroundColor Yellow
-dotnet publish "$root/src/Tapster/Tapster.csproj" `
-    -c Release `
-    -r win-x64 `
-    --self-contained true `
-    -o "$root/publish/cli-temp"
-
-if (Test-Path "$root/publish/cli-temp/Tapster.exe") {
-    Copy-Item "$root/publish/cli-temp/Tapster.exe" "$publishDir/Tapster.Cli.exe"
+# Move Single-File Tapster.exe to publish root
+if (Test-Path "$tempGuiDir/Tapster.Fluent.exe") {
+    Move-Item -Force "$tempGuiDir/Tapster.Fluent.exe" $targetExe
 }
-Remove-Item -Recurse -Force "$root/publish/cli-temp" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force $tempGuiDir -ErrorAction SilentlyContinue
 
-# 4. Create ZIP archive
-Write-Host "[Zip] Compressing portable release to $zipPath..." -ForegroundColor Green
-Compress-Archive -Path "$publishDir/*" -DestinationPath $zipPath -Force
+$exeSizeMb = [math]::Round(((Get-Item $targetExe).Length / 1MB), 2)
 
 Write-Host "==========================================" -ForegroundColor Green
-Write-Host " ✅ Portable Release Complete!" -ForegroundColor Green
-Write-Host " Output Folder: $publishDir" -ForegroundColor Gray
-Write-Host " ZIP Package:   $zipPath" -ForegroundColor Gray
+Write-Host " ✅ Standalone Single-File Release Complete!" -ForegroundColor Green
+Write-Host " 🚀 Tapster Single EXE: $targetExe ($exeSizeMb MB)" -ForegroundColor Cyan
+Write-Host " 📦 真正純單一 .exe 檔案，免安裝、零依賴、免解壓縮、隨拷隨用！" -ForegroundColor Yellow
 Write-Host "==========================================" -ForegroundColor Green
