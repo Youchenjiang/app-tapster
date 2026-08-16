@@ -89,6 +89,47 @@ public static partial class Keyboard
         return (GetAsyncKeyState(0x1B) & 0x8000) != 0;
     }
 
+    /// <summary>
+    /// Maps a virtual key code to a friendly key name string.
+    /// </summary>
+    public static string GetKeyName(int vk)
+    {
+        if (vk >= 0x41 && vk <= 0x5A) return ((char)('a' + (vk - 0x41))).ToString();
+        if (vk >= 0x30 && vk <= 0x39) return ((char)('0' + (vk - 0x30))).ToString();
+        if (vk >= 0x70 && vk <= 0x7B) return $"f{vk - 0x70 + 1}";
+
+        return vk switch
+        {
+            0x10 or 0xA0 or 0xA1 => "shift",
+            0x11 or 0xA2 or 0xA3 => "ctrl",
+            0x12 or 0xA4 or 0xA5 => "alt",
+            0x5B or 0x5C => "win",
+            0x0D => "enter",
+            0x20 => "space",
+            0x09 => "tab",
+            0x1B => "esc",
+            0x08 => "backspace",
+            0x2E => "delete",
+            0x14 => "capslock",
+            0x26 => "up",
+            0x28 => "down",
+            0x25 => "left",
+            0x27 => "right",
+            0xC0 => "`",
+            0xBD => "-",
+            0xBB => "=",
+            0xDB => "[",
+            0xDD => "]",
+            0xDC => "\\",
+            0xBA => ";",
+            0xDE => "'",
+            0xBC => ",",
+            0xBE => ".",
+            0xBF => "/",
+            _ => $"vk_{vk}"
+        };
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private static void SendKey(ushort vk, bool down)

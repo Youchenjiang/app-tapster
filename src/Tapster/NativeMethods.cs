@@ -80,7 +80,7 @@ public static partial class NativeMethods
 
     // ── GetAsyncKeyState ──────────────────────────────────────────────────────
     [LibraryImport("user32.dll")]
-    internal static partial short GetAsyncKeyState(int vKey);
+    public static partial short GetAsyncKeyState(int vKey);
 
     // ── Virtual key codes ─────────────────────────────────────────────────────
     internal const int VK_LBUTTON = 0x01;
