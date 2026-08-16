@@ -1,0 +1,32 @@
+# EditorConfig configuration for Tapster (.NET 8 / WinUI 3)
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{yml,yaml,json,jsonc}]
+indent_size = 2
+end_of_line = lf
+
+[*.md]
+trim_trailing_whitespace = false
+end_of_line = lf
+
+[*.{cs,csx}]
+# C# formatting rules
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_inlined_variable_declaration = true:suggestion
+csharp_style_deconstructed_variable_declaration = true:suggestion
+csharp_style_throw_expression = true:suggestion
+csharp_style_prefer_null_coalescing_operator = true:suggestion
+
+[*.{xaml,xml,props,targets,csproj,sln}]
+indent_size = 2
+end_of_line = crlf

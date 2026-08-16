@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  release-build:
+    name: Build & Package Dual-Track Releases
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: "Setup .NET SDK"
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005ddab # v4.3.0
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: "Build Portable Single-File EXE"
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/build_portable.ps1
+
+      - name: "Build Signed Store MSIX Package"
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/build_msix.ps1
+
+      - name: "Shutdown Build Servers"
+        shell: pwsh
+        if: always()
+        run: |
+          dotnet build-server shutdown
+
+      - name: "Create GitHub Release and Upload Artifacts"
+        uses: softprops/action-gh-release@c062e08bd5328807fb31346cf098484c1b5142c5 # v2.2.1
+        with:
+          files: |
+            publish/Tapster.exe
+            publish/*.msix
+          generate_release_notes: true
+          draft: false
+          prerelease: false

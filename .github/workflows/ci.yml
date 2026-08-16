@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-and-verify:
+    name: Build Solution & Packaging Pipelines
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: "Setup .NET SDK"
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005ddab # v4.3.0
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: "Build Tapster Solution (Release)"
+        shell: pwsh
+        run: |
+          dotnet build Tapster.sln -c Release
+
+      - name: "Test Portable Single-File Packaging"
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/build_portable.ps1
+          if (-not (Test-Path "publish/Tapster.exe")) {
+            throw "Missing expected output: publish/Tapster.exe"
+          }
+          Write-Host "Portable build verified: publish/Tapster.exe ($((Get-Item publish/Tapster.exe).Length / 1MB) MB)"
+
+      - name: "Test Store MSIX Packaging"
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/build_msix.ps1
+          $msix = Get-ChildItem "publish/*.msix" | Select-Object -First 1
+          if ($null -eq $msix) {
+            throw "Missing expected MSIX package in publish/"
+          }
+          Write-Host "MSIX build verified: $($msix.FullName) ($($msix.Length / 1MB) MB)"
+
+      - name: "Shutdown Build Servers (Process Hygiene)"
+        shell: pwsh
+        if: always()
+        run: |
+          dotnet build-server shutdown
