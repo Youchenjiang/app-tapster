@@ -16,7 +16,7 @@
 
         <NavigationView x:Name="NavView"
                         Grid.Row="0"
-                        IsSettingsVisible="False"
+                        IsSettingsVisible="True"
                         IsBackButtonVisible="Collapsed"
                         PaneDisplayMode="Left"
                         OpenPaneLength="180"
@@ -290,6 +290,119 @@
                             </StackPanel>
                         </Border>
                     </StackPanel>
+                </Grid>
+
+                <!-- Settings Panel -->
+                <Grid x:Name="SettingsPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,0,0,16" Spacing="4">
+                        <TextBlock Text="偏好設定 (Settings)" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="自訂 Tapster 系統常駐、開機自動啟動與視窗行為" FontSize="12"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1">
+                        <StackPanel Spacing="12" Margin="0,0,8,0">
+                            <!-- Card 1: Start on Boot -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="開機自動啟動 (Start with Windows)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="於 Windows 登入時自動在背景啟動 Tapster 並常駐於系統匣"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="StartOnBootToggle" Grid.Column="1"
+                                                  OnContent="" OffContent="" VerticalAlignment="Center"
+                                                  Toggled="StartOnBootToggle_Toggled"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Card 2: Start Minimized to Tray -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="啟動時縮小至系統匣 (Start Minimized to Tray)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="開啟應用程式時直接隱藏至右下角系統匣，不彈出主視窗干擾"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="StartMinimizedToggle" Grid.Column="1"
+                                                  OnContent="" OffContent="" VerticalAlignment="Center"
+                                                  Toggled="StartMinimizedToggle_Toggled"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Card 3: Minimize on Close -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="點擊關閉 (X) 時縮小至系統匣 (Minimize on Close)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="點擊右上角關閉按鈕時縮排至系統匣，保持全域快捷鍵隨叫隨到"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="MinimizeOnCloseToggle" Grid.Column="1"
+                                                  OnContent="" OffContent="" VerticalAlignment="Center"
+                                                  Toggled="MinimizeOnCloseToggle_Toggled"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Card 4: Global Hotkey Info -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="全域喚醒熱鍵 (Global Wake Hotkey)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="隨時在任何視窗按下熱鍵即可喚醒或隱藏 Tapster"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                            CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
+                                        <TextBlock Text="Ctrl + Alt + T" FontFamily="Cascadia Code, Consolas" FontSize="11" FontWeight="SemiBold"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Card 5: About Tapster -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="16">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="關於 Tapster (About)" FontWeight="SemiBold" FontSize="13"/>
+                                    <TextBlock Text="Tapster Fluent v1.1.0 (WinUI 3 + .NET NativeAOT Architecture)"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="100% 離線純本機運行，極致輕量低延遲，不收集任何按鍵或個人隱私資料。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </Grid>
         </NavigationView>

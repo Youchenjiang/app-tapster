@@ -59,6 +59,11 @@ public sealed partial class MainPage : Page
         MacroSpeedBox.Value = 1.0;
 
         GenerateVirtualKeyboard();
+
+        // Load Settings
+        StartOnBootToggle.IsOn = AppSettings.Current.StartOnBoot;
+        StartMinimizedToggle.IsOn = AppSettings.Current.StartMinimizedToTray;
+        MinimizeOnCloseToggle.IsOn = AppSettings.Current.MinimizeToTrayOnClose;
     }
 
     private void GenerateVirtualKeyboard()
@@ -169,6 +174,17 @@ public sealed partial class MainPage : Page
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+        if (args.IsSettingsSelected)
+        {
+            _activeTab = "Settings";
+            TyperPanel.Visibility = Visibility.Collapsed;
+            HolderPanel.Visibility = Visibility.Collapsed;
+            ClickerPanel.Visibility = Visibility.Collapsed;
+            MacroPanel.Visibility = Visibility.Collapsed;
+            SettingsPanel.Visibility = Visibility.Visible;
+            return;
+        }
+
         if (args.SelectedItem is NavigationViewItem item && item.Tag is string tag)
         {
             _activeTab = tag;
@@ -176,7 +192,25 @@ public sealed partial class MainPage : Page
             HolderPanel.Visibility = tag == "Holder" ? Visibility.Visible : Visibility.Collapsed;
             ClickerPanel.Visibility = tag == "Clicker" ? Visibility.Visible : Visibility.Collapsed;
             MacroPanel.Visibility = tag == "Macro" ? Visibility.Visible : Visibility.Collapsed;
+            SettingsPanel.Visibility = Visibility.Collapsed;
         }
+    }
+
+    private void StartOnBootToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        AppSettings.Current.StartOnBoot = StartOnBootToggle.IsOn;
+    }
+
+    private void StartMinimizedToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        AppSettings.Current.StartMinimizedToTray = StartMinimizedToggle.IsOn;
+        AppSettings.Current.Save();
+    }
+
+    private void MinimizeOnCloseToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        AppSettings.Current.MinimizeToTrayOnClose = MinimizeOnCloseToggle.IsOn;
+        AppSettings.Current.Save();
     }
 
     private async void Paste_Click(object sender, RoutedEventArgs e)

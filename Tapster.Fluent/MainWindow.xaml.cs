@@ -59,10 +59,16 @@ public sealed partial class MainWindow : Window
 
     private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
     {
-        if (!_isExplicitExit)
+        if (_isExplicitExit) return;
+
+        if (AppSettings.Current.MinimizeToTrayOnClose)
         {
             args.Cancel = true;
             AppWindow.Hide();
+        }
+        else
+        {
+            ExitApplication();
         }
     }
 

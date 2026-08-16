@@ -33,7 +33,7 @@ public partial class App : Application
             _window = new MainWindow();
 
             string[] cmdArgs = Environment.GetCommandLineArgs();
-            bool startInTray = false;
+            bool startInTray = AppSettings.Current.StartMinimizedToTray;
             foreach (var arg in cmdArgs)
             {
                 if (string.Equals(arg, "--tray", StringComparison.OrdinalIgnoreCase) ||

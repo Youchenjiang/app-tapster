@@ -101,8 +101,8 @@ timeline
 
 - [ ] **[P3-1] 巨集腳本 JSON 匯出與匯入 (Macro JSON Schema)**
   - **規格**：定義標準巨集 JSON 格式，支援將錄製好的動作序列儲存為 `.tapster` 檔案，方便分享、編輯與備份。
-- [ ] **[P3-2] 使用者偏好設定持久化 (Settings Persistence)**
-  - **規格**：自動儲存打字速度、連點間隔、啟動延遲、AlwaysOnTop 狀態與主題設定至本機 LocalAppData（`settings.json`）。
+- [x] **[P3-2] 使用者偏好設定持久化與開機自動啟動 (Settings Persistence & Windows Startup)**
+  - **規則**：於 NavigationView 左下角新增 Settings 設定分頁；支援「開機自動啟動 (Start with Windows)」、「啟動時自動縮小至系統匣」、「點擊關閉 (X) 時縮至系統匣」之開關切換；設定自動序列化儲存至 `%LOCALAPPDATA%\Tapster\settings.json`。
 - [x] **[P3-3] 系統匣常駐與右鍵選單 (System Tray & Background Resident)**
   - **規則**：透過 Win32 `Shell_NotifyIconW` 與 Window Subclassing 實作零依賴系統匣圖示；支援 `--tray` 啟動隱藏常駐、雙擊喚醒、視窗關閉縮排至系統匣，以及包含「顯示/隱藏」、「永遠置頂」、「結束」的原生右鍵彈出式選單。
 - [ ] **[P3-4] 擬人化隨機延遲 (Humanized Jitter & Anti-Detection)**
