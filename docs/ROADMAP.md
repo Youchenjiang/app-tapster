@@ -103,8 +103,8 @@ timeline
   - **規格**：定義標準巨集 JSON 格式，支援將錄製好的動作序列儲存為 `.tapster` 檔案，方便分享、編輯與備份。
 - [ ] **[P3-2] 使用者偏好設定持久化 (Settings Persistence)**
   - **規格**：自動儲存打字速度、連點間隔、啟動延遲、AlwaysOnTop 狀態與主題設定至本機 LocalAppData（`settings.json`）。
-- [ ] **[P3-3] 系統匣常駐與懸浮迷你控制列 (System Tray & Mini Overlay)**
-  - **規格**：支援最小化至 Windows 系統匣（NotifyIcon）；提供 Compact Overlay 迷你懸浮條，僅保留開始/停止按鈕與狀態指示，不遮擋主畫面。
+- [x] **[P3-3] 系統匣常駐與右鍵選單 (System Tray & Background Resident)**
+  - **規則**：透過 Win32 `Shell_NotifyIconW` 與 Window Subclassing 實作零依賴系統匣圖示；支援 `--tray` 啟動隱藏常駐、雙擊喚醒、視窗關閉縮排至系統匣，以及包含「顯示/隱藏」、「永遠置頂」、「結束」的原生右鍵彈出式選單。
 - [ ] **[P3-4] 擬人化隨機延遲 (Humanized Jitter & Anti-Detection)**
   - **規格**：在打字與連點間隔中加入可配置的正態分佈隨機波動（Jitter ±5~15%），模擬真人手速，防止機械式操作判定。
 - [ ] **[P3-5] 智慧像素 / 影像顏色條件觸發 (Pixel & Image Trigger)**

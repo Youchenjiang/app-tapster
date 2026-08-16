@@ -31,7 +31,25 @@ public partial class App : Application
         try
         {
             _window = new MainWindow();
-            _window.Activate();
+
+            string[] cmdArgs = Environment.GetCommandLineArgs();
+            bool startInTray = false;
+            foreach (var arg in cmdArgs)
+            {
+                if (string.Equals(arg, "--tray", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(arg, "--minimized", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(arg, "-minimized", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(arg, "-tray", StringComparison.OrdinalIgnoreCase))
+                {
+                    startInTray = true;
+                    break;
+                }
+            }
+
+            if (!startInTray)
+            {
+                _window.Activate();
+            }
         }
         catch (Exception ex)
         {
