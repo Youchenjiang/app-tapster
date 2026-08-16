@@ -122,25 +122,25 @@ timeline
     - 簡體中文 (`zh-CN`)
     - 日本語 (`ja-JP`)
     - 韓語 (`ko-KR`)
-- [ ] **[P4-2] MSIX 封裝與 Windows 沙盒合規 (MSIX Packaging & Sandbox)**
-  - **規格**：建立 `Tapster.Package` (MSIX) 封裝專案，宣告 `runFullTrust` 權限；補齊 StoreLogo 50x50、Square44、Square150、Wide310、SplashScreen 全套圖示資產。
+- [x] **[P4-2] MSIX 封裝與自動簽署 (MSIX Packaging & Signing)**
+  - **規則**：建立 `packaging/msix/AppxManifest.xml`（宣告 `runFullTrust`）與全套視覺資產；實作 `scripts/build_msix.ps1` 透過 `makeappx.exe` 打包與 `signtool.exe` 自動化測試憑證簽署，產出標準 `.msix` 安裝套件。
 - [ ] **[P4-3] Microsoft Store 文案與上架素材 (Store Listings & Assets)**
   - **規格**：撰寫 5 國語言商店文案、準備 1920x1080 高解析功能截圖；建立正式隱私權政策 (`PRIVACY.md`)，聲明「不收集、不傳輸任何使用者按鍵記錄，100% 本機處理」。
 
 ---
 
-### [Phase 5] CI/CD 自動化與雙軌發布 (Release Automation) — `規劃中 📌`
+### [Phase 5] CI/CD 自動化與雙軌發布 (Release Automation) — `進行中 🚧`
 > **目標**：比照 Clickra 建立全自動化構建、簽署、發布管線與雙軌發行模式。
 
 - [ ] **[P5-1] GitHub Actions 自動化建置管線 (`.github/workflows/build.yml`)**
   - **規格**：在 Windows Runner 上自動編譯 `Tapster.Fluent` 與 `Tapster.Core`，執行單元測試與品質檢查。
-- [ ] **[P5-2] MSIX 憑證簽署與 Release 打包**
-  - **規格**：支援 GitHub Secrets 注入 Code Signing Certificate，自動產出已簽署的 `.msix` 安裝檔。
+- [x] **[P5-2] 雙軌打包腳本與 Release 自動化 (Dual-Track Build Scripts)**
+  - **規則**：實作 `scripts/build_portable.ps1`（產出 Self-Contained 綠色免安裝 ZIP 包）與 `scripts/build_msix.ps1`（產出簽署版 Store MSIX 安裝包）。
 - [ ] **[P5-3] Microsoft Store Submission API 自動發布**
   - **規格**：透過 Azure AD 認證，在建立 Git Release Tag 時自動上傳 MSIX 至 Partner Center 審核隊列。
-- [ ] **[P5-4] 雙軌發行架構 (Dual-Track Distribution)**
+- [x] **[P5-4] 雙軌發行架構 (Dual-Track Distribution)**
   - **軌道 A (Store / 一般用戶)**：`Tapster (WinUI 3 Fluent MSIX)` 具備現代美觀介面與自動更新。
-  - **軌道 B (可攜式 / 伺服器維運)**：`Tapster Lite (NativeAOT Standalone EXE)` 體積僅 2MB，免安裝隨插即用。
+  - **軌道 B (可攜式 / 綠色免安裝)**：`Tapster Portable (Self-Contained ZIP & NativeAOT CLI)` 免安裝解壓即用。
 
 ---
 
