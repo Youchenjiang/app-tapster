@@ -1,6 +1,16 @@
 # Shared helpers for Tapster packaging scripts.
 $ErrorActionPreference = "Stop"
 
+# Globally disable background compiler worker nodes and servers
+$env:MSBUILDDISABLENODEREUSE = "1"
+$env:DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER = "1"
+
+function Stop-BuildServers {
+    try {
+        & dotnet build-server shutdown *>$null
+    } catch { }
+}
+
 function Assert-NativeSuccess {
     if ($LASTEXITCODE -ne 0) {
         throw "Native command failed with exit code $LASTEXITCODE"
@@ -47,6 +57,47 @@ function Add-WindowsSdkToolsToPath {
     Write-Warning "[SDK] Could not locate makeappx.exe in standard paths."
 }
 
+function Sync-WindowsAppRuntimeDependency {
+    param(
+        [string]$ProjectPath,
+        [string]$ManifestPath
+    )
+
+    [xml]$project = Get-Content $ProjectPath
+    $sdkReference = $project.Project.ItemGroup.PackageReference |
+        Where-Object Include -eq "Microsoft.WindowsAppSDK" |
+        Select-Object -First 1
+    $sdkVersion = [version]$sdkReference.Version
+    if ($sdkVersion.Major -lt 2) {
+        throw "Automatic Windows App Runtime alignment requires Windows App SDK 2.0 or newer."
+    }
+
+    [xml]$manifest = Get-Content $ManifestPath
+    $dependency = $manifest.Package.Dependencies.PackageDependency |
+        Where-Object Name -like "Microsoft.WindowsAppRuntime.*" |
+        Select-Object -First 1
+    if ($dependency) {
+        $dependency.Name = "Microsoft.WindowsAppRuntime.$($sdkVersion.Major)"
+        $dependency.MinVersion = "$($sdkVersion.ToString(3)).0"
+        $manifest.Save($ManifestPath)
+        Write-Host "[Build] Windows App Runtime aligned to $($dependency.Name) $($dependency.MinVersion)" -ForegroundColor Gray
+    }
+}
+
+function Install-DevCertToTrustedPeople {
+    param(
+        [string]$CertPath,
+        [string]$CertPassword = "TapsterDevPassword123!"
+    )
+    try {
+        $securePassword = ConvertTo-SecureString -String $CertPassword -Force -AsPlainText
+        Import-PfxCertificate -FilePath $CertPath -CertStoreLocation "Cert:\CurrentUser\TrustedPeople" -Password $securePassword | Out-Null
+        Write-Host "[Cert] Imported certificate into CurrentUser\TrustedPeople for seamless 1-click install." -ForegroundColor Green
+    } catch {
+        Write-Warning "[Cert] Failed to auto-import to TrustedPeople: $_"
+    }
+}
+
 function Invoke-SignMsixPackage {
     param(
         [string]$ManifestPath,
@@ -73,6 +124,8 @@ function Invoke-SignMsixPackage {
         Export-PfxCertificate -Cert $cert -FilePath $CertPath -Password $securePassword | Out-Null
         Write-Host "[Cert] Dev certificate generated." -ForegroundColor Green
     }
+
+    Install-DevCertToTrustedPeople -CertPath $CertPath -CertPassword $CertPassword
 
     Write-Host "[Sign] Signing MSIX package: $MsixPath..." -ForegroundColor Cyan
     & "signtool.exe" sign /fd SHA256 /a /f $CertPath /p $CertPassword $MsixPath
