@@ -9,13 +9,7 @@
     mc:Ignorable="d">
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
         <NavigationView x:Name="NavView"
-                        Grid.Row="0"
                         IsSettingsVisible="True"
                         IsBackButtonVisible="Collapsed"
                         PaneDisplayMode="Left"
@@ -53,18 +47,21 @@
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
-            <Grid Padding="20,12,20,12">
-                <!-- Auto Typer Panel -->
+            <Grid Padding="20,12,20,16">
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- 1. Auto Typer Panel                                        -->
+                <!-- ══════════════════════════════════════════════════════════ -->
                 <Grid x:Name="TyperPanel" Visibility="Visible">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
-                    <StackPanel Grid.Row="0" Margin="0,0,0,12" Spacing="4">
+                    <StackPanel Grid.Row="0" Margin="0,0,0,10" Spacing="2">
                         <TextBlock Text="Auto Typer" FontSize="18" FontWeight="SemiBold"/>
                         <TextBlock Text="Simulates keyboard input for VNC, VM consoles, or automated text entry."
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
@@ -79,7 +76,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                            <Grid Grid.Row="0" Margin="0,0,0,6">
                                 <TextBlock Text="Target Text:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                                     <Button Click="Paste_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Paste from Clipboard">
@@ -119,19 +116,60 @@
                     <!-- History Card -->
                     <Border Grid.Row="3" Margin="0,8,0,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Execution History" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <ListView x:Name="HistoryList" MaxHeight="60"
+                            CornerRadius="8" Padding="12,6">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Execution History" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <ListView x:Name="HistoryList" MaxHeight="50"
                                       FontFamily="Cascadia Code, Consolas" FontSize="11"/>
                         </StackPanel>
                     </Border>
+
+                    <!-- Dedicated Action Card for Typer -->
+                    <Border Grid.Row="4" Margin="0,10,0,0" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="14,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE81C;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="Delay (s):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                <NumberBox x:Name="TyperDelayBox" Width="68" Value="3" Minimum="0" Maximum="60"
+                                           FontSize="12" SpinButtonPlacementMode="Compact"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="3">
+                                <TextBlock x:Name="TyperStatusText" Text="Ready" FontSize="11" FontWeight="Medium"
+                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <ProgressBar x:Name="TyperProgressBar" Height="3" Value="0" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <Button x:Name="TyperActionBtn" Grid.Column="2" Width="120" Height="34" Click="TyperActionBtn_Click"
+                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <FontIcon x:Name="TyperActionIcon" Glyph="&#xE768;" FontSize="12"/>
+                                    <TextBlock x:Name="TyperActionText" Text="Start Typer" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
                 </Grid>
 
-                <!-- Key Holder Panel -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- 2. Key Holder Panel                                        -->
+                <!-- ══════════════════════════════════════════════════════════ -->
                 <Grid x:Name="HolderPanel" Visibility="Collapsed">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel Spacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                        <StackPanel Spacing="10">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Key Holder" FontSize="18" FontWeight="SemiBold"/>
                                 <TextBlock Text="Holds down specified key or key combination continuously."
@@ -186,11 +224,52 @@
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
+
+                    <!-- Dedicated Action Card for Key Holder -->
+                    <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="14,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE81C;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="Delay (s):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                <NumberBox x:Name="HolderDelayBox" Width="68" Value="3" Minimum="0" Maximum="60"
+                                           FontSize="12" SpinButtonPlacementMode="Compact"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="3">
+                                <TextBlock x:Name="HolderStatusText" Text="Ready" FontSize="11" FontWeight="Medium"
+                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <ProgressBar x:Name="HolderProgressBar" Height="3" Value="0" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <Button x:Name="HolderActionBtn" Grid.Column="2" Width="120" Height="34" Click="HolderActionBtn_Click"
+                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <FontIcon x:Name="HolderActionIcon" Glyph="&#xE768;" FontSize="12"/>
+                                    <TextBlock x:Name="HolderActionText" Text="Start Holder" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
                 </Grid>
 
-                <!-- Auto Clicker Panel -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- 3. Auto Clicker Panel                                      -->
+                <!-- ══════════════════════════════════════════════════════════ -->
                 <Grid x:Name="ClickerPanel" Visibility="Collapsed">
-                    <StackPanel Spacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Spacing="12">
                         <StackPanel Spacing="2">
                             <TextBlock Text="Auto Clicker" FontSize="18" FontWeight="SemiBold"/>
                             <TextBlock Text="Automates mouse clicks with precise interval and coordinate targeting."
@@ -243,11 +322,52 @@
                             </Grid>
                         </Border>
                     </StackPanel>
+
+                    <!-- Dedicated Action Card for Clicker -->
+                    <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="14,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE81C;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="Delay (s):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                <NumberBox x:Name="ClickerDelayBox" Width="68" Value="3" Minimum="0" Maximum="60"
+                                           FontSize="12" SpinButtonPlacementMode="Compact"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="3">
+                                <TextBlock x:Name="ClickerStatusText" Text="Ready" FontSize="11" FontWeight="Medium"
+                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <ProgressBar x:Name="ClickerProgressBar" Height="3" Value="0" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <Button x:Name="ClickerActionBtn" Grid.Column="2" Width="120" Height="34" Click="ClickerActionBtn_Click"
+                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <FontIcon x:Name="ClickerActionIcon" Glyph="&#xE768;" FontSize="12"/>
+                                    <TextBlock x:Name="ClickerActionText" Text="Start Clicker" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
                 </Grid>
 
-                <!-- Macro Recorder Panel -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- 4. Macro Recorder Panel                                    -->
+                <!-- ══════════════════════════════════════════════════════════ -->
                 <Grid x:Name="MacroPanel" Visibility="Collapsed">
-                    <StackPanel Spacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Spacing="12">
                         <StackPanel Spacing="2">
                             <TextBlock Text="Macro Recorder" FontSize="18" FontWeight="SemiBold"/>
                             <TextBlock Text="Record user mouse clicks and keystrokes and replay them back."
@@ -292,15 +412,51 @@
 
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Recorded Actions:" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <ListView x:Name="MacroActionList" MaxHeight="120"
+                                    <ListView x:Name="MacroActionList" MaxHeight="140"
                                               FontFamily="Cascadia Code, Consolas" FontSize="11"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>
+
+                    <!-- Dedicated Action Card for Macro Replay -->
+                    <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="14,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE81C;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="Delay (s):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                <NumberBox x:Name="MacroDelayBox" Width="68" Value="3" Minimum="0" Maximum="60"
+                                           FontSize="12" SpinButtonPlacementMode="Compact"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="3">
+                                <TextBlock x:Name="MacroStatusText" Text="Ready" FontSize="11" FontWeight="Medium"
+                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <ProgressBar x:Name="MacroProgressBar" Height="3" Value="0" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <Button x:Name="MacroActionBtn" Grid.Column="2" Width="120" Height="34" Click="MacroActionBtn_Click"
+                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <FontIcon x:Name="MacroActionIcon" Glyph="&#xE768;" FontSize="12"/>
+                                    <TextBlock x:Name="MacroActionText" Text="Replay Macro" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
                 </Grid>
 
-                <!-- Settings Panel -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- 5. Settings Panel                                          -->
+                <!-- ══════════════════════════════════════════════════════════ -->
                 <Grid x:Name="SettingsPanel" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -419,7 +575,9 @@
                     </ScrollViewer>
                 </Grid>
 
-                <!-- About Panel -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- 6. About Panel                                             -->
+                <!-- ══════════════════════════════════════════════════════════ -->
                 <Grid x:Name="AboutPanel" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -449,16 +607,14 @@
                                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                             <TextBlock Text="Tapster Fluent" FontSize="20" FontWeight="Bold"
                                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                                            <Border Background="{ThemeResource AccentFillColorDefaultBrush}"
-                                                    CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                                <TextBlock Text="v1.1.0 Release" FontSize="11" FontWeight="SemiBold"
-                                                           Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+                                            <Border Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="12" Padding="8,2">
+                                                <TextBlock Text="v1.1.0 Release" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
                                             </Border>
                                         </StackPanel>
-                                        <TextBlock Text="Windows 11 現代化鍵鼠輸入高精度自動化控制台" FontSize="12"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Text="© 2026 Youchen Jiang. All rights reserved." FontSize="11"
-                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                                        <TextBlock Text="Windows 11 原生超輕量自動化助手 (Native Automation Utility)"
+                                                   FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="專為遠端桌面 (VNC/RDP)、虛擬機、遊戲掛機與高頻點擊量身打造"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -467,11 +623,11 @@
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1" CornerRadius="8" Padding="16">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="技術規格與架構 (Technical Architecture)" FontWeight="SemiBold" FontSize="13"/>
-                                    <Grid ColumnSpacing="16" RowSpacing="6">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="技術規格 (Technical Specifications)" FontWeight="SemiBold" FontSize="13"/>
+                                    <Grid RowSpacing="8" ColumnSpacing="16">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="130"/>
+                                            <ColumnDefinition Width="140"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
@@ -485,10 +641,10 @@
                                         <TextBlock Grid.Row="0" Grid.Column="1" Text="WinUI 3 (Windows App SDK 2.3.1) Mica &amp; Acrylic" FontSize="11"/>
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="底層自動化核心" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="C# .NET 10 + Win32 Native P/Invoke (&lt; 35MB RAM, &lt; 1ms Latency)" FontSize="11"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="C# .NET 8 + Win32 Native P/Invoke (&lt; 35MB RAM, &lt; 1ms Latency)" FontSize="11"/>
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="發布架構" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="雙軌制：Microsoft Store MSIX 封裝 + Portable 綠色免安裝 ZIP" FontSize="11"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="雙軌制：Microsoft Store MSIX 封裝 + Standalone 綠色純單檔 EXE" FontSize="11"/>
 
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="授權條款" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                         <TextBlock Grid.Row="3" Grid.Column="1" Text="MIT License (開源且自由使用)" FontSize="11"/>
@@ -519,42 +675,5 @@
                 </Grid>
             </Grid>
         </NavigationView>
-
-        <!-- Bottom Action Control Bar -->
-        <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
-                Padding="24,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Delay Setting -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <FontIcon Glyph="&#xE81C;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    <TextBlock Text="Delay (s):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                    <NumberBox x:Name="DelayBox" Width="70" Value="3" Minimum="0" Maximum="60"
-                               FontSize="12" SpinButtonPlacementMode="Compact"/>
-                </StackPanel>
-
-                <!-- Status & Progress -->
-                <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center" Spacing="4">
-                    <TextBlock x:Name="StatusText" Text="Ready" FontSize="12" FontWeight="Medium"
-                               Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                    <ProgressBar x:Name="ProgressBar" Height="4" Value="0" HorizontalAlignment="Stretch"/>
-                </StackPanel>
-
-                <!-- Action Button -->
-                <Button x:Name="ActionBtn" Grid.Column="2" Width="120" Height="36" Click="ActionBtn_Click"
-                        Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
-                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                        <FontIcon x:Name="ActionIcon" Glyph="&#xE768;" FontSize="14"/>
-                        <TextBlock x:Name="ActionText" Text="Start" FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Button>
-            </Grid>
-        </Border>
     </Grid>
 </Page>

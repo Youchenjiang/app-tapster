@@ -45,18 +45,26 @@ public sealed partial class MainPage : Page
         ClickIntervalBox.NumberFormatter = fmt2;
         HoldDurationBox.NumberFormatter = fmtInt;
         ClickCountBox.NumberFormatter = fmtInt;
-        DelayBox.NumberFormatter = fmtInt;
         MacroRepeatBox.NumberFormatter = fmtInt;
         MacroSpeedBox.NumberFormatter = fmt2;
+
+        TyperDelayBox.NumberFormatter = fmtInt;
+        HolderDelayBox.NumberFormatter = fmtInt;
+        ClickerDelayBox.NumberFormatter = fmtInt;
+        MacroDelayBox.NumberFormatter = fmtInt;
 
         // Force refresh displayed text
         TypeIntervalBox.Value = 0.03;
         ClickIntervalBox.Value = 0.1;
         HoldDurationBox.Value = 10;
         ClickCountBox.Value = 100;
-        DelayBox.Value = 3;
         MacroRepeatBox.Value = 1;
         MacroSpeedBox.Value = 1.0;
+
+        TyperDelayBox.Value = 3;
+        HolderDelayBox.Value = 3;
+        ClickerDelayBox.Value = 3;
+        MacroDelayBox.Value = 3;
 
         GenerateVirtualKeyboard();
 
@@ -264,7 +272,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception ex)
         {
-            StatusText.Text = $"Paste error: {ex.Message}";
+            TyperStatusText.Text = $"Paste error: {ex.Message}";
         }
     }
 
@@ -285,32 +293,36 @@ public sealed partial class MainPage : Page
             _isCapturingKey = false;
             CaptureIcon.Glyph = "\uE7C8";
             CaptureKeyText.Text = "Capture Key";
-            StatusText.Text = "Key capture canceled";
+            HolderStatusText.Text = "Key capture canceled";
             return;
         }
 
         _isCapturingKey = true;
         CaptureIcon.Glyph = "\uE71A";
         CaptureKeyText.Text = "Listening...";
-        StatusText.Text = "Press any key on your keyboard...";
+        HolderStatusText.Text = "Press any key on your keyboard...";
 
         await Task.Run(async () =>
         {
+            // Give 200ms buffer so clicking the button itself is not captured
+            await Task.Delay(200);
+
             while (_isCapturingKey)
             {
-                await Task.Delay(50);
-                string[] checkKeys = new[] { "w", "a", "s", "d", "space", "shift", "ctrl", "alt", "enter", "tab", "esc", "q", "e", "r", "f" };
-                foreach (var k in checkKeys)
+                await Task.Delay(15);
+                for (int vk = 0x08; vk <= 0xFE; vk++)
                 {
-                    if (Keyboard.IsEscPressed() || Mouse.IsButtonDown("left"))
+                    short state = NativeMethods.GetAsyncKeyState(vk);
+                    if ((state & 0x8000) != 0 || state < 0)
                     {
+                        string k = Keyboard.GetKeyName(vk);
                         DispatcherQueue.TryEnqueue(() =>
                         {
                             HolderKeyBox.Text = k;
                             _isCapturingKey = false;
                             CaptureIcon.Glyph = "\uE7C8";
                             CaptureKeyText.Text = "Capture Key";
-                            StatusText.Text = $"Captured key: {k}";
+                            HolderStatusText.Text = $"Captured key: {k}";
                         });
                         return;
                     }
@@ -321,17 +333,17 @@ public sealed partial class MainPage : Page
 
     private async void PickCoordBtn_Click(object sender, RoutedEventArgs e)
     {
-        StatusText.Text = "Move cursor to target location in 3s...";
+        ClickerStatusText.Text = "Move cursor to target location in 3s...";
         for (int i = 3; i > 0; i--)
         {
-            StatusText.Text = $"Locking coordinates in {i}s... Move mouse to target!";
+            ClickerStatusText.Text = $"Locking coordinates in {i}s... Move mouse to target!";
             await Task.Delay(1000);
         }
 
         var (x, y) = Mouse.GetPosition();
         ClickXBox.Value = x;
         ClickYBox.Value = y;
-        StatusText.Text = $"Locked target coordinates: ({x}, {y})";
+        ClickerStatusText.Text = $"Locked target coordinates: ({x}, {y})";
     }
 
     private void RecordMacroBtn_Click(object sender, RoutedEventArgs e)
@@ -342,61 +354,150 @@ public sealed partial class MainPage : Page
             _macroRecorder.StopRecording();
             RecordIcon.Glyph = "\uE7C8";
             RecordMacroText.Text = "Start Recording";
-            StatusText.Text = $"Macro recorded: {_macroRecorder.Actions.Count} actions";
+            MacroStatusText.Text = $"Macro recorded: {_macroRecorder.Actions.Count} actions";
             RefreshMacroActionList();
         }
         else
         {
             _isRecordingMacro = true;
-            _macroRecorder.StartRecording();
+            _macroRecorder.StartRecording(count =>
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    MacroStatusText.Text = $"Recording macro... {count} actions captured (Click Stop to finish)";
+                });
+            });
             RecordIcon.Glyph = "\uE71A";
             RecordMacroText.Text = "Stop Recording";
-            StatusText.Text = "Recording macro... Click or type anywhere to record actions!";
+            MacroStatusText.Text = "Recording macro... Click or type anywhere to record actions!";
         }
     }
 
     private void ClearMacroBtn_Click(object sender, RoutedEventArgs e)
     {
-        _macroRecorder.StartRecording();
-        _macroRecorder.StopRecording();
+        _isRecordingMacro = false;
+        RecordIcon.Glyph = "\uE7C8";
+        RecordMacroText.Text = "Start Recording";
+        _macroRecorder.Clear();
         MacroActionList.Items.Clear();
-        StatusText.Text = "Macro cleared";
+        MacroStatusText.Text = "Macro cleared";
     }
 
     private void RefreshMacroActionList()
     {
         MacroActionList.Items.Clear();
-        foreach (var act in _macroRecorder.Actions)
+        var actions = _macroRecorder.Actions;
+        foreach (var act in actions)
         {
             string detail = act.Type switch
             {
-                MacroActionType.ClickLeft => $"Click Left at ({act.X}, {act.Y})",
-                MacroActionType.ClickRight => $"Click Right at ({act.X}, {act.Y})",
-                MacroActionType.ClickMiddle => $"Click Middle at ({act.X}, {act.Y})",
-                MacroActionType.KeyPress => $"Key Press [{act.Data}]",
-                MacroActionType.KeyRelease => $"Key Release [{act.Data}]",
-                _ => $"Type [{act.Data}]"
+                MacroActionType.ClickLeft => $"🖱️ Left Click at ({act.X}, {act.Y})",
+                MacroActionType.ClickRight => $"🖱️ Right Click at ({act.X}, {act.Y})",
+                MacroActionType.ClickMiddle => $"🖱️ Middle Click at ({act.X}, {act.Y})",
+                MacroActionType.KeyPress => $"⌨️ Key Down [{act.Data}]",
+                MacroActionType.KeyRelease => $"⌨️ Key Up [{act.Data}]",
+                _ => $"🔤 Type [{act.Data}]"
             };
-            MacroActionList.Items.Add($"+{act.DelayMs}ms - {detail}");
+            MacroActionList.Items.Add($"+{act.DelayMs}ms — {detail}");
         }
     }
 
-    private async void ActionBtn_Click(object sender, RoutedEventArgs e)
+    // ══════════════════════════════════════════════════════════
+    // Per-Panel Action Handlers (Plan A: Self-Contained Execution)
+    // ══════════════════════════════════════════════════════════
+
+    private string? _runningTaskName = null;
+
+    private async void TyperActionBtn_Click(object sender, RoutedEventArgs e)
+    {
+        await RunTaskAsync(
+            "Typer",
+            TyperDelayBox,
+            TyperStatusText,
+            TyperProgressBar,
+            TyperActionBtn,
+            TyperActionIcon,
+            TyperActionText,
+            "Start Typer",
+            RunAutoTyperAsync);
+    }
+
+    private async void HolderActionBtn_Click(object sender, RoutedEventArgs e)
+    {
+        await RunTaskAsync(
+            "Holder",
+            HolderDelayBox,
+            HolderStatusText,
+            HolderProgressBar,
+            HolderActionBtn,
+            HolderActionIcon,
+            HolderActionText,
+            "Start Holder",
+            RunKeyHolderAsync);
+    }
+
+    private async void ClickerActionBtn_Click(object sender, RoutedEventArgs e)
+    {
+        await RunTaskAsync(
+            "Clicker",
+            ClickerDelayBox,
+            ClickerStatusText,
+            ClickerProgressBar,
+            ClickerActionBtn,
+            ClickerActionIcon,
+            ClickerActionText,
+            "Start Clicker",
+            RunAutoClickerAsync);
+    }
+
+    private async void MacroActionBtn_Click(object sender, RoutedEventArgs e)
+    {
+        await RunTaskAsync(
+            "Macro",
+            MacroDelayBox,
+            MacroStatusText,
+            MacroProgressBar,
+            MacroActionBtn,
+            MacroActionIcon,
+            MacroActionText,
+            "Replay Macro",
+            RunMacroReplayAsync);
+    }
+
+    private async Task RunTaskAsync(
+        string taskName,
+        NumberBox delayBox,
+        TextBlock statusText,
+        ProgressBar progressBar,
+        Button actionBtn,
+        FontIcon actionIcon,
+        TextBlock actionText,
+        string defaultActionTitle,
+        Func<CancellationToken, Action<string, double>, Task> taskFunc)
     {
         if (_isRunning)
         {
-            StopTask("Stopped by user");
+            if (_runningTaskName == taskName)
+            {
+                StopTask("Stopped by user");
+            }
+            else
+            {
+                StopTask($"Switched task from {_runningTaskName}");
+            }
             return;
         }
 
         _isRunning = true;
+        _runningTaskName = taskName;
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
-        ActionText.Text = "Stop";
-        ActionIcon.Glyph = "\uE71A";
 
-        double delay = DelayBox.Value;
-        int delayMs = (int)(delay * 1000);
+        actionText.Text = "Stop";
+        actionIcon.Glyph = "\uE71A";
+
+        double delay = delayBox.Value;
+        if (double.IsNaN(delay) || delay < 0) delay = 0;
 
         try
         {
@@ -405,30 +506,25 @@ public sealed partial class MainPage : Page
             {
                 token.ThrowIfCancellationRequested();
                 CheckEmergencyEsc();
-                StatusText.Text = $"Starting in {remaining}s... Switch to target app!";
-                ProgressBar.Value = (delay - remaining) / delay * 100;
+                statusText.Text = $"Starting in {remaining}s... Switch to target app!";
+                progressBar.Value = (delay - remaining) / delay * 100;
                 await Task.Delay(1000, token);
             }
 
-            ProgressBar.Value = 100;
-            StatusText.Text = "Running...";
+            progressBar.Value = 100;
+            statusText.Text = "Running...";
 
-            // Execute corresponding task
-            switch (_activeTab)
+            // Progress callback for live updates
+            Action<string, double> reportProgress = (msg, pct) =>
             {
-                case "Typer":
-                    await RunAutoTyperAsync(token);
-                    break;
-                case "Holder":
-                    await RunKeyHolderAsync(token);
-                    break;
-                case "Clicker":
-                    await RunAutoClickerAsync(token);
-                    break;
-                case "Macro":
-                    await RunMacroReplayAsync(token);
-                    break;
-            }
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    statusText.Text = msg;
+                    if (pct >= 0) progressBar.Value = Math.Min(100, Math.Max(0, pct));
+                });
+            };
+
+            await taskFunc(token, reportProgress);
 
             StopTask("Finished successfully");
         }
@@ -442,7 +538,7 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private async Task RunAutoTyperAsync(CancellationToken token)
+    private async Task RunAutoTyperAsync(CancellationToken token, Action<string, double> reportProgress)
     {
         string text = TypeTextBox.Text;
         if (string.IsNullOrEmpty(text))
@@ -460,6 +556,10 @@ public sealed partial class MainPage : Page
                 token.ThrowIfCancellationRequested();
                 CheckEmergencyEsc();
                 Keyboard.Type(text[i]);
+
+                int charIndex = i + 1;
+                reportProgress($"Typing character {charIndex}/{text.Length}...", (double)charIndex / text.Length * 100);
+
                 if (intervalMs > 0)
                 {
                     Thread.Sleep(intervalMs);
@@ -474,7 +574,7 @@ public sealed partial class MainPage : Page
         });
     }
 
-    private async Task RunKeyHolderAsync(CancellationToken token)
+    private async Task RunKeyHolderAsync(CancellationToken token, Action<string, double> reportProgress)
     {
         string keys = HolderKeyBox.Text.Trim();
         if (string.IsNullOrEmpty(keys))
@@ -496,6 +596,17 @@ public sealed partial class MainPage : Page
                 while (!token.IsCancellationRequested && (durationMs <= 0 || elapsedMs < durationMs))
                 {
                     CheckEmergencyEsc();
+
+                    if (durationMs > 0)
+                    {
+                        double pct = (double)elapsedMs / durationMs * 100;
+                        reportProgress($"Holding [{keys}] ({elapsedMs / 1000}s / {durationSec}s)...", pct);
+                    }
+                    else
+                    {
+                        reportProgress($"Holding [{keys}] ({elapsedMs / 1000}s / Infinite)...", 100);
+                    }
+
                     await Task.Delay(checkIntervalMs, token);
                     elapsedMs += checkIntervalMs;
                 }
@@ -508,7 +619,7 @@ public sealed partial class MainPage : Page
         }, token);
     }
 
-    private async Task RunAutoClickerAsync(CancellationToken token)
+    private async Task RunAutoClickerAsync(CancellationToken token, Action<string, double> reportProgress)
     {
         int buttonIndex = MouseButtonCombo.SelectedIndex;
         string button = buttonIndex switch
@@ -519,7 +630,7 @@ public sealed partial class MainPage : Page
         };
 
         double intervalSec = ClickIntervalBox.Value;
-        int intervalMs = Math.Max(10, (int)(intervalSec * 1000));
+        int intervalMs = Math.Max(5, (int)(intervalSec * 1000));
         int totalClicks = (int)ClickCountBox.Value;
         bool infinite = totalClicks <= 0;
 
@@ -541,6 +652,16 @@ public sealed partial class MainPage : Page
                     Mouse.Click(button);
                 }
                 count++;
+
+                if (!infinite)
+                {
+                    reportProgress($"Clicking {count}/{totalClicks}...", (double)count / totalClicks * 100);
+                }
+                else
+                {
+                    reportProgress($"Clicking count: {count} (Infinite)...", 100);
+                }
+
                 if (intervalMs > 0)
                 {
                     Thread.Sleep(intervalMs);
@@ -549,17 +670,20 @@ public sealed partial class MainPage : Page
         }, token);
     }
 
-    private async Task RunMacroReplayAsync(CancellationToken token)
+    private async Task RunMacroReplayAsync(CancellationToken token, Action<string, double> reportProgress)
     {
+        if (_macroRecorder.Actions.Count == 0)
+        {
+            throw new InvalidOperationException("No recorded macro actions to replay! Please record first.");
+        }
+
         int loops = (int)MacroRepeatBox.Value;
         double speed = MacroSpeedBox.Value;
 
         await _macroRecorder.ReplayAsync(loops, speed, token, (loop, step) =>
         {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                StatusText.Text = $"Replaying Macro: Loop {loop}, Action {step}/{_macroRecorder.Actions.Count}";
-            });
+            double pct = (double)step / _macroRecorder.Actions.Count * 100;
+            reportProgress($"Replaying Macro: Loop {loop}, Action {step}/{_macroRecorder.Actions.Count}", pct);
         });
     }
 
@@ -578,11 +702,34 @@ public sealed partial class MainPage : Page
         _cts = null;
 
         _isRunning = false;
-        ActionText.Text = "Start";
-        ActionIcon.Glyph = "\uE768";
-        StatusText.Text = message;
-        ProgressBar.Value = 0;
 
+        // Reset Typer UI
+        TyperActionText.Text = "Start Typer";
+        TyperActionIcon.Glyph = "\uE768";
+        TyperProgressBar.Value = 0;
+
+        // Reset Holder UI
+        HolderActionText.Text = "Start Holder";
+        HolderActionIcon.Glyph = "\uE768";
+        HolderProgressBar.Value = 0;
+
+        // Reset Clicker UI
+        ClickerActionText.Text = "Start Clicker";
+        ClickerActionIcon.Glyph = "\uE768";
+        ClickerProgressBar.Value = 0;
+
+        // Reset Macro UI
+        MacroActionText.Text = "Replay Macro";
+        MacroActionIcon.Glyph = "\uE768";
+        MacroProgressBar.Value = 0;
+
+        // Set status message on the active/relevant panel
+        if (_runningTaskName == "Typer") TyperStatusText.Text = message;
+        else if (_runningTaskName == "Holder") HolderStatusText.Text = message;
+        else if (_runningTaskName == "Clicker") ClickerStatusText.Text = message;
+        else if (_runningTaskName == "Macro") MacroStatusText.Text = message;
+
+        _runningTaskName = null;
         Keyboard.ReleaseAllModifiers();
     }
 }
