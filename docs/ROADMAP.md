@@ -13,10 +13,10 @@ timeline
     title Tapster 全階段演進路徑 (Phase 0 ~ Phase 5)
     Phase 0 : 2025 早期 : Python 原型與 Tkinter GUI : VNC 自動打字 / 軟體鍵盤網格 / 動作錄製重播
     Phase 1 : 2026 前期 : C# NativeAOT 核心重構 : SendInput 原生硬體模擬 / 微秒級時序 / 2MB 零依賴
-    Phase 2 : 2026 近期 : WinUI 3 Fluent 現代介面 : 擬真 5 排實體鍵盤 / 視窗拖曳優化 / 全域喚醒 (Ctrl+Alt+T) / PE 圖示注入
-    Phase 3 : 2026 進行中 : 偏好持久化與進階自動化 : JSON 巨集腳本匯出匯入 / 系統匣迷你懸浮條 / 擬人化隨機延遲
+    Phase 2 : 2026 近期 : WinUI 3 Fluent 現代介面 : 擬真 5 排實體鍵盤 / 分頁獨立執行卡片 / 全域喚醒 (Ctrl+Alt+T) / PE 圖示注入
+    Phase 3 : 2026 進行中 : 偏好持久化與巨集錄製 : 系統匣常駐 / 偏好設定持久化 / 全域鍵鼠錄製引擎 / 擬人化隨機延遲
     Phase 4 : 2026 規劃中 : 多語系與 Microsoft Store 合規 : 5 國語言 i18n / MSIX 沙盒合規 / 商店素材與隱私政策
-    Phase 5 : 2026 規劃中 : CI/CD 自動化與雙軌發布 : GitHub Actions 自動管線 / Store API 發布 / 雙軌發行
+    Phase 5 : 2026 進行中 : 雙軌打包與純單檔 EXE 發布 : 純單檔啟動器 (SHA-256 自動同步) / 構建伺服器自動清理 / MSIX 自動簽署
 ```
 
 ### 世代演進對照表
@@ -26,9 +26,9 @@ timeline
 | **Phase 0** | Python 舊版原型 | Python 3 + `keyboard` + `ctypes` | Tkinter 多頁籤 GUI | ~8MB / ~45MB | 已完成 ✅ (封存) |
 | **Phase 1** | Native 底層核心 | C# .NET 8 + Win32 `SendInput` | 輕量命令列 (CLI) | ~2-3MB / ~8MB | 已完成 ✅ |
 | **Phase 2** | Fluent 現代介面 | WinUI 3 + Windows App SDK | 現代 Windows 11 GUI | 獨立發布 / ~35MB | 已完成 ✅ (現行) |
-| **Phase 3** | 進階自動化增強 | C# .NET + JSON Schema + Tray | Fluent GUI + 迷你懸浮條 | 獨立發布 / ~35MB | 進行中 🚧 |
+| **Phase 3** | 進階自動化與錄製 | C# .NET + Win32 Hooks + Tray | Fluent GUI + 獨立控制卡片 | 獨立發布 / ~35MB | 進行中 🚧 |
 | **Phase 4** | Store 上架合規 | C# .NET + MSIX Sandboxed | 5 國多語系 Fluent GUI | MSIX 商店套件 | 規劃中 📌 |
-| **Phase 5** | CI/CD 雙軌發行 | GitHub Actions + Store API | 雙軌（Store + AOT） | 雙軌自動分發 | 規劃中 📌 |
+| **Phase 5** | 雙軌發行與自動化 | Single-File Launcher + MSIX | 雙軌（Store + Portable EXE） | 雙軌自動分發 | 進行中 🚧 |
 
 ---
 
@@ -93,6 +93,12 @@ timeline
   - **規則**：透過 Win32 `RegisterHotKey` 註冊 **`Ctrl + Alt + T`**，任何時候按下皆能將視窗從最小化/背景拉至最前端並取得焦點。
 - [x] **[P2-6] PE 資源注入修復 (Win32 Resource Injection)**
   - **規則**：實作 `UpdateIcon.ps1` Post-build 目標，在編譯完成後直接透過 Win32 `kernel32!UpdateResource` 將 `app.ico` 嵌入 EXE 的 PE 資源區段，並在 `MainWindow` 初始化呼叫 `AppWindow.SetIcon()`，修復檔案總管與工作列圖示。
+- [x] **[P2-7] 分頁獨立自治控制卡片 (Self-Contained Per-Panel Execution Cards)**
+  - **規則**：移除全域底欄，將啟動延遲（`Delay (s)`）、毫秒/字元/點擊即時進度條與 `[ Start / Stop ]` 按鈕直接內嵌於各功能（Typer, Holder, Clicker, Macro）卡片底部；徹底避免跨頁執行時的認知混淆，並使 Settings 與 About 分頁呈現純粹專屬視圖。
+- [x] **[P2-8] 單鍵捕捉全域掃描 (Full Virtual-Key Capture)**
+  - **規則**：實作全域 0x08~0xFE 虛擬鍵盤掃描機制，點擊「Capture Key」後可在任意視窗按下實體鍵並自動轉換為友善按鍵名稱。
+- [x] **[P2-9] 關於分頁與規格展示 (About & Technical Specs)**
+  - **規則**：於導航列底部加入 About 專屬頁面，呈現 Hero Logo 卡片、版本號標籤、底層技術規格矩陣、100% 離線隱私聲明，以及一鍵開啟 `%LOCALAPPDATA%\Tapster\` 設定目錄。
 
 ---
 
@@ -105,9 +111,11 @@ timeline
   - **規則**：於 NavigationView 左下角新增 Settings 設定分頁；支援「開機自動啟動 (Start with Windows)」、「啟動時自動縮小至系統匣」、「點擊關閉 (X) 時縮至系統匣」之開關切換；設定自動序列化儲存至 `%LOCALAPPDATA%\Tapster\settings.json`。
 - [x] **[P3-3] 系統匣常駐與右鍵選單 (System Tray & Background Resident)**
   - **規則**：透過 Win32 `Shell_NotifyIconW` 與 Window Subclassing 實作零依賴系統匣圖示；支援 `--tray` 啟動隱藏常駐、雙擊喚醒、視窗關閉縮排至系統匣，以及包含「顯示/隱藏」、「永遠置頂」、「結束」的原生右鍵彈出式選單。
-- [ ] **[P3-4] 擬人化隨機延遲 (Humanized Jitter & Anti-Detection)**
+- [x] **[P3-4] 背景巨集錄製引擎 (Macro Recorder Engine)**
+  - **規則**：基於 Win32 `GetAsyncKeyState` 狀態機與相對毫秒時間戳捕捉鍵盤與滑鼠點擊動作，支援即時動作捕獲回調、符號位元跨執行緒安全判定與多倍速回放。
+- [ ] **[P3-5] 擬人化隨機延遲 (Humanized Jitter & Anti-Detection)**
   - **規格**：在打字與連點間隔中加入可配置的正態分佈隨機波動（Jitter ±5~15%），模擬真人手速，防止機械式操作判定。
-- [ ] **[P3-5] 智慧像素 / 影像顏色條件觸發 (Pixel & Image Trigger)**
+- [ ] **[P3-6] 智慧像素 / 影像顏色條件觸發 (Pixel & Image Trigger)**
   - **規格**：偵測指定螢幕座標之像素顏色或區域特徵，符合條件時自動觸發連點或巨集。
 
 ---
@@ -123,7 +131,7 @@ timeline
     - 日本語 (`ja-JP`)
     - 韓語 (`ko-KR`)
 - [x] **[P4-2] MSIX 封裝與自動簽署 (MSIX Packaging & Signing)**
-  - **規則**：建立 `packaging/msix/AppxManifest.xml`（宣告 `runFullTrust`）與全套視覺資產；實作 `scripts/build_msix.ps1` 透過 `makeappx.exe` 打包與 `signtool.exe` 自動化測試憑證簽署，產出標準 `.msix` 安裝套件。
+  - **規則**：建立 `packaging/msix/AppxManifest.xml`（宣告 `runFullTrust`）與全套視覺資產；實作 `scripts/build_msix.ps1` 透過 `makeappx.exe` 打包與 `signtool.exe` 自動化測試憑證簽署，產出標準 `.msix` 安裝套件（33.9MB）。
 - [ ] **[P4-3] Microsoft Store 文案與上架素材 (Store Listings & Assets)**
   - **規格**：撰寫 5 國語言商店文案、準備 1920x1080 高解析功能截圖；建立正式隱私權政策 (`PRIVACY.md`)，聲明「不收集、不傳輸任何使用者按鍵記錄，100% 本機處理」。
 
@@ -134,13 +142,15 @@ timeline
 
 - [ ] **[P5-1] GitHub Actions 自動化建置管線 (`.github/workflows/build.yml`)**
   - **規格**：在 Windows Runner 上自動編譯 `Tapster.Fluent` 與 `Tapster.Core`，執行單元測試與品質檢查。
-- [x] **[P5-2] 雙軌打包腳本與 Release 自動化 (Dual-Track Build Scripts)**
-  - **規則**：實作 `scripts/build_portable.ps1`（產出 Self-Contained 綠色免安裝 ZIP 包）與 `scripts/build_msix.ps1`（產出簽署版 Store MSIX 安裝包）。
-- [ ] **[P5-3] Microsoft Store Submission API 自動發布**
-  - **規格**：透過 Azure AD 認證，在建立 Git Release Tag 時自動上傳 MSIX 至 Partner Center 審核隊列。
+- [x] **[P5-2] 純單檔可攜式啟動器與自動同步 (`Tapster.Launcher`)**
+  - **規則**：實作純單一 `.exe` 啟動器（43.1MB），內建 Payload 解壓、SHA-256 特徵碼比對自動同步機制；更新前自動平穩釋放舊程序以防止 DLL 檔案鎖定，並支援單一實例智慧喚醒。
+- [x] **[P5-3] 編譯程序防護與構建伺服器清理 (Build Process Guard & Server Shutdown)**
+  - **規則**：全域關閉 MSBuild NodeReuse 與 SharedCompilation，在所有打包腳本加入 `finally { Stop-BuildServers }` 自動關閉伺服器防殘留，確保使用者開發環境 100% 乾淨無背景 `.NET Host` 佔用。
 - [x] **[P5-4] 雙軌發行架構 (Dual-Track Distribution)**
-  - **軌道 A (Store / 一般用戶)**：`Tapster (WinUI 3 Fluent MSIX)` 具備現代美觀介面與自動更新。
-  - **軌道 B (可攜式 / 綠色免安裝)**：`Tapster Portable (Self-Contained ZIP & NativeAOT CLI)` 免安裝解壓即用。
+  - **軌道 A (Store / 一般用戶)**：`Tapster (WinUI 3 Fluent MSIX)` 具備現代美觀介面、自動依賴管理與沙盒安全性。
+  - **軌道 B (可攜式 / 綠色免安裝)**：`Tapster Portable (True Single-File EXE)` 真正純單一 `.exe` 檔案，解壓即跑、零依賴、零報錯。
+- [ ] **[P5-5] Microsoft Store Submission API 自動發布**
+  - **規格**：透過 Azure AD 認證，在建立 Git Release Tag 時自動上傳 MSIX 至 Partner Center 審核隊列。
 
 ---
 
@@ -155,22 +165,28 @@ Script-List/automation/
 │
 └── tapster-native/               # [Active] 現代化 Native 解決方案
     ├── Tapster.sln
+    ├── Directory.Build.props     # MSBuild 全域防護 (NodeReuse=false)
     ├── docs/
     │   └── ROADMAP.md            # 本發展藍圖文件
     ├── src/
-    │   └── Tapster/              # [Tapster.Core] 零依賴底層自動化引擎 (.NET 8/10)
-    │       ├── AutoTyper.cs
-    │       ├── AutoClicker.cs
-    │       ├── KeyHolder.cs
-    │       ├── MacroRecorder.cs
-    │       ├── Keyboard.cs
-    │       ├── Mouse.cs
-    │       └── NativeMethods.cs
+    │   ├── Tapster/              # [Tapster.Core] 零依賴底層自動化引擎 (.NET 8/10)
+    │   │   ├── AutoTyper.cs
+    │   │   ├── AutoClicker.cs
+    │   │   ├── KeyHolder.cs
+    │   │   ├── MacroRecorder.cs
+    │   │   ├── Keyboard.cs
+    │   │   ├── Mouse.cs
+    │   │   └── NativeMethods.cs
+    │   │
+    │   └── Tapster.Launcher/     # [Tapster.Launcher] 純單檔啟動器 (SHA-256 自動同步)
+    │       ├── Program.cs
+    │       └── Tapster.Launcher.csproj
     │
     └── Tapster.Fluent/           # [Tapster.Fluent] WinUI 3 現代化桌面應用程式
         ├── Assets/               # 高解析圖示與向量資源
         ├── MainWindow.xaml(.cs)  # 標題列拖曳、置頂與全域喚醒控制
-        ├── MainPage.xaml(.cs)    # 5 排實體虛擬鍵盤、連點器、巨集介面
+        ├── MainPage.xaml(.cs)    # 5 排實體虛擬鍵盤、各分頁獨立控制卡片、關於頁
+        ├── AppSettings.cs        # 偏好設定持久化 (%LOCALAPPDATA%\Tapster\settings.json)
         ├── UpdateIcon.ps1        # Post-build Win32 PE 資源注入腳本
         └── Tapster.Fluent.csproj # 專案設定與自動化構建目標
 ```
@@ -179,4 +195,4 @@ Script-List/automation/
 1. **零多餘依賴 (Zero Bloat)**：`Tapster.Core` 維持純粹的 Win32 API 呼叫，不引入肥大第三方套件。
 2. **極致響應 (Responsive UI)**：所有耗時的自動化打字、連點與巨集回放必須在獨立的非同步線程 (`Task.Run`) 執行，不得阻斷 UI Dispatcher。
 3. **無閃爍與高 DPI 支援 (Per-Monitor V2 DPI Awareness)**：WinUI 3 原生支援向量渲染與動態 DPI 縮放，在 100% ~ 300% 縮放下字型與鍵盤網格皆保持像素級銳利。
-4. **乾淨發布 (Clean Release Gate)**：發布版本必須維持 **0 警告、0 錯誤**，並通過乾淨虛擬機啟動驗證。
+4. **乾淨發布 (Clean Release Gate)**：發布版本必須維持 **0 警告、0 錯誤**，並保證編譯退出後不殘留任何背景伺服器進程。
