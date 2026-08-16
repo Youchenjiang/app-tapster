@@ -1,28 +1,38 @@
-# Tapster (Native)
+# Tapster (Native & Fluent)
 
-Native Win11 version of Tapster, built with C# + .NET 8 + NativeAOT. Produces a ~2-3MB standalone executable with zero dependencies.
+Modern Windows 11 keyboard and mouse automation utility, featuring both a **WinUI 3 Fluent Desktop GUI** and a lightweight **NativeAOT CLI**.
 
-[閱讀繁體中文版](README.zh-TW.md)
+[閱讀繁體中文版](README.zh-TW.md) · [View Roadmap & History](docs/ROADMAP.md)
 
 ---
 
-## vs Python Version
+## 🌟 Core Architecture & Modes
 
-| | Python | Native |
+| Mode | Project | Highlights | Target Scenario |
+|---|---|---|---|
+| **Fluent GUI** | `Tapster.Fluent` | WinUI 3 modern UI, 5-row physical virtual keyboard, Mica, global hotkey wake-up, Always on Top | Standard Users / Microsoft Store |
+| **Native CLI** | `src/Tapster/` | C# .NET NativeAOT build, ~2-3MB size, zero external dependencies | Scripting batch automation / Server maintenance |
+
+---
+
+## vs Legacy Python Version
+
+| | Legacy Python (`../tapster/`) | Modern Native / Fluent (`This directory`) |
 |---|---|---|
-| Location | `../tapster/` | This directory |
-| Platform | Cross-platform (Win/Linux/macOS) | Windows only |
-| GUI | tkinter tabbed interface | CLI + system tray |
-| EXE Size | ~8MB | ~2-3MB |
-| Dependencies | Python + pip install | None (NativeAOT) |
+| **Backend Engine** | Python 3 + `keyboard` + `pyperclip` | C# .NET + Win32 `SendInput` API |
+| **GUI Framework** | Tkinter tabbed interface | WinUI 3 (Windows App SDK) Fluent Design |
+| **Memory & Latency** | ~45MB / Millisecond | ~8-15MB / Microsecond timing |
+| **Package Size** | ~8MB (PyInstaller) | ~2-3MB (AOT CLI) / Native MSIX |
+| **Global Wake-up** | None | `Ctrl + Alt + T` Native Hotkey |
 
 ---
 
-## Features
+## Features Overview
 
-1. **Auto Type** — Simulate keyboard input character by character
-2. **Key Hold** — Hold down keys (including combos like ctrl+shift)
-3. **Auto Click** — Mouse clicking with configurable interval and coordinates
+1. **Auto Typer** — Keystroke-by-keystroke simulation with Unicode UTF-16 support (bypasses IME and VNC clipboard restrictions)
+2. **Key Holder** — 5-row physical virtual keyboard grid, physical Key Capture, timed/indefinite/rotation hold
+3. **Auto Clicker** — Ultra-fast mouse clicking (Left/Right/Middle, ms-level interval, Hold-Key during click, Crosshair Coordinate Picker)
+4. **Macro Recorder** — Mouse & keyboard event recording and high-resolution timing replay (0.1x to 5.0x speed multiplier)
 
 ---
 
