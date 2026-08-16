@@ -1,97 +1,73 @@
 # Tapster (Native & Fluent)
 
-Modern Windows 11 keyboard and mouse automation utility, featuring both a **WinUI 3 Fluent Desktop GUI** and a lightweight **NativeAOT CLI**.
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Youchenjiang/Tapster/badge)](https://scorecard.dev/viewer/?url=github.com/Youchenjiang/Tapster)
+[![Security Policy](https://img.shields.io/badge/Security-Policy-blue.svg)](.github/SECURITY.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20Fluent-0078D4.svg)](https://microsoft.com/windows)
 
-[閱讀繁體中文版](README.zh-TW.md) · [View Roadmap & History](docs/ROADMAP.md)
+Modern Windows 11 keyboard and mouse automation utility, featuring both a **WinUI 3 Fluent Desktop GUI** and a lightweight **NativeAOT Core**.
+
+[閱讀繁體中文版](README.zh-TW.md) · [View Roadmap & Specifications](docs/ROADMAP.md) · [Security Policy](.github/SECURITY.md)
 
 ---
 
-## 🌟 Core Architecture & Modes
+## 🌟 Core Architecture & Distribution
 
-| Mode | Project | Highlights | Target Scenario |
+| Distribution | Project / Format | Highlights | Target Scenario |
 |---|---|---|---|
-| **Fluent GUI** | `Tapster.Fluent` | WinUI 3 modern UI, 5-row physical virtual keyboard, Mica, global hotkey wake-up, Always on Top | Standard Users / Microsoft Store |
-| **Native CLI** | `src/Tapster/` | C# .NET NativeAOT build, ~2-3MB size, zero external dependencies | Scripting batch automation / Server maintenance |
+| **Standalone Portable** | `publish/Tapster.exe` | True single-file EXE (43.1MB), zero dependencies, embedded payload with SHA-256 auto-update sync | Portable / USB drive / Quick launch |
+| **Microsoft Store MSIX** | `publish/Tapster-v1.1.0.msix` | Signed MSIX package (33.9MB), auto updates, full sandbox compliance | End Users / Corporate Environments |
+| **Native Core Engine** | `src/Tapster/` | C# .NET NativeAOT build (< 35MB RAM, < 1ms latency), zero external dependencies | Headless automation / Embedding |
 
 ---
 
-## vs Legacy Python Version
+## 🛡️ OpenSSF Supply Chain Security Guarantee
 
-| | Legacy Python (`../tapster/`) | Modern Native / Fluent (`This directory`) |
-|---|---|---|
-| **Backend Engine** | Python 3 + `keyboard` + `pyperclip` | C# .NET + Win32 `SendInput` API |
-| **GUI Framework** | Tkinter tabbed interface | WinUI 3 (Windows App SDK) Fluent Design |
-| **Memory & Latency** | ~45MB / Millisecond | ~8-15MB / Microsecond timing |
-| **Package Size** | ~8MB (PyInstaller) | ~2-3MB (AOT CLI) / Native MSIX |
-| **Global Wake-up** | None | `Ctrl + Alt + T` Native Hotkey |
+Tapster strictly complies with **OpenSSF (Open Source Security Foundation)** security standards:
+- **100% Offline & Zero Telemetry**: Operates exclusively on local Win32 native APIs without sending any network requests.
+- **Automated Security Audits**: Weekly automated OpenSSF Scorecard supply-chain scans and CodeQL SAST analyses.
+- **Hardened CI/CD**: Pinned GitHub Actions commit hashes and least-privilege token permissions (`permissions: read-all`).
 
 ---
 
 ## Features Overview
 
-1. **Auto Typer** — Keystroke-by-keystroke simulation with Unicode UTF-16 support (bypasses IME and VNC clipboard restrictions)
-2. **Key Holder** — 5-row physical virtual keyboard grid, physical Key Capture, timed/indefinite/rotation hold
-3. **Auto Clicker** — Ultra-fast mouse clicking (Left/Right/Middle, ms-level interval, Hold-Key during click, Crosshair Coordinate Picker)
-4. **Macro Recorder** — Mouse & keyboard event recording and high-resolution timing replay (0.1x to 5.0x speed multiplier)
+1. **Auto Typer** — Keystroke-by-keystroke simulation with Unicode UTF-16 support (bypasses IME and VNC clipboard restrictions), independent live progress feedback.
+2. **Key Holder** — Realistic 5-row physical virtual keyboard grid, full 0x08~0xFE key capture, timed/indefinite hold.
+3. **Auto Clicker** — Ultra-fast mouse clicking (Left/Right/Middle, ms-level interval, Crosshair coordinate picker, live click count).
+4. **Macro Recorder** — Global input capture with relative millisecond timing and variable speed replay (0.1x to 10.0x).
+5. **System Tray & Hotkey** — Minimizes to system tray on close, global wake-up hotkey (**`Ctrl + Alt + T`**), Always on Top.
 
 ---
 
 ## Prerequisites
 
-- .NET 8 SDK ([Download](https://dotnet.microsoft.com/download/dotnet/8.0))
-- Windows 10/11
+- .NET 8 / 10 SDK ([Download](https://dotnet.microsoft.com/download))
+- Windows 10 (20H2+) / Windows 11
 
 ---
 
 ## Build
 
-### Development
-```bash
-dotnet build
+### 1. Build Solution
+```powershell
+dotnet build Tapster.sln -c Release
 ```
 
-### Release (NativeAOT - Recommended)
-```bash
-dotnet publish -c Release -r win-x64 --self-contained
+### 2. Package True Standalone Single-File EXE
+```powershell
+powershell -ExecutionPolicy Bypass -File "scripts/build_portable.ps1"
 ```
+Output: `publish/Tapster.exe` (43.1 MB)
 
-Output: `src/Tapster/bin/Release/net8.0-windows/win-x64/publish/Tapster.exe`
-
----
-
-## Usage
-
-```bash
-# Auto-type text
-tapster type --text "Hello World" --delay 5
-
-# Hold 'w' key for 30 seconds
-tapster hold --key w --duration 30
-
-# Click left mouse button 100 times
-tapster click --button left --interval 50 --count 100
-
-# Click at specific coordinates
-tapster click --x 500 --y 300 -c 10
-
-# Infinite clicking (Ctrl+C to stop)
-tapster click --interval 100
+### 3. Package & Sign Store MSIX
+```powershell
+powershell -ExecutionPolicy Bypass -File "scripts/build_msix.ps1"
 ```
-
-### Options
-
-| Option | Description | Default |
-|---|---|---|
-| `--delay` | Startup delay in seconds | 3 |
-| `--count` | Number of iterations (0=infinite) | 0 |
-| `--interval` | Interval in milliseconds | 100 |
-| `--key` | Key to hold | w |
-| `--duration` | Hold duration in seconds (0=until Esc) | 10 |
-| `--button` | Mouse button (left/right/middle) | left |
-| `--x`, `--y` | Target coordinates | - |
+Output: `publish/Tapster-v1.1.0.msix` (33.9 MB)
 
 ---
 
 ## License
 
-MIT License
+This project is licensed under the [MIT License](LICENSE).

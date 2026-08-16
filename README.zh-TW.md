@@ -1,97 +1,66 @@
-# Tapster (Native & Fluent)
+# Tapster (Native & Fluent 原生鍵鼠自動化助手)
 
-Windows 11 現代化鍵鼠輸入自動化工具，支援 **WinUI 3 Fluent 桌面介面** 與 **NativeAOT 輕量命令列** 雙軌運行。
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Youchenjiang/Tapster/badge)](https://scorecard.dev/viewer/?url=github.com/Youchenjiang/Tapster)
+[![Security Policy](https://img.shields.io/badge/Security-Policy-blue.svg)](.github/SECURITY.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20Fluent-0078D4.svg)](https://microsoft.com/windows)
 
-[Read English Version](README.md) · [查看發展藍圖與歷史演進 (Roadmap)](docs/ROADMAP.md)
+現代化 Windows 11 鍵盤與滑鼠輸入自動化控制台，結合 **WinUI 3 Fluent 現代桌面應用程式** 與超輕量 **NativeAOT 核心**。
+
+[Read English Version](README.md) · [查看發展藍圖 (ROADMAP)](docs/ROADMAP.md) · [安全性政策](.github/SECURITY.md)
 
 ---
 
-## 🌟 核心架構與模式
+## 🌟 核心架構與發行雙軌制
 
-| 模式 | 專案 | 特色 | 適用情境 |
+| 發行版本 | 專案 / 產出 | 特色亮點 | 適用情境 |
 |---|---|---|---|
-| **Fluent GUI** | `Tapster.Fluent` | WinUI 3 現代介面、5 排擬真鍵盤、Mica、全域熱鍵喚醒、置頂 | 一般使用者 / Microsoft Store |
-| **Native CLI** | `src/Tapster/` | C# .NET NativeAOT 編譯、體積僅 2-3MB、零外部依賴 | 腳本批次自動化 / 伺服器維運 |
+| **綠色免安裝單檔** | `publish/Tapster.exe` | 真正純單一 `.exe` 檔案（43.1MB），內嵌 Payload 與 SHA-256 自動同步，零依賴解壓即跑 | 隨身碟攜帶 / 快速啟動 / 免安裝 |
+| **微軟商店 MSIX** | `publish/Tapster-v1.1.0.msix` | 標準微軟簽署 `.msix` 安裝包（33.9MB），自動更新管理與完全沙盒隔離 | 一般使用者 / 企業受控環境 |
+| **底層 Native 核心** | `src/Tapster/` | C# .NET Native 核心（記憶體 < 35MB，延遲 < 1ms），純 Win32 原生調用 | 高性能自動化 / 模組嵌入 |
 
 ---
 
-## 與 Python 舊版差異
+## 🛡️ OpenSSF 軟體供應鏈安全承諾
 
-| | Python 舊版 (`../tapster/`) | Native / Fluent 現代版 (`本目錄`) |
-|---|---|---|
-| **底層技術** | Python 3 + `keyboard` + `pyperclip` | C# .NET + Win32 `SendInput` API |
-| **圖形介面** | Tkinter 分頁介面 | WinUI 3 (Windows App SDK) Fluent 介面 |
-| **記憶體與延遲** | ~45MB / 毫秒級 | ~8-15MB / 微秒級時序 |
-| **打包體積** | ~8MB (PyInstaller) | ~2-3MB (AOT CLI) / 原生 MSIX |
-| **全域喚醒** | 無 | 支援 `Ctrl + Alt + T` 原生熱鍵呼叫 |
+Tapster 嚴格遵守 **OpenSSF（開源安全基金會）** 安全標準：
+- **100% 離線純本機運行**：絕不發送任何外部網路請求，零遙測資料收集。
+- **自動化安全審計**：每週自動執行 OpenSSF Scorecard 供應鏈審查與 CodeQL SAST 靜態代碼掃描。
+- **CI/CD 權限最小化**：GitHub Actions 全面導入 SHA-Pinned Action 與最小權限宣告（`permissions: read-all`）。
 
 ---
 
-## 功能總覽
+## 功能規格亮點
 
-1. **Auto Typer** — 逐字模擬實體鍵盤輸入（支援 Unicode UTF-16，繞過輸入法與 VNC 限制）
-2. **Key Holder** — 擬真 5 排實體鍵盤點選、實體按鍵 Capture 捕捉、長按（定時/無限/輪替）
-3. **Auto Clicker** — 極速滑鼠連點（左/右/中鍵、毫秒級頻率、連點時按住修飾鍵、十字準星座標拾取）
-4. **Macro Recorder** — 鍵鼠動作錄製與高解析時序回放（支援 0.1x~5.0x 倍速播放）
-
----
-
-## 環境需求
-
-- .NET 8 SDK ([下載](https://dotnet.microsoft.com/download/dotnet/8.0))
-- Windows 10/11
+1. **Auto Typer (自動打字機)** — 以實體鍵擊事件逐字模擬打入文字，支援 Unicode UTF-16 直投（自動繞過中英輸入法與遠端 VNC 剪貼簿限制），獨立字元即時進度反饋。
+2. **Key Holder (按鍵長按器)** — 擬真 5 排實體虛擬鍵盤、0x08~0xFE 全鍵盤按鍵捕捉（Capture Key）、支援計時倒數與無限保持。
+3. **Auto Clicker (極速連點器)** — 高頻滑鼠連點（左鍵/右鍵/中鍵，毫秒級間隔）、十字準星取點與即時點擊計數。
+4. **Macro Recorder (巨集錄製器)** — 背景多執行緒即時捕捉鍵鼠動作，高解析度時間戳與多倍速回放（0.1x 至 10.0x）。
+5. **系統匣常駐與熱鍵** — 關閉自動縮小至系統匣、全域喚醒熱鍵（**`Ctrl + Alt + T`**）、視窗永遠置頂。
 
 ---
 
-## 建置
+## 建置與打包
 
-### 開發模式
-```bash
-dotnet build
+### 1. 建置專案方案
+```powershell
+dotnet build Tapster.sln -c Release
 ```
 
-### 發佈 NativeAOT (推薦)
-```bash
-dotnet publish -c Release -r win-x64 --self-contained
+### 2. 打包純單一 .exe 綠色可攜版
+```powershell
+powershell -ExecutionPolicy Bypass -File "scripts/build_portable.ps1"
 ```
+產出：`publish/Tapster.exe` (43.1 MB)
 
-輸出位置：`src/Tapster/bin/Release/net8.0-windows/win-x64/publish/Tapster.exe`
-
----
-
-## 使用方式
-
-```bash
-# 自動打字
-tapster type --text "Hello World" --delay 5
-
-# 長按按鍵 30 秒
-tapster hold --key w --duration 30
-
-# 連點滑鼠左鍵 100 次
-tapster click --button left --interval 50 --count 100
-
-# 指定坐標連點
-tapster click --x 500 --y 300 -c 10
-
-# 無限連點 (Ctrl+C 停止)
-tapster click --interval 100
+### 3. 打包並簽署 Store MSIX 安裝套件
+```powershell
+powershell -ExecutionPolicy Bypass -File "scripts/build_msix.ps1"
 ```
-
-### 參數說明
-
-| 參數 | 說明 | 預設值 |
-|---|---|---|
-| `--delay` | 啟動延遲秒數 | 3 |
-| `--count` | 執行次數 (0=無限) | 0 |
-| `--interval` | 間隔毫秒數 | 100 |
-| `--key` | 要長按的按鍵 | w |
-| `--duration` | 長按秒數 (0=直到 Esc) | 10 |
-| `--button` | 滑鼠按鍵 (left/right/middle) | left |
-| `--x`, `--y` | 目標坐標 | - |
+產出：`publish/Tapster-v1.1.0.msix` (33.9 MB)
 
 ---
 
 ## 授權條款
 
-MIT License
+本專案採用 [MIT License](LICENSE) 授權條款開源發布。
