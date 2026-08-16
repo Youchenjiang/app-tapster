@@ -181,6 +181,7 @@ public sealed partial class MainPage : Page
             HolderPanel.Visibility = Visibility.Collapsed;
             ClickerPanel.Visibility = Visibility.Collapsed;
             MacroPanel.Visibility = Visibility.Collapsed;
+            AboutPanel.Visibility = Visibility.Collapsed;
             SettingsPanel.Visibility = Visibility.Visible;
             return;
         }
@@ -193,7 +194,44 @@ public sealed partial class MainPage : Page
             ClickerPanel.Visibility = tag == "Clicker" ? Visibility.Visible : Visibility.Collapsed;
             MacroPanel.Visibility = tag == "Macro" ? Visibility.Visible : Visibility.Collapsed;
             SettingsPanel.Visibility = Visibility.Collapsed;
+            AboutPanel.Visibility = tag == "About" ? Visibility.Visible : Visibility.Collapsed;
         }
+    }
+
+    private void NavigateToAbout_Click(object sender, RoutedEventArgs e)
+    {
+        _activeTab = "About";
+        TyperPanel.Visibility = Visibility.Collapsed;
+        HolderPanel.Visibility = Visibility.Collapsed;
+        ClickerPanel.Visibility = Visibility.Collapsed;
+        MacroPanel.Visibility = Visibility.Collapsed;
+        SettingsPanel.Visibility = Visibility.Collapsed;
+        AboutPanel.Visibility = Visibility.Visible;
+
+        if (NavView.FooterMenuItems.Count > 0)
+        {
+            NavView.SelectedItem = NavView.FooterMenuItems[0];
+        }
+    }
+
+    private void OpenSettingsFolder_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string folder = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Tapster");
+            if (!System.IO.Directory.Exists(folder))
+            {
+                System.IO.Directory.CreateDirectory(folder);
+            }
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = folder,
+                UseShellExecute = true
+            });
+        }
+        catch { }
     }
 
     private void StartOnBootToggle_Toggled(object sender, RoutedEventArgs e)
