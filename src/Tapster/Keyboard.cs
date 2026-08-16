@@ -31,20 +31,29 @@ public static partial class Keyboard
     }
 
     /// <summary>
-    /// Type a single character.
+    /// Type a single character using Unicode SendInput for reliable VNC/app typing.
     /// </summary>
     public static void Type(char c)
     {
+        if (c == '\r') return; // Skip \r in \r\n pairs
+        if (c == '\n')
+        {
+            SendKey(0x0D, down: true);
+            SendKey(0x0D, down: false);
+            return;
+        }
+
         var inputs = new INPUT[2];
 
         // Key down
         inputs[0].type = INPUT_KEYBOARD;
-        inputs[0].u.ki.wVk = (ushort)VkKeyScan(c);
+        inputs[0].u.ki.wScan = c;
+        inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
 
         // Key up
         inputs[1].type = INPUT_KEYBOARD;
-        inputs[1].u.ki.wVk = (ushort)VkKeyScan(c);
-        inputs[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
+        inputs[1].u.ki.wScan = c;
+        inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
 
         SendInput(2, inputs, Marshal.SizeOf<INPUT>());
     }
@@ -72,6 +81,14 @@ public static partial class Keyboard
         }
     }
 
+    /// <summary>
+    /// Checks if the Esc key is currently pressed on the keyboard.
+    /// </summary>
+    public static bool IsEscPressed()
+    {
+        return (GetAsyncKeyState(0x1B) & 0x8000) != 0;
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private static void SendKey(ushort vk, bool down)
@@ -96,32 +113,44 @@ public static partial class Keyboard
     {
         return combo.Split('+')
             .Select(k => k.Trim().ToLower())
+            .Where(k => !string.IsNullOrEmpty(k))
             .Select(MapKeyName)
             .ToArray();
     }
 
-    private static ushort MapKeyName(string name) => name switch
+    private static ushort MapKeyName(string name)
     {
-        "shift" => 0x10,
-        "ctrl" or "control" => 0x11,
-        "alt" => 0x12,
-        "windows" or "win" => 0x5B,
-        "enter" or "return" => 0x0D,
-        "space" => 0x20,
-        "tab" => 0x09,
-        "esc" or "escape" => 0x1B,
-        "backspace" => 0x08,
-        "delete" or "del" => 0x2E,
-        "capslock" => 0x14,
-        "up" => 0x26,
-        "down" => 0x28,
-        "left" => 0x25,
-        "right" => 0x27,
-        "f1" => 0x70, "f2" => 0x71, "f3" => 0x72, "f4" => 0x73,
-        "f5" => 0x74, "f6" => 0x75, "f7" => 0x76, "f8" => 0x77,
-        "f9" => 0x78, "f10" => 0x79, "f11" => 0x7A, "f12" => 0x7B,
-        _ => (ushort)name[0]  // Single character keys (a-z, 0-9, etc.)
-    };
+        string k = name.ToLower();
+        if (k.Length == 1)
+        {
+            char ch = k[0];
+            if (ch >= 'a' && ch <= 'z') return (ushort)(ch - 'a' + 0x41); // VK_A .. VK_Z
+            if (ch >= '0' && ch <= '9') return (ushort)(ch - '0' + 0x30); // VK_0 .. VK_9
+        }
+
+        return k switch
+        {
+            "shift" => 0x10,
+            "ctrl" or "control" => 0x11,
+            "alt" => 0x12,
+            "windows" or "win" => 0x5B,
+            "enter" or "return" => 0x0D,
+            "space" => 0x20,
+            "tab" => 0x09,
+            "esc" or "escape" => 0x1B,
+            "backspace" => 0x08,
+            "delete" or "del" => 0x2E,
+            "capslock" => 0x14,
+            "up" => 0x26,
+            "down" => 0x28,
+            "left" => 0x25,
+            "right" => 0x27,
+            "f1" => 0x70, "f2" => 0x71, "f3" => 0x72, "f4" => 0x73,
+            "f5" => 0x74, "f6" => 0x75, "f7" => 0x76, "f8" => 0x77,
+            "f9" => 0x78, "f10" => 0x79, "f11" => 0x7A, "f12" => 0x7B,
+            _ => (ushort)k[0]
+        };
+    }
 
     [DllImport("user32.dll")]
     private static extern short VkKeyScan(char ch);

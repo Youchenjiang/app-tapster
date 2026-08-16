@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace Tapster;
 
-internal static partial class NativeMethods
+public static partial class NativeMethods
 {
     // ── SendInput ─────────────────────────────────────────────────────────────
     internal const uint INPUT_MOUSE = 0;
@@ -17,7 +17,9 @@ internal static partial class NativeMethods
     internal const uint MOUSEEVENTF_MIDDLEUP = 0x0040;
     internal const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
 
+    internal const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
     internal const uint KEYEVENTF_KEYUP = 0x0002;
+    internal const uint KEYEVENTF_UNICODE = 0x0004;
 
     [LibraryImport("user32.dll", SetLastError = true)]
     internal static partial uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
@@ -84,4 +86,27 @@ internal static partial class NativeMethods
     internal const int VK_LBUTTON = 0x01;
     internal const int VK_RBUTTON = 0x02;
     internal const int VK_MBUTTON = 0x04;
+
+    // ── Hotkey & Window Management ──────────────────────────────────────────────
+    public const int WM_HOTKEY = 0x0312;
+    public const uint MOD_ALT = 0x0001;
+    public const uint MOD_CONTROL = 0x0002;
+    public const uint MOD_SHIFT = 0x0004;
+    public const int SW_RESTORE = 9;
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetForegroundWindow(IntPtr hWnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
 }
