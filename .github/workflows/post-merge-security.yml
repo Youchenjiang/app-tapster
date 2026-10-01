@@ -20,14 +20,15 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  actions: read
+permissions: {}
 
 jobs:
   staging-readiness:
     name: Check staging readiness
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     env:
       STAGING_URL: ${{ vars.STAGING_URL }}
 
@@ -67,13 +68,15 @@ jobs:
     needs: staging-readiness
     if: ${{ vars.STAGING_URL != '' && needs.staging-readiness.result == 'success' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run ZAP baseline scan
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@7c4deb10e6261301961c86d65d54a516394f9aed # v0.14.0
         with:
           target: ${{ vars.STAGING_URL }}
           allow_issue_writing: false
@@ -211,7 +214,7 @@ jobs:
 
       - name: Upload Greenbone report artifact
         if: ${{ steps.config.outputs.enabled == 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: openvas-post-merge
           path: openvas-report.xml
