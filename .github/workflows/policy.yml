@@ -13,6 +13,7 @@ jobs:
   conventional-policy:
     name: PR and commit policy
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
     steps:
       - name: Validate PR title and commit subjects
         uses: actions/github-script@v8
