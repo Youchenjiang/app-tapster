@@ -1,38 +1,21 @@
-<!--
-PR descriptions are separate from commit bodies. Keep the entire description in English.
-Use the structure that matches the number of changed files:
-  - Small (<10 files): Summary (1-2 sentences) + numbered list.
-  - Medium (10-50 files): Summary + Key Changes + Verification.
-  - Large (50+ files): Overview + Key Changes (numbered sections) + Verification.
-The medium structure below is the default. Remove unused sections and replace every placeholder.
-
-PR metadata is validated by the Repository Policy workflow (assignee, labels, milestone)
-and listed in the checklist below. The PR description also becomes the GitHub Release
-notes for the merged version, so write it as public-facing copy.
-
-Title rule: use a plain descriptive title (type(scope): what changed), never internal
-roadmap codes like "P2-7" -- those belong in the milestone only.
--->
-
 ## Summary
-<!-- Write 1-2 sentences describing what changed and why. Do not list file names here. -->
+<!-- 1-2 sentence high-level description of what this PR accomplishes and why -->
 
 ## Key Changes
-<!-- Group technical changes by area. Use bullets and include relevant files or APIs. -->
-* Area
-  * Describe the change.
+<!-- Numbered list detailing changes by area/scope -->
+1. 
 
-## Verification
-<!-- Use a checklist. Mark completed checks with [x] and incomplete checks with [ ]. -->
-- [ ] Describe the build, test, or manual verification performed.
-- [ ] Describe any verification that remains outstanding.
+## How to Verify (Verification)
+<!-- Reproducible steps and evidence for reviewers -->
+- **Automated Tests**: `command to run tests (e.g. npm test, dotnet test)`
+- **Manual Verification**:
+  1. 
+- **Results / Evidence**: <!-- paste test output summary, logs, or attach screenshots -->
 
-## Notes
-<!-- Optional: record non-obvious decisions, limitations, or rollout considerations. -->
-
-## PR Metadata
-<!-- Checked by the Repository Policy workflow; fill these in before opening the PR. -->
-- [ ] **Assignee**: self-assigned (the workflow auto-assigns the author if left empty).
-- [ ] **Label**: added at least one matching the title scope (`core` / `fluent` / `launcher` / `cli` / `msix` / `tray` / `macro` / `docs` / `ci` / `deps` / `store` / `agent` / `packaging`).
-- [ ] **Milestone**: linked to the roadmap phase or target version (exempt for `release` / `hotfix` / `deps` / `dependencies` / `docs`-labeled PRs).
-- [ ] **Development**: linked to the issue(s) this PR closes, if any.
+## Pre-Submission Checklist
+<!-- Gatekeeping checklist to be completed by author before requesting review -->
+- [ ] Atomic commits (passed the Revert Test)
+- [ ] Commit headers follow Conventional Commits (`< 72 chars`, no trailing dot)
+- [ ] Numbered technical body included in commits
+- [ ] Self-reviewed locally (no stray console logs, debug statements, or credentials)
+- [ ] Documentation / comments updated accordingly
