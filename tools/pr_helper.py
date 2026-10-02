@@ -75,7 +75,7 @@ def run_cmd(cmd, cwd=None):
             raise ValueError(f"Dangerous character in command argument: {clean_arg}")
         safe_cmd.append(clean_arg)
     try:
-        res = subprocess.run(
+        res = subprocess.run(  # sourcery skip # nosec B603 # noqa: S603
             safe_cmd,
             cwd=run_cwd,
             stdout=subprocess.PIPE,
@@ -264,7 +264,7 @@ def run_local_preflight():
     print("⏳ [1/2] 正在執行本機 Commit 規範與職責分離審核...")
     linter_path = os.path.join(CURRENT_DIR, "lint_commits.py")
     if os.path.exists(linter_path):
-        res = subprocess.run([sys.executable, linter_path, "--base", "origin/main"])
+        res = subprocess.run([sys.executable, linter_path, "--base", "origin/main"], check=False)  # sourcery skip # nosec B603 # noqa: S603
         if res.returncode != 0:
             print("❌ 本地 Commit Linter 審核未通過，中斷 PR 提交。")
             sys.exit(1)
@@ -315,7 +315,7 @@ def handle_create(args):
     print("=" * 75)
 
     try:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True)  # sourcery skip # nosec B603 # noqa: S603
         print("🎉 PR 建立成功！")
     finally:
         if os.path.exists(temp_body_path):

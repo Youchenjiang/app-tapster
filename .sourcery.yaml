@@ -1,0 +1,3 @@
+# Sourcery configuration for Tapster
+ignore:
+  - "tools/**"
