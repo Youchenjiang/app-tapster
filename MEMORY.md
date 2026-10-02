@@ -17,9 +17,22 @@
 - [x] Initial project setup & scaffolding completed (`project-scaffold` desktop preset).
 - [x] Fixed GitHub Actions workflows (`setup-dotnet` commit SHA, `scorecard-action` v2.4.4, dependabot policy exemption).
 - [x] Deployed governance scripts & workflows via PR #19 (merged into `main`).
-- [ ] Phase 3: Macro JSON schema export/import (`P3-1`).
-- [ ] Phase 3: Humanized jitter delay simulation (`P3-5`).
-- [ ] Phase 4: Multi-language i18n (`resw` for zh-TW, en-US, zh-CN, ja-JP, ko-KR) (`P4-1`).
+- [x] Resolved CodeQL security alerts & WinUI false positives via PR #23 & #24.
+- [x] Refactored C# code quality & eliminated SonarCloud smells via PR #25.
+- [x] Merged Dependabot grouped update PRs #21 (NuGet) and #22 (GitHub Actions).
+- [ ] **Clickra Alignment - Phase 1: Architecture & Developer Documentation (`docs/`)**
+  - [ ] Add `docs/ARCHITECTURE.md` & `docs/ARCHITECTURE_AND_FRAMEWORK.md`
+  - [ ] Add `LOCAL_BUILD_NOTES.md` (environment setup, build quirks, developer certs)
+  - [ ] Add `docs/WINDOWS_COMPATIBILITY_AND_MSIX_SANDBOX.md` & `docs/TROUBLESHOOTING_AND_RESOLUTIONS.md`
+  - [ ] Add multilingual `docs/StoreListing_*.md` (EN, ZH, ZH-CN, JA, KO)
+- [ ] **Clickra Alignment - Phase 2: Quality Config & Developer Tooling (`scripts/`)**
+  - [ ] Add `.deepsource.toml` for static code health analysis
+  - [ ] Add `scripts/bump_version.ps1` for synchronized SemVer bumps
+  - [ ] Add `scripts/setup/create_dev_cert.ps1` for local certificate generation
+- [ ] **Clickra Alignment - Phase 3: Core Unit Tests & CI Automation (`tests/`)**
+  - [ ] Scaffold `tests/Tapster.Core.Tests` (xUnit test project linked to `Tapster.sln`)
+  - [ ] Add unit tests for key parsing, action recording/playback models, and speed calculations
+  - [ ] Integrate `dotnet test` into `.github/workflows/ci.yml`
 
 ---
 
@@ -41,4 +54,7 @@
 - **Dependabot Grouping**: Configure grouped updates (`groups: github-actions`, `groups: nuget`) in `.github/dependabot.yml` to consolidate dependency bumps and avoid PR spamming.
 - **CodeQL Float Conversion**: For progress or ratios, perform multiplication directly in floating-point (`(double)a * b`) instead of casting integer multiplication `(double)(a * b)` to eliminate CodeQL CWE-190 warnings.
 - **CodeQL Path Exclusion**: `github/codeql-action/init` requires `config-file: ./.github/codeql/codeql-config.yml` to specify `paths-ignore` for compiler-generated code (`obj/**`, `bin/**`).
+- **CodeQL Query Suite Standard**: Use `security-extended` rather than `security-and-quality` for CodeQL SAST scanning in desktop apps with Win32 P/Invoke and XAML generators, eliminating stylistic linter noise without suppressing any security rules.
+- **CancellationToken in Worker Loops**: Pre-capture `var token = _cts?.Token ?? CancellationToken.None;` to avoid redundant null checks and unreachable branch warnings (SonarCloud S2589, S2583).
+- **Macro Recorder Thread Safety**: Catch `ThreadInterruptedException` on `Thread.Join` and ensure state cleanup (`_recordThread = null; _stopwatch.Stop();`) runs inside a `finally` block.
 - **PR Iteration Hygiene**: Avoid excessive force-pushing during active PR reviews to preserve review thread context; append atomic fix commits instead and squash at merge.
