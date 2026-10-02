@@ -38,3 +38,7 @@
 - **Action Commit SHA Hygiene**: When pinning GitHub Actions to commit SHAs, always verify the exact commit hash via `git ls-remote` (avoid typographical errors like `ddab` vs `cbab`).
 - **GCR Deprecation**: `ossf/scorecard-action` v2.4.0 relied on deprecated GCR image requiring billing; v2.4.4+ is required for public repository scanning.
 - **Policy Scopes**: Must maintain Tapster-specific scopes (`core`, `fluent`, `launcher`, `tray`, `macro`, `packaging`, `tapster`) across `policy.yml` and `tools/lint_commits.py`.
+- **Dependabot Grouping**: Configure grouped updates (`groups: github-actions`, `groups: nuget`) in `.github/dependabot.yml` to consolidate dependency bumps and avoid PR spamming.
+- **CodeQL Float Conversion**: For progress or ratios, perform multiplication directly in floating-point (`(double)a * b`) instead of casting integer multiplication `(double)(a * b)` to eliminate CodeQL CWE-190 warnings.
+- **CodeQL Path Exclusion**: `github/codeql-action/init` requires `config-file: ./.github/codeql/codeql-config.yml` to specify `paths-ignore` for compiler-generated code (`obj/**`, `bin/**`).
+- **PR Iteration Hygiene**: Avoid excessive force-pushing during active PR reviews to preserve review thread context; append atomic fix commits instead and squash at merge.
