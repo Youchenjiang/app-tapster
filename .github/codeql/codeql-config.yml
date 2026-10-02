@@ -4,18 +4,3 @@ name: "CodeQL Configuration"
 paths-ignore:
   - "**/obj/**"
   - "**/bin/**"
-
-# Suppress false positives from compiler-generated XAML artifacts and expected Win32 P/Invoke declarations
-query-filters:
-  - exclude:
-      id: cs/useless-assignment-to-local
-  - exclude:
-      id: cs/useless-cast-to-self
-  - exclude:
-      id: cs/useless-upcast
-  - exclude:
-      id: cs/call-to-unmanaged-code
-  - exclude:
-      id: cs/unmanaged-code
-  - exclude:
-      id: cs/missed-readonly-modifier
