@@ -10,7 +10,8 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-permissions: read-all
+permissions:
+  contents: read
 
 env:
   DOTNET_VERSION: '8.0.x'
