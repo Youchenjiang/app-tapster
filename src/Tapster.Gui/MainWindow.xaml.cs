@@ -432,13 +432,14 @@ public partial class MainWindow : Window
         }
 
         double interval = double.TryParse(TypeIntervalBox.Text, out double i) ? i : 0.03;
+        var token = _cts?.Token ?? CancellationToken.None;
 
         Task.Run(() =>
         {
             Keyboard.ReleaseAllModifiers();
             foreach (var c in text)
             {
-                if (_cts?.Token.IsCancellationRequested ?? true) break;
+                if (token.IsCancellationRequested) break;
                 Keyboard.Type(c);
                 if (interval > 0) Thread.Sleep((int)(interval * 1000));
             }
@@ -464,6 +465,8 @@ public partial class MainWindow : Window
             return;
         }
 
+        var token = _cts?.Token ?? CancellationToken.None;
+
         Task.Run(() =>
         {
             Keyboard.ReleaseAllModifiers();
@@ -475,7 +478,7 @@ public partial class MainWindow : Window
             });
 
             var start = DateTime.UtcNow;
-            while (_cts is { Token.IsCancellationRequested: false })
+            while (!token.IsCancellationRequested)
             {
                 if (duration > 0)
                 {
@@ -524,18 +527,19 @@ public partial class MainWindow : Window
         }
 
         bool loop = RotationLoopCheck.IsChecked == true;
+        var token = _cts?.Token ?? CancellationToken.None;
 
         Task.Run(() =>
         {
             Keyboard.ReleaseAllModifiers();
             int round = 0;
 
-            while (_cts is { Token.IsCancellationRequested: false })
+            while (!token.IsCancellationRequested)
             {
                 round++;
                 for (int i = 0; i < steps.Count; i++)
                 {
-                    if (_cts?.Token.IsCancellationRequested ?? true) break;
+                    if (token.IsCancellationRequested) break;
 
                     var (combo, dur) = steps[i];
                     StatusText.Dispatcher.Invoke(() =>
@@ -546,7 +550,7 @@ public partial class MainWindow : Window
 
                     Keyboard.Press(combo);
                     var start = DateTime.UtcNow;
-                    while (_cts is { Token.IsCancellationRequested: false })
+                    while (!token.IsCancellationRequested)
                     {
                         var elapsed = (DateTime.UtcNow - start).TotalSeconds;
                         if (elapsed >= dur) break;
@@ -578,13 +582,14 @@ public partial class MainWindow : Window
         int intervalMs = int.TryParse(ClickIntervalBox.Text, out int interval) ? interval : 100;
         int count = CountLimited.IsChecked == true && int.TryParse(ClickCountBox.Text, out int c) ? c : 0;
         string? holdKey = string.IsNullOrWhiteSpace(HoldKeyBox.Text) ? null : HoldKeyBox.Text;
+        var token = _cts?.Token ?? CancellationToken.None;
 
         Task.Run(() =>
         {
             if (holdKey != null) Keyboard.Press(holdKey);
             int clicked = 0;
 
-            while (_cts is { Token.IsCancellationRequested: false })
+            while (!token.IsCancellationRequested)
             {
                 Mouse.Click(button);
                 clicked++;
@@ -621,6 +626,7 @@ public partial class MainWindow : Window
         double speed = ReplaySpeedSlider.Value;
         bool loop = LoopRepeat.IsChecked == true;
         int loopCount = loop && int.TryParse(ReplayCountBox.Text, out int lc) ? lc : 1;
+        var token = _cts?.Token ?? CancellationToken.None;
 
         Task.Run(() =>
         {
@@ -630,11 +636,11 @@ public partial class MainWindow : Window
 
             for (int loopIdx = 0; loopIdx < loops; loopIdx++)
             {
-                if (_cts?.Token.IsCancellationRequested ?? true) break;
+                if (token.IsCancellationRequested) break;
 
                 for (int i = 0; i < total; i++)
                 {
-                    if (_cts?.Token.IsCancellationRequested ?? true) break;
+                    if (token.IsCancellationRequested) break;
 
                     var action = actions[i];
                     if (i > 0)
