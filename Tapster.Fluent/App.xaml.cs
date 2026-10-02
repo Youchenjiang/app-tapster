@@ -62,9 +62,12 @@ public partial class App : Application
     {
         try
         {
-            string path = Path.Combine(Path.GetTempPath(), "tapster_crash.log");
+            string path = Path.Join(Path.GetTempPath(), "tapster_crash.log");
             File.AppendAllText(path, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to write crash log: {ex.Message}");
+        }
     }
 }

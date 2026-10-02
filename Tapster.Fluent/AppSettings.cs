@@ -10,11 +10,11 @@ public class AppSettings
     private const string REG_RUN_KEY = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string APP_NAME = "Tapster";
 
-    private static readonly string SettingsFolder = Path.Combine(
+    private static readonly string SettingsFolder = Path.Join(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Tapster");
 
-    private static readonly string SettingsFilePath = Path.Combine(SettingsFolder, "settings.json");
+    private static readonly string SettingsFilePath = Path.Join(SettingsFolder, "settings.json");
 
     private static AppSettings? _instance;
     public static AppSettings Current => _instance ??= Load();
@@ -32,8 +32,9 @@ public class AppSettings
                 using var key = Registry.CurrentUser.OpenSubKey(REG_RUN_KEY, false);
                 return key?.GetValue(APP_NAME) != null;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Failed to read autorun registry key: {ex.Message}");
                 return false;
             }
         }
@@ -46,7 +47,7 @@ public class AppSettings
 
                 if (value)
                 {
-                    string exePath = Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "Tapster.Fluent.exe");
+                    string exePath = Environment.ProcessPath ?? Path.Join(AppContext.BaseDirectory, "Tapster.Fluent.exe");
                     key.SetValue(APP_NAME, $"\"{exePath}\" --tray");
                 }
                 else
@@ -54,9 +55,9 @@ public class AppSettings
                     key.DeleteValue(APP_NAME, false);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignored
+                System.Diagnostics.Debug.WriteLine($"Failed to write autorun registry key: {ex.Message}");
             }
         }
     }
@@ -72,7 +73,10 @@ public class AppSettings
                 if (settings != null) return settings;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load settings file: {ex.Message}");
+        }
 
         return new AppSettings();
     }
@@ -89,6 +93,9 @@ public class AppSettings
             string json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(SettingsFilePath, json);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to save settings file: {ex.Message}");
+        }
     }
 }
