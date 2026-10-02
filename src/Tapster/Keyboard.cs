@@ -77,7 +77,14 @@ public static partial class Keyboard
         string[] mods = ["shift", "ctrl", "alt", "windows"];
         foreach (var mod in mods)
         {
-            try { Release(mod); } catch { }
+            try
+            {
+                Release(mod);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to release modifier key {mod}: {ex.Message}");
+            }
         }
     }
 

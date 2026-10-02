@@ -207,10 +207,10 @@ internal static class Program
     {
         for (int i = 0; i < args.Length - 1; i++)
         {
-            if (args[i].Equals(name, StringComparison.OrdinalIgnoreCase))
+            if (args[i].Equals(name, StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(args[i + 1], out int val))
             {
-                if (int.TryParse(args[i + 1], out int val))
-                    return val;
+                return val;
             }
         }
         return defaultValue;
@@ -220,10 +220,10 @@ internal static class Program
     {
         for (int i = 0; i < args.Length - 1; i++)
         {
-            if (args[i].Equals(name, StringComparison.OrdinalIgnoreCase))
+            if (args[i].Equals(name, StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(args[i + 1], out int val))
             {
-                if (int.TryParse(args[i + 1], out int val))
-                    return val;
+                return val;
             }
         }
         return null;

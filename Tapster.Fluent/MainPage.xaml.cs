@@ -226,7 +226,7 @@ public sealed partial class MainPage : Page
     {
         try
         {
-            string folder = System.IO.Path.Combine(
+            string folder = System.IO.Path.Join(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "Tapster");
             if (!System.IO.Directory.Exists(folder))
@@ -239,7 +239,10 @@ public sealed partial class MainPage : Page
                 UseShellExecute = true
             });
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to open settings folder: {ex.Message}");
+        }
     }
 
     private void StartOnBootToggle_Toggled(object sender, RoutedEventArgs e)

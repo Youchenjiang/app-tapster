@@ -26,8 +26,8 @@ public sealed partial class MainWindow : Window
         // Set window & taskbar icon — must use .ico; .png is not supported by SetIcon()
         string[] iconCandidates =
         [
-            Path.Combine(AppContext.BaseDirectory, "app.ico"),
-            Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"),
+            Path.Join(AppContext.BaseDirectory, "app.ico"),
+            Path.Join(AppContext.BaseDirectory, "Assets", "AppIcon.ico"),
         ];
         foreach (var candidate in iconCandidates)
         {

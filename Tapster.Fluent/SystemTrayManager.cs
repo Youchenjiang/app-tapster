@@ -42,10 +42,10 @@ public sealed class SystemTrayManager : IDisposable
 
     private void InitializeTrayIcon()
     {
-        string iconPath = Path.Combine(AppContext.BaseDirectory, "app.ico");
+        string iconPath = Path.Join(AppContext.BaseDirectory, "app.ico");
         if (!File.Exists(iconPath))
         {
-            iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
+            iconPath = Path.Join(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
         }
 
         if (File.Exists(iconPath))
