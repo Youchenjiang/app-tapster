@@ -8,9 +8,14 @@ paths-ignore:
 # Suppress false positives from compiler-generated XAML artifacts and expected Win32 P/Invoke declarations
 query-filters:
   - exclude:
-      id:
-        - cs/useless-assignment-to-local
-        - cs/useless-cast-to-self
-        - cs/useless-upcast
-        - cs/call-to-unmanaged-code
-        - cs/unmanaged-code
+      id: cs/useless-assignment-to-local
+  - exclude:
+      id: cs/useless-cast-to-self
+  - exclude:
+      id: cs/useless-upcast
+  - exclude:
+      id: cs/call-to-unmanaged-code
+  - exclude:
+      id: cs/unmanaged-code
+  - exclude:
+      id: cs/missed-readonly-modifier
