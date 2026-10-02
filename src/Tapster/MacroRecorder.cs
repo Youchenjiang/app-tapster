@@ -173,8 +173,15 @@ public class MacroRecorder
         {
             System.Diagnostics.Debug.WriteLine($"Failed to join recording thread: {ex.Message}");
         }
-        _recordThread = null;
-        _stopwatch.Stop();
+        catch (ThreadInterruptedException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to join recording thread: {ex.Message}");
+        }
+        finally
+        {
+            _recordThread = null;
+            _stopwatch.Stop();
+        }
     }
 
     public void Clear()
