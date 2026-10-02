@@ -650,7 +650,9 @@ public partial class MainWindow : Window
                         Mouse.ClickAt(action.X, action.Y, action.Button);
                     }
 
-                    var progress = (double)(loopIdx * total + i + 1) / (loops * total) * 100;
+                    double currentStep = (double)loopIdx * total + i + 1;
+                    double totalSteps = (double)loops * total;
+                    double progress = (currentStep / totalSteps) * 100.0;
                     ProgressBar.Dispatcher.Invoke(() => ProgressBar.Value = progress);
                 }
             }

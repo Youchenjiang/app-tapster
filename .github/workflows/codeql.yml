@@ -9,7 +9,7 @@ on:
     - cron: "0 2 * * 1" # Every Monday at 02:00 UTC
   workflow_dispatch:
 
-permissions: read-all
+permissions: {}  # default deny-all; job-level overrides below
 
 jobs:
   analyze:
@@ -34,6 +34,7 @@ jobs:
         with:
           languages: "csharp"
           queries: security-extended,security-and-quality
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: "Build Solution"
         run: |

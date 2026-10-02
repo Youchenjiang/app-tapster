@@ -8,8 +8,8 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-# Declare default least-privilege permissions
-permissions: read-all
+# Default deny-all; the job below overrides with exactly the permissions it needs
+permissions: {}  # deny-all by default; job-level overrides below
 
 jobs:
   analysis:

@@ -1,0 +1,6 @@
+name: "CodeQL Configuration"
+
+# Exclude compiler-generated files from CodeQL analysis
+paths-ignore:
+  - "**/obj/**"
+  - "**/bin/**"
