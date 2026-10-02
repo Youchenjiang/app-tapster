@@ -8,7 +8,11 @@ updates:
     commit-message:
       prefix: "chore(ci)"
       include: "scope"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   # Maintain NuGet package dependencies for .NET projects
   - package-ecosystem: "nuget"
@@ -18,4 +22,8 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    groups:
+      nuget:
+        patterns:
+          - "*"

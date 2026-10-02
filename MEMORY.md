@@ -16,6 +16,7 @@
 ## 📋 Current Active Tasks
 - [x] Initial project setup & scaffolding completed (`project-scaffold` desktop preset).
 - [x] Fixed GitHub Actions workflows (`setup-dotnet` commit SHA, `scorecard-action` v2.4.4, dependabot policy exemption).
+- [x] Deployed governance scripts & workflows via PR #19 (merged into `main`).
 - [ ] Phase 3: Macro JSON schema export/import (`P3-1`).
 - [ ] Phase 3: Humanized jitter delay simulation (`P3-5`).
 - [ ] Phase 4: Multi-language i18n (`resw` for zh-TW, en-US, zh-CN, ja-JP, ko-KR) (`P4-1`).
