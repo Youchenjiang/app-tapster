@@ -142,16 +142,14 @@ public partial class MainWindow : Window
         {
             if (child is StackPanel row)
             {
-                foreach (var btn in row.Children.OfType<Button>())
+                foreach (var btn in row.Children.OfType<Button>().Where(b => b.Tag is string))
                 {
-                    if (btn.Tag is string vkName)
-                    {
-                        btn.Style = _selectedKeys.Contains(vkName)
-                            ? (Style)FindResource("ActiveKeyButton")
-                            : vkName is "ctrl" or "alt" or "shift" or "lwin"
-                                ? (Style)FindResource("ModifierKeyButton")
-                                : (Style)FindResource("KeyButton");
-                    }
+                    string vkName = (string)btn.Tag;
+                    btn.Style = _selectedKeys.Contains(vkName)
+                        ? (Style)FindResource("ActiveKeyButton")
+                        : vkName is "ctrl" or "alt" or "shift" or "lwin"
+                            ? (Style)FindResource("ModifierKeyButton")
+                            : (Style)FindResource("KeyButton");
                 }
             }
         }
@@ -440,7 +438,7 @@ public partial class MainWindow : Window
             Keyboard.ReleaseAllModifiers();
             foreach (var c in text)
             {
-                if (_cts.Token.IsCancellationRequested) break;
+                if (_cts?.Token.IsCancellationRequested ?? true) break;
                 Keyboard.Type(c);
                 if (interval > 0) Thread.Sleep((int)(interval * 1000));
             }
@@ -477,7 +475,7 @@ public partial class MainWindow : Window
             });
 
             var start = DateTime.UtcNow;
-            while (!_cts.Token.IsCancellationRequested)
+            while (_cts is { Token.IsCancellationRequested: false })
             {
                 if (duration > 0)
                 {
@@ -532,12 +530,12 @@ public partial class MainWindow : Window
             Keyboard.ReleaseAllModifiers();
             int round = 0;
 
-            while (!_cts.Token.IsCancellationRequested)
+            while (_cts is { Token.IsCancellationRequested: false })
             {
                 round++;
                 for (int i = 0; i < steps.Count; i++)
                 {
-                    if (_cts.Token.IsCancellationRequested) break;
+                    if (_cts?.Token.IsCancellationRequested ?? true) break;
 
                     var (combo, dur) = steps[i];
                     StatusText.Dispatcher.Invoke(() =>
@@ -548,7 +546,7 @@ public partial class MainWindow : Window
 
                     Keyboard.Press(combo);
                     var start = DateTime.UtcNow;
-                    while (!_cts.Token.IsCancellationRequested)
+                    while (_cts is { Token.IsCancellationRequested: false })
                     {
                         var elapsed = (DateTime.UtcNow - start).TotalSeconds;
                         if (elapsed >= dur) break;
@@ -586,7 +584,7 @@ public partial class MainWindow : Window
             if (holdKey != null) Keyboard.Press(holdKey);
             int clicked = 0;
 
-            while (!_cts.Token.IsCancellationRequested)
+            while (_cts is { Token.IsCancellationRequested: false })
             {
                 Mouse.Click(button);
                 clicked++;
@@ -632,11 +630,11 @@ public partial class MainWindow : Window
 
             for (int loopIdx = 0; loopIdx < loops; loopIdx++)
             {
-                if (_cts.Token.IsCancellationRequested) break;
+                if (_cts?.Token.IsCancellationRequested ?? true) break;
 
                 for (int i = 0; i < total; i++)
                 {
-                    if (_cts.Token.IsCancellationRequested) break;
+                    if (_cts?.Token.IsCancellationRequested ?? true) break;
 
                     var action = actions[i];
                     if (i > 0)
