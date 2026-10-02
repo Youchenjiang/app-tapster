@@ -1,7 +1,13 @@
 # <type>(<scope>): <subject> (max 72 chars, no trailing period)
+# Allowed types: feat, fix, refactor, docs, test, chore, style, perf, security
+# Allowed scopes: core, fluent, launcher, cli, msix, tray, macro, docs, ci, deps, store, agent, packaging, build, tapster
+# Example: feat(core): implement robust async retry pipeline
 #
-# Allowed types : feat | fix | refactor | docs | test | chore | style | perf | security
-# Allowed scopes: core | fluent | launcher | cli | msix | tray | macro | docs | ci | deps | store | agent | packaging | build | tapster
+# 1. Detail change item 1 in English with technical reasoning.
+# 2. Detail change item 2 in English.
 #
-# 1. First key technical change.
-# 2. Second key technical change.
+# ---
+# Checklist:
+# - [ ] Atomic commit (passed revert test)
+# - [ ] Commit header <= 72 characters without trailing period
+# - [ ] Numbered technical body in English
