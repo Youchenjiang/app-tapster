@@ -1,0 +1,8 @@
+{
+  "TenantId": "00000000-0000-0000-0000-000000000000",
+  "ClientId": "00000000-0000-0000-0000-000000000000",
+  "ClientSecret": "YOUR_AZURE_AD_CLIENT_SECRET",
+  "SellerId": "00000000",
+  "ProductId": "9XXXXXXXXXXX",
+  "MsixPath": "publish/Tapster-v1.1.0.0.msix"
+}
