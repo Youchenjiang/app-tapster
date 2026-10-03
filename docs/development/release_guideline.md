@@ -72,7 +72,7 @@ $$\text{Version} = \text{Major} . \text{Minor} . \text{Patch} . \mathbf{0}$$
 當發布新版本時，以下檔案必須同步保持最新狀態：
 
 1. **`Directory.Build.props`**：全域 `<Version>`，影響所有編譯出的 `.dll` 與 `.exe`。
-2. **`packaging/msix/AppxManifest.xml`**：MSIX 套件識別版本 `<Identity Version="..." />`。
+2. **`packaging/msix/AppxManifest.xml` 與 `Tapster.Fluent/Package.appxmanifest`**：MSIX 套件識別版本 `<Identity Version="..." />`（前者為 Store MSIX 打包之權威來源，後者由 `bump_version.ps1` 自動同步對齊供 IDE 打包）。
 3. **`CHANGELOG.md`**：記載使用者可見的變更摘要。
 4. **`docs/StoreListing_*.md`**：五種語言商店送審文本。
 

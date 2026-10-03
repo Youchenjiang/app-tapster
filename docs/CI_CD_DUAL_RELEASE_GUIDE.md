@@ -11,7 +11,7 @@ Tapster 採取現代 Windows 桌面軟體的雙軌發布架構，滿足不同使
 | 產物名稱 | 發布目標 | 封裝模式 | 預估大小 | 特點與適用對象 |
 | :--- | :--- | :--- | :--- | :--- |
 | **`Tapster.exe`** | GitHub Releases / 官網免安裝版 | Standalone Single-File (Embedded Payload) | **~46 MB** | **真正純單一檔免安裝**。內嵌執行階段與 Fluent Engine，隨身碟即插即用，適合便攜與進階使用者。 |
-| **`Tapster-vX.Y.Z.msix`** | Microsoft Store / 側載安裝 | Framework-Dependent (Windows App SDK) | **~25 MB** | **微軟商店標準封裝**。由系統自動維護 Windows App Runtime 相依性，具備沙盒隔離與差分增量更新。 |
+| **`Tapster-vX.Y.Z.msix`** | Microsoft Store / 側載安裝 | WinUI 3 Packaged (Windows App SDK) | **~25 MB** | **微軟商店標準封裝**。採用 WindowsAppSDK 打包模式，具備 runFullTrust 存取權限、沙盒隔離與差分增量更新。 |
 
 ---
 
@@ -27,8 +27,8 @@ Tapster 採取現代 Windows 桌面軟體的雙軌發布架構，滿足不同使
    - 產出純單檔 `publish/Tapster.exe` 並上傳至 GitHub Release 附件。
 3. **建置 MSIX 現代安裝套件**：
    - 執行 `powershell -File scripts/build_msix.ps1`。
-   - 組裝 `packaging/msix/Layout`，對齊 `Package.appxmanifest` 依賴版本與中繼資料。
-   - 使用自簽憑證（本機/CI 測試）或微軟商店 Trusted Signing 進行簽署，產出 `Tapster-vX.Y.Z.msix`。
+   - 組裝 `packaging/msix/Layout`，對齊 `packaging/msix/AppxManifest.xml` 依賴版本與中繼資料。
+   - 使用自簽憑證（本機/CI 測試）或微軟商店 Trusted Signing 進行簽署，動態產出 `publish/Tapster-vX.Y.Z.msix`。
 4. **發布到微軟商店 (Microsoft Store Partner Center)**：
    - 可搭配微軟合作夥伴 API 提交工具自動將 MSIX 套件與多語系中繼資料上傳審核。
 
