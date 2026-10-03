@@ -1,0 +1,22 @@
+#!/bin/sh
+# Tapster pre-push hook (versioned in-repo)
+# Configured via: git config core.hooksPath scripts/hooks
+# (or run powershell -File scripts/setup_hooks.ps1)
+
+set -e
+
+echo "[pre-push] Auditing commits against policy and conventional commit rules..."
+python tools/lint_commits.py --base origin/main || {
+    echo "[ERROR] Commit policy violation detected. Aborting push." >&2
+    exit 1
+}
+
+echo "[pre-push] Running Tapster test suite (Release)..."
+dotnet test Tapster.sln -c Release || {
+    dotnet build-server shutdown >/dev/null 2>&1 || true
+    echo "[ERROR] Unit test suite failed. Aborting push." >&2
+    exit 1
+}
+
+dotnet build-server shutdown >/dev/null 2>&1 || true
+echo "All pre-push verifications passed."
