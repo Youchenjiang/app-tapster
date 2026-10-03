@@ -36,6 +36,11 @@ jobs:
         run: |
           dotnet build Tapster.sln -c Release
 
+      - name: "Run Unit Tests"
+        shell: pwsh
+        run: |
+          dotnet test Tapster.sln --no-build -c Release --logger "console;verbosity=normal"
+
       - name: "Test Portable Single-File Packaging"
         shell: pwsh
         run: |

@@ -1,0 +1,105 @@
+using Tapster;
+using Xunit;
+
+namespace Tapster.Core.Tests;
+
+public class KeyboardTests
+{
+    [Theory]
+    [InlineData(0x41, "a")]
+    [InlineData(0x42, "b")]
+    [InlineData(0x4D, "m")]
+    [InlineData(0x59, "y")]
+    [InlineData(0x5A, "z")]
+    public void GetKeyName_AlphabetKeys_ReturnsLowerCaseLetter(int vk, string expected)
+    {
+        var result = Keyboard.GetKeyName(vk);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData(0x30, "0")]
+    [InlineData(0x31, "1")]
+    [InlineData(0x35, "5")]
+    [InlineData(0x39, "9")]
+    public void GetKeyName_DigitKeys_ReturnsDigitString(int vk, string expected)
+    {
+        var result = Keyboard.GetKeyName(vk);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData(0x70, "f1")]
+    [InlineData(0x71, "f2")]
+    [InlineData(0x75, "f6")]
+    [InlineData(0x7A, "f11")]
+    [InlineData(0x7B, "f12")]
+    public void GetKeyName_FunctionKeys_ReturnsFNumberedString(int vk, string expected)
+    {
+        var result = Keyboard.GetKeyName(vk);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData(0x10, "shift")]
+    [InlineData(0xA0, "shift")]
+    [InlineData(0xA1, "shift")]
+    [InlineData(0x11, "ctrl")]
+    [InlineData(0xA2, "ctrl")]
+    [InlineData(0xA3, "ctrl")]
+    [InlineData(0x12, "alt")]
+    [InlineData(0xA4, "alt")]
+    [InlineData(0xA5, "alt")]
+    [InlineData(0x5B, "win")]
+    [InlineData(0x5C, "win")]
+    public void GetKeyName_ModifierKeys_ReturnsCanonicalName(int vk, string expected)
+    {
+        var result = Keyboard.GetKeyName(vk);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData(0x0D, "enter")]
+    [InlineData(0x20, "space")]
+    [InlineData(0x09, "tab")]
+    [InlineData(0x1B, "esc")]
+    [InlineData(0x08, "backspace")]
+    [InlineData(0x2E, "delete")]
+    [InlineData(0x14, "capslock")]
+    [InlineData(0x26, "up")]
+    [InlineData(0x28, "down")]
+    [InlineData(0x25, "left")]
+    [InlineData(0x27, "right")]
+    public void GetKeyName_NavigationAndControlKeys_ReturnsFriendlyName(int vk, string expected)
+    {
+        var result = Keyboard.GetKeyName(vk);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData(0xC0, "`")]
+    [InlineData(0xBD, "-")]
+    [InlineData(0xBB, "=")]
+    [InlineData(0xDB, "[")]
+    [InlineData(0xDD, "]")]
+    [InlineData(0xDC, "\\")]
+    [InlineData(0xBA, ";")]
+    [InlineData(0xDE, "'")]
+    [InlineData(0xBC, ",")]
+    [InlineData(0xBE, ".")]
+    [InlineData(0xBF, "/")]
+    public void GetKeyName_PunctuationKeys_ReturnsPunctuationSymbol(int vk, string expected)
+    {
+        var result = Keyboard.GetKeyName(vk);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData(0x01, "vk_1")]
+    [InlineData(0xFF, "vk_255")]
+    public void GetKeyName_UnmappedVirtualKey_ReturnsPrefixedVkFormat(int vk, string expected)
+    {
+        var result = Keyboard.GetKeyName(vk);
+        Assert.Equal(expected, result);
+    }
+}
