@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0.1] - 2026-10-03
+
+### Fixed
+- Fixed MSIX launch crash caused by duplicate WinUI 3 runtime binaries and unpackaged packaging flags conflicting with `Microsoft.WindowsAppRuntime.2` (`CoreMessagingXP.dll` `0xc0000602`).
+
+### Changed
+- Parameterized `WindowsPackageType` and `WindowsAppSDKSelfContained` in `Tapster.Fluent.csproj` to support dynamic overrides across MSIX and Portable builds.
+- Updated `build_msix.ps1` to publish with `-p:WindowsPackageType=MSIX -p:WindowsAppSDKSelfContained=false`.
+- Explicitly pinned `build_portable.ps1` to `-p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true`.
+
 All notable changes to **Tapster** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

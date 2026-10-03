@@ -31,6 +31,8 @@ try {
         --self-contained true `
         -p:PublishTrimmed=true `
         -p:TrimMode=partial `
+        -p:WindowsPackageType=None `
+        -p:WindowsAppSDKSelfContained=true `
         -o $tempFluent
 
     Assert-NativeSuccess
