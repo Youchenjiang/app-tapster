@@ -20,19 +20,19 @@
 - [x] Resolved CodeQL security alerts & WinUI false positives via PR #23 & #24.
 - [x] Refactored C# code quality & eliminated SonarCloud smells via PR #25.
 - [x] Merged Dependabot grouped update PRs #21 (NuGet) and #22 (GitHub Actions).
-- [ ] **Clickra Alignment - Phase 1: Architecture & Developer Documentation (`docs/`)**
-  - [ ] Add `docs/ARCHITECTURE.md` & `docs/ARCHITECTURE_AND_FRAMEWORK.md`
-  - [ ] Add `LOCAL_BUILD_NOTES.md` (environment setup, build quirks, developer certs)
-  - [ ] Add `docs/WINDOWS_COMPATIBILITY_AND_MSIX_SANDBOX.md` & `docs/TROUBLESHOOTING_AND_RESOLUTIONS.md`
-  - [ ] Add multilingual `docs/StoreListing_*.md` (EN, ZH, ZH-CN, JA, KO)
-- [ ] **Clickra Alignment - Phase 2: Quality Config & Developer Tooling (`scripts/`)**
-  - [ ] Add `.deepsource.toml` for static code health analysis
-  - [ ] Add `scripts/bump_version.ps1` for synchronized SemVer bumps
-  - [ ] Add `scripts/setup/create_dev_cert.ps1` for local certificate generation
-- [ ] **Clickra Alignment - Phase 3: Core Unit Tests & CI Automation (`tests/`)**
-  - [ ] Scaffold `tests/Tapster.Core.Tests` (xUnit test project linked to `Tapster.sln`)
-  - [ ] Add unit tests for key parsing, action recording/playback models, and speed calculations
-  - [ ] Integrate `dotnet test` into `.github/workflows/ci.yml`
+- [x] **Clickra Alignment - Phase 1: Architecture & Developer Documentation (`docs/`)** (PR #26)
+  - [x] Add `docs/ARCHITECTURE.md` & `docs/ARCHITECTURE_AND_FRAMEWORK.md`
+  - [x] Add `LOCAL_BUILD_NOTES.md` (environment setup, build quirks, developer certs)
+  - [x] Add `docs/WINDOWS_COMPATIBILITY_AND_MSIX_SANDBOX.md` & `docs/TROUBLESHOOTING_AND_RESOLUTIONS.md`
+  - [x] Add multilingual `docs/StoreListing_*.md` (EN, ZH, ZH-CN, JA, KO)
+- [x] **Clickra Alignment - Phase 2: Quality Config & Developer Tooling (`scripts/`)** (PR #27)
+  - [x] Add `.deepsource.toml` for static code health analysis
+  - [x] Add `scripts/bump_version.ps1` for synchronized SemVer bumps
+  - [x] Add `scripts/setup/create_dev_cert.ps1` for local certificate generation
+- [x] **Clickra Alignment - Phase 3: Core Unit Tests & CI Automation (`tests/`)** (PR #28)
+  - [x] Scaffold `tests/Tapster.Core.Tests` (xUnit test project linked to `Tapster.sln`)
+  - [x] Add unit tests for key parsing, action recording/playback models, and speed calculations
+  - [x] Integrate `dotnet test` into `.github/workflows/ci.yml`
 
 ---
 
