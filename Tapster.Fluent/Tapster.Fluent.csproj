@@ -12,7 +12,7 @@
     <UseWinUI>true</UseWinUI>
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
-    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsPackageType Condition="'$(WindowsPackageType)' == ''">None</WindowsPackageType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Authors>Youchen Jiang</Authors>
@@ -20,7 +20,8 @@
     <ApplicationIcon>app.ico</ApplicationIcon>
     <Win32Icon>app.ico</Win32Icon>
     <AppxManifestMetadataIsRequired>false</AppxManifestMetadataIsRequired>
-    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <WindowsAppSDKSelfContained Condition="'$(WindowsAppSDKSelfContained)' == ''">true</WindowsAppSDKSelfContained>
+    <WindowsAppSdkDeploymentManagerInitialize Condition="'$(WindowsAppSdkDeploymentManagerInitialize)' == ''">false</WindowsAppSdkDeploymentManagerInitialize>
   </PropertyGroup>
 
   <ItemGroup>

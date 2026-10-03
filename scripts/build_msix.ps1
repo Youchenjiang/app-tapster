@@ -34,7 +34,10 @@ try {
     dotnet publish "$root/Tapster.Fluent/Tapster.Fluent.csproj" `
         -c Release `
         -r win-x64 `
-        --self-contained false
+        --self-contained false `
+        -p:WindowsPackageType=MSIX `
+        -p:WindowsAppSDKSelfContained=false `
+        -p:WindowsAppSdkDeploymentManagerInitialize=false
 
     Assert-NativeSuccess
 
@@ -80,7 +83,6 @@ try {
     if (Test-Path $runtimeSource) {
         $runtimeTarget = "$layoutDir/runtimes/win-x64/native"
         New-Item -ItemType Directory -Path $runtimeTarget -Force | Out-Null
-        Copy-Item "$runtimeSource/Microsoft.WindowsAppRuntime.Bootstrap.dll" "$runtimeTarget/" -ErrorAction SilentlyContinue
         Copy-Item "$runtimeSource/WebView2Loader.dll" "$runtimeTarget/" -ErrorAction SilentlyContinue
     }
 
