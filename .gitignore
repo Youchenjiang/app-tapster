@@ -31,3 +31,8 @@ Desktop.ini
 # Publish profiles & secrets
 Properties/PublishProfiles/
 scripts/local_store_config.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo

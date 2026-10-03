@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions: {}  # deny-all by default; job-level grants contents: write for release upload
 
@@ -21,6 +22,16 @@ jobs:
     steps:
       - name: "Checkout Code"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: "Detect Release Trigger"
+        id: release-trigger
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: "Setup .NET SDK"
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -43,12 +54,56 @@ jobs:
         run: |
           dotnet build-server shutdown
 
+      - name: "Fetch Merged Pull Request Description"
+        if: steps.release-trigger.outputs.is_release == 'true'
+        id: get_pr_desc
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $commitSha = "${{ github.sha }}"
+          Write-Host "Fetching PR for commit: $commitSha"
+          $prBody = ""
+          try {
+              $pullsJson = gh api "repos/${{ github.repository }}/commits/$commitSha/pulls"
+              $pulls = $pullsJson | ConvertFrom-Json
+              if ($pulls -and $pulls.Count -gt 0) {
+                  $prBody = $pulls[0].body
+                  Write-Host "Found PR #${($pulls[0].number)}: $($pulls[0].title)"
+              }
+          } catch {}
+          if ([string]::IsNullOrWhiteSpace($prBody)) {
+              Write-Host "No direct PR found for commit. Fetching the last merged PR..."
+              try {
+                  $lastPrJson = gh pr list --state merged --limit 1 --json body,number,title
+                  $lastPr = $lastPrJson | ConvertFrom-Json
+                  if ($lastPr -and $lastPr.Count -gt 0) {
+                      $prBody = $lastPr[0].body
+                      Write-Host "Found last merged PR #${($lastPr[0].number)}: $($lastPr[0].title)"
+                  }
+              } catch {}
+          }
+          if ([string]::IsNullOrWhiteSpace($prBody)) {
+              $prBody = "No release notes available."
+          }
+          $delimiter = [guid]::NewGuid().ToString()
+          "pr_body<<$delimiter" >> $env:GITHUB_OUTPUT
+          $prBody >> $env:GITHUB_OUTPUT
+          "$delimiter" >> $env:GITHUB_OUTPUT
+
       - name: "Create GitHub Release and Upload Artifacts"
+        if: steps.release-trigger.outputs.is_release == 'true'
         uses: softprops/action-gh-release@c062e08bd5328807fb31346cf098484c1b5142c5 # v2.2.1
         with:
           files: |
             publish/Tapster.exe
             publish/*.msix
-          generate_release_notes: true
+          body: |
+            ${{ steps.get_pr_desc.outputs.pr_body }}
+
+            ---
+            ### 📦 Installation
+            - **Portable Standalone**: 下載 `Tapster.exe`（單檔案綠色免安裝，零外部相依，點擊即用）。
+            - **Microsoft Store MSIX**: 下載 `Tapster-*.msix` 於 Windows 10/11 雙擊安裝，或待日後於 Microsoft Store 上架後取得以享有全自動無縫靜默更新。
           draft: false
           prerelease: false
