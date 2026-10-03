@@ -10,13 +10,9 @@ import sys
 import os
 import json
 import re
-import time
-import zipfile
-import io
 import urllib.request
 import urllib.parse
 import urllib.error
-import copy
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -40,35 +36,47 @@ def open_https(request, timeout=60):
         raise ValueError(f'Only HTTPS URLs are allowed: {target}')
     return urllib.request.urlopen(request, timeout=timeout)
 
-def load_store_config(config_path):
-    # Support environment variables as fallback
-    t_id = os.environ.get("STORE_TENANT_ID")
-    c_id = os.environ.get("STORE_CLIENT_ID")
-    c_sec = os.environ.get("STORE_CLIENT_SECRET")
-    p_id = os.environ.get("STORE_PRODUCT_ID")
-    m_path = os.environ.get("STORE_MSIX_PATH")
+def _find_latest_msix(repo_root):
+    publish_dir = os.path.join(repo_root, "publish")
+    if not os.path.exists(publish_dir):
+        return None
+    candidates = [
+        os.path.join(publish_dir, f)
+        for f in os.listdir(publish_dir)
+        if f.startswith("Tapster") and f.endswith(".msix")
+    ]
+    if candidates:
+        candidates.sort(key=os.path.getmtime, reverse=True)
+        return candidates[0]
+    return None
 
-    if os.path.exists(config_path):
-        with open(config_path, 'r', encoding='utf-8-sig') as f:
-            config = json.load(f)
-            t_id = t_id or config.get("TenantId") or config.get("tenantId")
-            c_id = c_id or config.get("ClientId") or config.get("clientId")
-            c_sec = c_sec or config.get("ClientSecret") or config.get("clientSecret")
-            p_id = p_id or config.get("ProductId") or config.get("productId")
-            m_path = m_path or config.get("MsixPath") or config.get("msixPath")
+def _read_config_file(config_path):
+    if not os.path.exists(config_path):
+        return {}
+    with open(config_path, 'r', encoding='utf-8-sig') as f:
+        return json.load(f)
+
+def load_store_config(config_path):
+    file_cfg = _read_config_file(config_path)
+
+    t_id = os.environ.get("STORE_TENANT_ID") or file_cfg.get("TenantId") or file_cfg.get("tenantId")
+    c_id = os.environ.get("STORE_CLIENT_ID") or file_cfg.get("ClientId") or file_cfg.get("clientId")
+    c_sec = os.environ.get("STORE_CLIENT_SECRET") or file_cfg.get("ClientSecret") or file_cfg.get("clientSecret")
+    p_id = os.environ.get("STORE_PRODUCT_ID") or file_cfg.get("ProductId") or file_cfg.get("productId")
+    m_path = os.environ.get("STORE_MSIX_PATH") or file_cfg.get("MsixPath") or file_cfg.get("msixPath")
 
     if not m_path:
-        # Fallback to newest MSIX in publish/
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        publish_dir = os.path.join(repo_root, "publish")
-        if os.path.exists(publish_dir):
-            candidates = [os.path.join(publish_dir, f) for f in os.listdir(publish_dir) if f.startswith("Tapster") and f.endswith(".msix")]
-            if candidates:
-                candidates.sort(key=os.path.getmtime, reverse=True)
-                m_path = candidates[0]
+        m_path = _find_latest_msix(repo_root)
 
     if is_dry_run():
-        return (t_id or "MOCK_TENANT", c_id or "MOCK_CLIENT", c_sec or "MOCK_SECRET", p_id or "MOCK_PRODUCT", m_path or "publish/Tapster.msix")
+        return (
+            t_id or "MOCK_TENANT",
+            c_id or "MOCK_CLIENT",
+            c_sec or "MOCK_SECRET",
+            p_id or "MOCK_PRODUCT",
+            m_path or "publish/Tapster.msix"
+        )
 
     if not all([t_id, c_id, c_sec, p_id, m_path]):
         print("Error: Missing credentials or paths. Please provide scripts/local_store_config.json or STORE_* environment variables.")
@@ -101,7 +109,7 @@ def parse_markdown_listing(file_path):
     if not os.path.exists(file_path):
         return None
     with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
+        lines = f.readlines()
 
     listing = {
         'description': '',
@@ -110,20 +118,31 @@ def parse_markdown_listing(file_path):
         'searchTerms': []
     }
 
-    # Extract sections
-    desc_match = re.search(r'##\s*(?:Description|產品描述|詳細描述|詳細說明|説明|설명)\s*\n(.*?)(?=\n##|\Z)', content, re.DOTALL)
-    if desc_match:
-        listing['description'] = desc_match.group(1).strip()
+    current_section = None
+    sections = {}
 
-    feat_match = re.search(r'##\s*(?:Features|主要功能|功能亮點|特徴|주요 기능)\s*\n(.*?)(?=\n##|\Z)', content, re.DOTALL)
-    if feat_match:
-        lines = feat_match.group(1).strip().split('\n')
-        features = [re.sub(r'^[-\*\d\.]+\s*', '', line).strip() for line in lines if line.strip()]
-        listing['features'] = features[:20]
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            current_section = stripped[3:].strip()
+            sections[current_section] = []
+        elif current_section:
+            sections[current_section].append(line)
 
-    notes_match = re.search(r'##\s*(?:What\'s new|更新日誌|新功能說明|新機能|새로운 기능)\s*\n(.*?)(?=\n##|\Z)', content, re.DOTALL)
-    if notes_match:
-        listing['releaseNotes'] = notes_match.group(1).strip()
+    desc_keys = ["description", "產品描述", "詳細描述", "詳細說明", "説明", "설명"]
+    feat_keys = ["features", "主要功能", "功能亮點", "特徴", "주요 기능"]
+    note_keys = ["what's new", "更新日誌", "新功能說明", "新機能", "새로운 기능"]
+
+    for header, sec_lines in sections.items():
+        text = "".join(sec_lines).strip()
+        header_lower = header.lower()
+        if any(k in header_lower for k in desc_keys):
+            listing['description'] = text
+        elif any(k in header_lower for k in feat_keys):
+            feature_items = [re.sub(r'^[-\*\d\.]+\s*', '', l).strip() for l in sec_lines if l.strip()]
+            listing['features'] = feature_items[:20]
+        elif any(k in header_lower for k in note_keys):
+            listing['releaseNotes'] = text
 
     return listing
 
@@ -142,7 +161,8 @@ def main():
     print(f"MSIX Path:  {m_path}")
 
     token = get_token(t_id, c_id, c_sec)
-    print("Token verified successfully.")
+    if token:
+        print("Token verified successfully.")
 
     # Parse multilingual docs
     docs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "docs"))
@@ -153,6 +173,10 @@ def main():
         if data:
             listings[locale] = data
             print(f"Parsed {locale} listing from StoreListing_{prefix}.md ({len(data['features'])} features)")
+
+    if not listings:
+        print("Error: No valid store listings found in docs/")
+        return 1
 
     print(f"\nReady to upload MSIX package and sync {len(listings)} locale listings to Partner Center.")
     if is_dry_run():
