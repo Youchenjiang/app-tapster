@@ -1,0 +1,14 @@
+version = 1
+
+exclude_patterns = [
+  "Tapster.Fluent/App.xaml.cs",
+  "Tapster.Fluent/MainWindow.xaml.cs"
+]
+
+test_patterns = [
+  "tests/**"
+]
+
+[[analyzers]]
+name = "csharp"
+enabled = true
