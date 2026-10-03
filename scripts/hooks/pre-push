@@ -1,0 +1,53 @@
+#!/bin/sh
+# Tapster pre-push hook (versioned in-repo)
+# Configured via: git config core.hooksPath scripts/hooks
+# (or run powershell -File scripts/setup_hooks.ps1)
+
+set -e
+
+remote="$1"
+url="$2"
+zero="0000000000000000000000000000000000000000"
+
+has_commits_to_audit=0
+
+# Read stdin fed by git: <local_ref> <local_oid> <remote_ref> <remote_oid>
+while read -r local_ref local_oid remote_ref remote_oid; do
+    # Skip branch deletion (local_oid is all zeros)
+    if [ "$local_oid" = "$zero" ]; then
+        continue
+    fi
+    has_commits_to_audit=1
+done
+
+# If all pushed refs are branch deletions, exit immediately
+if [ "$has_commits_to_audit" -eq 0 ]; then
+    exit 0
+fi
+
+# Determine base reference for commit auditing
+base_ref="${remote}/main"
+if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+    if git rev-parse --verify "main" >/dev/null 2>&1; then
+        base_ref="main"
+    else
+        echo "[ERROR] Cannot resolve base branch '$base_ref' or 'main' for commit auditing." >&2
+        exit 1
+    fi
+fi
+
+echo "[pre-push] Auditing commits against policy and conventional commit rules ($base_ref..HEAD)..."
+python tools/lint_commits.py --base "$base_ref" || {
+    echo "[ERROR] Commit policy violation detected. Aborting push." >&2
+    exit 1
+}
+
+echo "[pre-push] Running Tapster test suite (Release)..."
+dotnet test Tapster.sln -c Release || {
+    dotnet build-server shutdown >/dev/null 2>&1 || true
+    echo "[ERROR] Unit test suite failed. Aborting push." >&2
+    exit 1
+}
+
+dotnet build-server shutdown >/dev/null 2>&1 || true
+echo "All pre-push verifications passed."

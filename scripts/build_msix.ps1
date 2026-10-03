@@ -6,13 +6,15 @@ $root = "$PSScriptRoot/.."
 $packagingDir = "$root/packaging/msix"
 $layoutDir = "$packagingDir/Layout"
 $publishDir = "$root/publish"
-$msixPath = "$publishDir/Tapster-v1.1.0.msix"
+$propsContent = [System.IO.File]::ReadAllText("$root/Directory.Build.props", [System.Text.Encoding]::UTF8)
+$pkgVersion = if ($propsContent -match '<Version>(?<v>[\d\.]+)</Version>') { $Matches['v'] } else { "1.1.0.0" }
+$msixPath = "$publishDir/Tapster-v$pkgVersion.msix"
 $certPath = "$packagingDir/TapsterDev.pfx"
 
 Add-WindowsSdkToolsToPath
 
 Write-Host "==========================================" -ForegroundColor Cyan
-Write-Host " Building Tapster MSIX Package (v1.1.0)" -ForegroundColor Cyan
+Write-Host " Building Tapster MSIX Package (v$pkgVersion)" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
 try {

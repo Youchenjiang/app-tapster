@@ -44,13 +44,18 @@ $newProps = $content -replace '<Version>.*</Version>', "<Version>$newVersion</Ve
 [System.IO.File]::WriteAllText("$root/$propsPath", $newProps, $utf8NoBOM)
 Write-Host "[Props] Updated $propsPath -> $newVersion" -ForegroundColor Gray
 
-# 4. Update packaging/msix/AppxManifest.xml
-$manifestPath = "packaging/msix/AppxManifest.xml"
-if (Test-Path "$root/$manifestPath") {
-    $manifest = [System.IO.File]::ReadAllText("$root/$manifestPath", [System.Text.Encoding]::UTF8)
-    $newManifest = $manifest -replace '(?<=<Identity\s+[^>]*?Version=")([\d\.]+)', $newVersion
-    [System.IO.File]::WriteAllText("$root/$manifestPath", $newManifest, $utf8NoBOM)
-    Write-Host "[Manifest] Updated $manifestPath -> $newVersion" -ForegroundColor Gray
+# 4. Update packaging/msix/AppxManifest.xml and Tapster.Fluent/Package.appxmanifest
+$manifests = @(
+    "packaging/msix/AppxManifest.xml",
+    "Tapster.Fluent/Package.appxmanifest"
+)
+foreach ($mPath in $manifests) {
+    if (Test-Path "$root/$mPath") {
+        $manifest = [System.IO.File]::ReadAllText("$root/$mPath", [System.Text.Encoding]::UTF8)
+        $newManifest = $manifest -replace '(?<=<Identity\s+[^>]*?Version=")([\d\.]+)', $newVersion
+        [System.IO.File]::WriteAllText("$root/$mPath", $newManifest, $utf8NoBOM)
+        Write-Host "[Manifest] Updated $mPath -> $newVersion" -ForegroundColor Gray
+    }
 }
 
 # 5. Insert placeholder into CHANGELOG.md if present
