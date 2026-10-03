@@ -28,5 +28,6 @@ Desktop.ini
 # macOS
 .DS_Store
 
-# Publish profiles
+# Publish profiles & secrets
 Properties/PublishProfiles/
+scripts/local_store_config.json
