@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0.1] - 2026-10-03
+## [1.1.1.0] - 2026-10-04
 
 ### Fixed
 - Fixed MSIX launch crash caused by duplicate WinUI 3 runtime binaries and unpackaged packaging flags conflicting with `Microsoft.WindowsAppRuntime.2` (`CoreMessagingXP.dll` `0xc0000602`).

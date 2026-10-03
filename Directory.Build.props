@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Centralized version management -->
-    <Version>1.1.0.1</Version>
+    <Version>1.1.1.0</Version>
     <Company>Youchen Jiang</Company>
     <!-- Disable MSBuild node reuse and shared compilation background daemons -->
     <UseSharedCompilation>false</UseSharedCompilation>
