@@ -28,7 +28,10 @@ public class MacroTimingAndSpeedTests
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
 
         // Replaying empty actions should return without throwing or blocking
-        await recorder.ReplayAsync(repeatCount: 1, speedMultiplier: 1.0, cts.Token);
+        var exception = await Record.ExceptionAsync(() =>
+            recorder.ReplayAsync(repeatCount: 1, speedMultiplier: 1.0, cts.Token));
+
+        Assert.Null(exception);
     }
 
     [Theory]
