@@ -8,9 +8,12 @@ $gitHooksDir = Join-Path $repoRoot ".git\hooks"
 # 1. Configure git core.hooksPath
 try {
     git config core.hooksPath scripts/hooks
+    if ($LASTEXITCODE -ne 0) {
+        throw "git config core.hooksPath failed with exit code $LASTEXITCODE."
+    }
     Write-Host "Configured git core.hooksPath -> scripts/hooks" -ForegroundColor Cyan
 } catch {
-    Write-Warning "Could not set core.hooksPath directly via git config."
+    Write-Warning "Could not set core.hooksPath directly via git config: $_"
 }
 
 # 2. Copy hooks into .git/hooks for full backward compatibility
