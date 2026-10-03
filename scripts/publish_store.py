@@ -187,7 +187,7 @@ def match_section_name(header):
         return 'features'
     if any(k in h for k in ("what's new", "更新日誌", "新功能說明", "新機能", "새로운 기능")):
         return 'releaseNotes'
-    if any(k in h for k in ("keywords", "terms", "關鍵字", "关键字", "キーワード", "키워드")):
+    if any(k in h for k in ("keywords", "terms", "關鍵字", "关键字", "关键词", "キーワード", "키워드")):
         return 'keywords'
     return None
 
@@ -366,7 +366,7 @@ def update_package_refs(metadata, msix_name):
     metadata['applicationPackages'] = new_packages
 
 
-def update_listing_image_refs(metadata, image_dir, screenshot_files):
+def update_listing_image_refs(metadata, screenshot_files):
     if not screenshot_files:
         return
     listings = metadata.get('listings') or metadata.get('Listings') or {}
@@ -462,7 +462,7 @@ def run_submission_flow(repo_root, token, p_id, msix_path):
     parsed_listings = parse_all_listings(repo_root)
     update_metadata(submission, parsed_listings)
     update_package_refs(submission, os.path.basename(msix_path))
-    update_listing_image_refs(submission, image_dir, screenshot_files)
+    update_listing_image_refs(submission, screenshot_files)
     sanitize_keywords_recursive(submission)
 
     sub_url = f'https://manage.devcenter.microsoft.com/v1.0/my/applications/{p_id}/submissions/{submission_id}'
