@@ -93,17 +93,20 @@ jobs:
 
       - name: "Create GitHub Release and Upload Artifacts"
         if: steps.release-trigger.outputs.is_release == 'true'
-        uses: softprops/action-gh-release@c062e08bd5328807fb31346cf098484c1b5142c5 # v2.2.1
-        with:
-          files: |
-            publish/Tapster.exe
-            publish/*.msix
-          body: |
-            ${{ steps.get_pr_desc.outputs.pr_body }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat << 'EOF' > release_notes.md
+          ${{ steps.get_pr_desc.outputs.pr_body }}
 
-            ---
-            ### 📦 Installation
-            - **Portable Standalone**: 下載 `Tapster.exe`（單檔案綠色免安裝，零外部相依，點擊即用）。
-            - **Microsoft Store MSIX**: 下載 `Tapster-*.msix` 於 Windows 10/11 雙擊安裝，或待日後於 Microsoft Store 上架後取得以享有全自動無縫靜默更新。
-          draft: false
-          prerelease: false
+          ---
+          ### 📦 Installation
+          - **Portable Standalone**: 下載 `Tapster.exe`（單檔案綠色免安裝，零外部相依，點擊即用）。
+          - **Microsoft Store MSIX**: 下載 `Tapster-*.msix` 於 Windows 10/11 雙擊安裝，或待日後於 Microsoft Store 上架後取得以享有全自動無縫靜默更新。
+          EOF
+          gh release create "${{ github.ref_name }}" \
+            publish/Tapster.exe \
+            publish/*.msix \
+            --title "${{ github.ref_name }}" \
+            --notes-file release_notes.md
