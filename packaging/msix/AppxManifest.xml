@@ -33,6 +33,9 @@
   <Resources>
     <Resource Language="zh-TW" />
     <Resource Language="en-US" />
+    <Resource Language="ja-JP" />
+    <Resource Language="ko-KR" />
+    <Resource Language="zh-CN" />
   </Resources>
 
   <Applications>

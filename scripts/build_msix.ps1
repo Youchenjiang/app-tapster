@@ -46,6 +46,9 @@ try {
         -ManifestPath "$layoutDir/AppxManifest.xml"
 
     Copy-Item -Recurse "$packagingDir/Assets" "$layoutDir/" -Force
+    if (Test-Path "$packagingDir/Strings") {
+        Copy-Item -Recurse "$packagingDir/Strings" "$layoutDir/" -Force
+    }
 
     $fluentPublishSource = "$root/Tapster.Fluent/bin/Release/net8.0-windows10.0.26100.0/win-x64/publish"
     if (-not (Test-Path $fluentPublishSource)) {
