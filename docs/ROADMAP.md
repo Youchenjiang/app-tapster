@@ -131,8 +131,8 @@ timeline
   - **規格**：將 Auto Clicker 擴展為支援「滑鼠按鍵」與「指定鍵盤按鍵」雙軌連點。使用者可設定單鍵（如 `F`、`Space`、`E`）以 1ms~1000ms 間隔高速連按，滿足遊戲狂刷與交互需求。
 - [x] **[P3-10] 打字機剪貼簿直投與結尾鍵 (Clipboard Paste Mode & Trailing Enter)**
   - **規格**：
-    - **輸入模式切換**：支援「逐字敲擊（Keystroke Emulation，支援自然時間抖動 Jitter）」與「剪貼簿直投（Clipboard Paste，瞬間 0 延遲貼入大段文字/程式碼）」。
-    - **自動結尾鍵**：支援尾隨動作（None / Enter ↵ / Tab ⇥），終端機自動執行指令與表單填寫無縫衔接。
+    - **輸入模式切換**：支援「逐字敲擊（Keystroke Emulation，支援自然時間抖動 Jitter）」與「剪貼簿直投（Clipboard Paste，瞬間 0 延遲貼入大段文字/程式碼，並自動還原前一次剪貼簿內容）」。
+    - **自動結尾鍵**：支援尾隨動作（None / Enter ↵ / Tab ⇥，含中止取消防護），終端機自動執行指令與表單填寫無縫衔接。
 - [ ] **[P3-11] 巨集動作軌跡過濾與微調編輯 (Macro Action Filtering & Step Editor)**
   - **規格**：
     - **錄製過濾**：提供 `[x] 只錄製點擊與按鍵，忽略滑鼠移動軌跡`，將巨集精簡至關鍵動作，消除偏差。

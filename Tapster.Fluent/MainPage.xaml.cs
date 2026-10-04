@@ -810,21 +810,59 @@ public sealed partial class MainPage : Page
 
     private static async Task RunClipboardTyperAsync(string text, string trailingKey, CancellationToken token, Action<string, double> reportProgress)
     {
+        string? previousText = null;
+        try
+        {
+            var currentContent = Clipboard.GetContent();
+            if (currentContent.Contains(StandardDataFormats.Text))
+            {
+                previousText = await currentContent.GetTextAsync();
+            }
+        }
+        catch
+        {
+            // Ignore failure to read previous clipboard content
+        }
+
         var package = new DataPackage();
         package.SetText(text);
         Clipboard.SetContent(package);
 
-        await Task.Run(() =>
+        try
         {
-            token.ThrowIfCancellationRequested();
-            CheckEmergencyEsc();
-            reportProgress($"Pasting {text.Length} chars via clipboard...", 50);
+            await Task.Run(() =>
+            {
+                token.ThrowIfCancellationRequested();
+                CheckEmergencyEsc();
+                reportProgress($"Pasting {text.Length} chars via clipboard...", 50);
 
-            Keyboard.Paste();
+                Keyboard.Paste();
 
-            ApplyTrailingKey(trailingKey);
-            reportProgress($"Pasted {text.Length} chars", 100);
-        }, token);
+                token.ThrowIfCancellationRequested();
+                CheckEmergencyEsc();
+
+                ApplyTrailingKey(trailingKey, token);
+                reportProgress($"Pasted {text.Length} chars", 100);
+            }, token);
+        }
+        finally
+        {
+            if (!string.IsNullOrEmpty(previousText))
+            {
+                await Task.Delay(150, CancellationToken.None);
+                try
+                {
+                    var restorePackage = new DataPackage();
+                    restorePackage.SetText(previousText);
+                    Clipboard.SetContent(restorePackage);
+                    Clipboard.Flush();
+                }
+                catch
+                {
+                    // Ignore failure to restore clipboard
+                }
+            }
+        }
     }
 
     private static async Task RunKeystrokeTyperAsync(string text, int intervalMs, bool jitter, string trailingKey, CancellationToken token, Action<string, double> reportProgress)
@@ -850,16 +888,26 @@ public sealed partial class MainPage : Page
                 }
             }
 
-            ApplyTrailingKey(trailingKey);
+            token.ThrowIfCancellationRequested();
+            CheckEmergencyEsc();
+            ApplyTrailingKey(trailingKey, token);
         }, token);
     }
 
-    private static void ApplyTrailingKey(string trailingKey)
+    private static void ApplyTrailingKey(string trailingKey, CancellationToken token)
     {
+        if (token.IsCancellationRequested || Keyboard.IsEscPressed())
+        {
+            return;
+        }
+
         if (trailingKey is KeyEnter or KeyTab)
         {
             Thread.Sleep(50);
-            Keyboard.Tap(trailingKey);
+            if (!token.IsCancellationRequested && !Keyboard.IsEscPressed())
+            {
+                Keyboard.Tap(trailingKey);
+            }
         }
     }
 

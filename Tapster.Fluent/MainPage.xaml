@@ -130,7 +130,7 @@
                                     <ComboBoxItem Content="⌨️ Keystroke Emulation"/>
                                     <ComboBoxItem Content="📋 Clipboard Paste (Instant)"/>
                                 </ComboBox>
-                                <TextBlock x:Name="TypeModeHint" Text="⚡ 0ms instantaneous paste via clipboard"
+                                <TextBlock x:Name="TypeModeHint" Text="⚡ Instant paste (Ctrl+V) with clipboard auto-restore"
                                            FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                            VerticalAlignment="Center" Visibility="Collapsed"/>
                             </StackPanel>
