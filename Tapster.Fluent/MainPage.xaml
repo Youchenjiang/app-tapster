@@ -49,8 +49,7 @@
 
             <NavigationView.PaneFooter>
                 <StackPanel Margin="12,4" Spacing="4">
-                    <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Always on top" FontSize="11"
-                              Checked="AlwaysOnTopCheckBox_CheckedChanged" Unchecked="AlwaysOnTopCheckBox_CheckedChanged"/>
+                    <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Always on top" FontSize="11"/>
                 </StackPanel>
             </NavigationView.PaneFooter>
 

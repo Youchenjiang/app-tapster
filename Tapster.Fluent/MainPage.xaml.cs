@@ -77,6 +77,9 @@ public sealed partial class MainPage : Page
             AlwaysOnTopCheckBox.IsChecked = MainWindow.Instance.IsAlwaysOnTop;
             MainWindow.Instance.AlwaysOnTopChanged += OnMainWindowAlwaysOnTopChanged;
         }
+
+        AlwaysOnTopCheckBox.Checked += (_, _) => MainWindow.Instance?.SetAlwaysOnTop(true);
+        AlwaysOnTopCheckBox.Unchecked += (_, _) => MainWindow.Instance?.SetAlwaysOnTop(false);
     }
 
     private void GenerateVirtualKeyboard()
@@ -745,13 +748,10 @@ public sealed partial class MainPage : Page
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            AlwaysOnTopCheckBox.IsChecked = isTop;
+            if (AlwaysOnTopCheckBox.IsChecked != isTop)
+            {
+                AlwaysOnTopCheckBox.IsChecked = isTop;
+            }
         });
-    }
-
-    private void AlwaysOnTopCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
-    {
-        bool isChecked = AlwaysOnTopCheckBox.IsChecked ?? false;
-        MainWindow.Instance?.SetAlwaysOnTop(isChecked);
     }
 }
