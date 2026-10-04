@@ -108,16 +108,49 @@
                         </Grid>
                     </Border>
 
-                    <!-- Interval Setting Card -->
+                    <!-- Mode & Options Card -->
                     <Border Grid.Row="2" Margin="0,8,0,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8">
-                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE916;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="Keystroke Interval (sec/char):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                            <NumberBox x:Name="TypeIntervalBox" Width="100" Value="0.03" Minimum="0.001" Maximum="5" SmallChange="0.01"
-                                       FontSize="12" SpinButtonPlacementMode="Compact"/>
-                        </StackPanel>
+                            CornerRadius="8" Padding="12,10">
+                        <Grid RowSpacing="8" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Input Mode: Keystroke vs Clipboard Paste -->
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Typing Mode:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <ComboBox x:Name="TypeModeCombo" SelectedIndex="0" Width="200" HorizontalAlignment="Left">
+                                    <ComboBoxItem Content="⌨️ Keystroke Emulation"/>
+                                    <ComboBoxItem Content="📋 Clipboard Paste (Instant)"/>
+                                </ComboBox>
+                                <TextBlock x:Name="TypeModeHint" Text="⚡ 0ms instantaneous paste via clipboard"
+                                           FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           VerticalAlignment="Center" Visibility="Collapsed"/>
+                            </StackPanel>
+
+                            <!-- Trailing Key: None / Enter / Tab -->
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Trailing Key:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                            <ComboBox x:Name="TypeTrailingKeyCombo" Grid.Row="1" Grid.Column="1" SelectedIndex="0" Width="200" HorizontalAlignment="Left">
+                                <ComboBoxItem Content="None"/>
+                                <ComboBoxItem Content="Enter (↵ Send / Newline)"/>
+                                <ComboBoxItem Content="Tab (⇥ Switch Field)"/>
+                            </ComboBox>
+
+                            <!-- Keystroke Interval & Jitter (Keystroke only) -->
+                            <TextBlock x:Name="TypeIntervalLabel" Grid.Row="2" Grid.Column="0" Text="Interval (sec/char):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                            <StackPanel x:Name="TypeIntervalPanel" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <NumberBox x:Name="TypeIntervalBox" Width="80" Value="0.03" Minimum="0.001" Maximum="5" SmallChange="0.01"
+                                           FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                <CheckBox x:Name="TypeJitterCheck" Content="Natural Typing Jitter (±15%)" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
 
                     <!-- History Card -->

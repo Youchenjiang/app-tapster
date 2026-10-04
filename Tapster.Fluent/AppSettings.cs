@@ -34,6 +34,9 @@ public class AppSettings
     public bool ClickerJitterEnabled { get; set; } = false;
     public double ClickerTimeJitterPercent { get; set; } = 15;
     public double ClickerLocationJitterPx { get; set; } = 0;
+    public string TyperInputMode { get; set; } = "keystroke";
+    public string TyperTrailingKey { get; set; } = "none";
+    public bool TyperJitterEnabled { get; set; } = false;
 
     public bool StartOnBoot
     {

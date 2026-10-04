@@ -108,6 +108,39 @@ public sealed partial class MainPage : Page
             AppSettings.Current.Save();
         };
 
+        // Restore Typer Preferences
+        TypeModeCombo.SelectedIndex = AppSettings.Current.TyperInputMode == "clipboard" ? 1 : 0;
+        TypeTrailingKeyCombo.SelectedIndex = AppSettings.Current.TyperTrailingKey switch
+        {
+            "enter" => 1,
+            "tab" => 2,
+            _ => 0
+        };
+        TypeJitterCheck.IsChecked = AppSettings.Current.TyperJitterEnabled;
+
+        TypeModeCombo.SelectionChanged += (_, _) => UpdateTyperMode(this);
+        TypeTrailingKeyCombo.SelectionChanged += (_, _) =>
+        {
+            AppSettings.Current.TyperTrailingKey = TypeTrailingKeyCombo.SelectedIndex switch
+            {
+                1 => "enter",
+                2 => "tab",
+                _ => "none"
+            };
+            AppSettings.Current.Save();
+        };
+        TypeJitterCheck.Checked += (_, _) =>
+        {
+            AppSettings.Current.TyperJitterEnabled = true;
+            AppSettings.Current.Save();
+        };
+        TypeJitterCheck.Unchecked += (_, _) =>
+        {
+            AppSettings.Current.TyperJitterEnabled = false;
+            AppSettings.Current.Save();
+        };
+        UpdateTyperMode(this);
+
         ClickTargetTypeCombo.SelectionChanged += (_, _) => UpdateClickerTargetType(this);
         ClickTriggerModeCombo.SelectionChanged += (_, _) => UpdateClickerTriggerMode(this);
         UpdateClickerTargetType(this);
@@ -533,6 +566,18 @@ public sealed partial class MainPage : Page
         AppSettings.Current.Save();
     }
 
+    private static void UpdateTyperMode(MainPage page)
+    {
+        if (page.TypeModeCombo == null || page.TypeModeHint == null || page.TypeIntervalLabel == null || page.TypeIntervalPanel == null) return;
+        bool isClipboard = page.TypeModeCombo.SelectedIndex == 1;
+        page.TypeModeHint.Visibility = isClipboard ? Visibility.Visible : Visibility.Collapsed;
+        page.TypeIntervalLabel.Visibility = isClipboard ? Visibility.Collapsed : Visibility.Visible;
+        page.TypeIntervalPanel.Visibility = isClipboard ? Visibility.Collapsed : Visibility.Visible;
+
+        AppSettings.Current.TyperInputMode = isClipboard ? "clipboard" : "keystroke";
+        AppSettings.Current.Save();
+    }
+
     // ══════════════════════════════════════════════════════════
     // Global Hotkey Remote Triggers
     // ══════════════════════════════════════════════════════════
@@ -728,9 +773,56 @@ public sealed partial class MainPage : Page
             throw new InvalidOperationException("No text to type!");
         }
 
-        double interval = TypeIntervalBox.Value;
-        int intervalMs = (int)(interval * 1000);
+        bool isClipboard = TypeModeCombo.SelectedIndex == 1;
+        int trailingIndex = TypeTrailingKeyCombo.SelectedIndex;
+        string trailingKey = trailingIndex switch
+        {
+            1 => "enter",
+            2 => "tab",
+            _ => "none"
+        };
 
+        if (isClipboard)
+        {
+            await RunClipboardTyperAsync(text, trailingKey, token, reportProgress);
+        }
+        else
+        {
+            double interval = TypeIntervalBox.Value;
+            int intervalMs = (int)(interval * 1000);
+            bool jitter = TypeJitterCheck.IsChecked.GetValueOrDefault();
+            await RunKeystrokeTyperAsync(text, intervalMs, jitter, trailingKey, token, reportProgress);
+        }
+
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            string modeDesc = isClipboard ? "Pasted" : "Typed";
+            string summary = $"{DateTime.Now:HH:mm:ss} - {modeDesc} {text.Length} chars" + (trailingKey != "none" ? $" + [{trailingKey}]" : "");
+            HistoryList.Items.Insert(0, summary);
+        });
+    }
+
+    private static async Task RunClipboardTyperAsync(string text, string trailingKey, CancellationToken token, Action<string, double> reportProgress)
+    {
+        var package = new DataPackage();
+        package.SetText(text);
+        Clipboard.SetContent(package);
+
+        await Task.Run(() =>
+        {
+            token.ThrowIfCancellationRequested();
+            CheckEmergencyEsc();
+            reportProgress($"Pasting {text.Length} chars via clipboard...", 50);
+
+            Keyboard.Paste();
+
+            ApplyTrailingKey(trailingKey);
+            reportProgress($"Pasted {text.Length} chars", 100);
+        }, token);
+    }
+
+    private static async Task RunKeystrokeTyperAsync(string text, int intervalMs, bool jitter, string trailingKey, CancellationToken token, Action<string, double> reportProgress)
+    {
         await Task.Run(() =>
         {
             for (int i = 0; i < text.Length; i++)
@@ -742,18 +834,27 @@ public sealed partial class MainPage : Page
                 int charIndex = i + 1;
                 reportProgress($"Typing character {charIndex}/{text.Length}...", (double)charIndex / text.Length * 100);
 
-                if (intervalMs > 0)
+                int sleepMs = jitter && intervalMs > 0
+                    ? JitterHelper.ApplyTimeJitter(intervalMs, 15, minIntervalMs: 1)
+                    : intervalMs;
+
+                if (sleepMs > 0)
                 {
-                    Thread.Sleep(intervalMs);
+                    Thread.Sleep(sleepMs);
                 }
             }
-        }, token);
 
-        DispatcherQueue.TryEnqueue(() =>
+            ApplyTrailingKey(trailingKey);
+        }, token);
+    }
+
+    private static void ApplyTrailingKey(string trailingKey)
+    {
+        if (trailingKey is "enter" or "tab")
         {
-            string summary = $"{DateTime.Now:HH:mm:ss} - Typed {text.Length} chars";
-            HistoryList.Items.Insert(0, summary);
-        });
+            Thread.Sleep(50);
+            Keyboard.Tap(trailingKey);
+        }
     }
 
     private async Task RunKeyHolderAsync(CancellationToken token, Action<string, double> reportProgress)
