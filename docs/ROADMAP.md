@@ -117,6 +117,34 @@ timeline
   - **規格**：在打字與連點間隔中加入可配置的正態分佈隨機波動（Jitter ±5~15%），模擬真人手速，防止機械式操作判定。
 - [ ] **[P3-6] 智慧像素 / 影像顏色條件觸發 (Pixel & Image Trigger)**
   - **規格**：偵測指定螢幕座標之像素顏色或區域特徵，符合條件時自動觸發連點或巨集。
+- [ ] **[P3-7] 全域功能熱鍵系統 (Global Function Hotkeys)**
+  - **規格**：各模組支援全域熱鍵直接啟動與停止（免切回 Tapster 視窗）：
+    - `F6`：切換 Auto Clicker（連點開始/暫停）
+    - `F7`：切換 Key Holder（按鍵長按開始/停止）
+    - `F8`：啟動 Auto Typer（自動開始打字）
+    - `F9`：切換 Macro Recorder（錄製/停止/回放）
+    - `F10`：全域強制終止（Kill Switch）
+  - 支援在 Settings 與各分頁錄製自訂快速鍵，透過 Win32 `RegisterHotKey` 動態註冊並持久化。
+- [ ] **[P3-8] 連點器按壓觸發模式 (Clicker Hold-to-Click Mode)**
+  - **規格**：除現有 Toggle 模式（按一次啟動/停止）外，新增 Hold Mode。當按住指定熱鍵或滑鼠鍵時高速連點（如 50~100 CPS），放開即刻停止，大幅提升射擊與動作遊戲體驗。
+- [ ] **[P3-9] 鍵盤按鍵連打支援 (Keyboard Auto Clicker / Key Spammer)**
+  - **規格**：將 Auto Clicker 擴展為支援「滑鼠按鍵」與「指定鍵盤按鍵」雙軌連點。使用者可設定單鍵（如 `F`、`Space`、`E`）以 1ms~1000ms 間隔高速連按，滿足遊戲狂刷與交互需求。
+- [ ] **[P3-10] 打字機剪貼簿直投與結尾鍵 (Clipboard Paste Mode & Trailing Enter)**
+  - **規格**：
+    - **輸入模式切換**：提供「逐字敲擊（Keystroke Emulation，適用 VM/Console）」與「剪貼簿直投（Clipboard Paste，瞬間 0 延遲貼入大段文字/程式碼）」。
+    - **自動結尾鍵**：提供勾選 `[x] 打字完畢後自動按 Enter` 或 `Tab`，終端機與聊天室自動化無縫衔接。
+- [ ] **[P3-11] 巨集動作軌跡過濾與微調編輯 (Macro Action Filtering & Step Editor)**
+  - **規格**：
+    - **錄製過濾**：提供 `[x] 只錄製點擊與按鍵，忽略滑鼠移動軌跡`，將巨集精簡至關鍵動作，消除偏差。
+    - **清單微調**：可在動作列表中雙擊修改特定動作的座標、按鍵或延遲毫秒（Delay ms），並支援刪除指定步驟。
+- [ ] **[P3-12] 音效回饋提示與安全緊急熔斷 (Audio Cue Feedback & Panic Kill)**
+  - **規格**：
+    - **狀態提示音**：使用 Win32 `MessageBeep` / `Beep`，熱鍵啟動時發出高音嗶聲（1000Hz 80ms），停止時發出低音嗶聲（500Hz 80ms），全螢幕遊戲與盲打時提供即時人機反饋。
+    - **緊急安全熔斷 (Panic Kill)**：連點速度過快導致游標被鎖死時，支援「連按三次 Esc」或「快速甩動滑鼠（Mouse Shake > 2500 px/s）」立刻無條件中斷所有 Worker 並釋放所有按鍵。
+- [ ] **[P3-13] 迷你懸浮膠囊模式 (Mini Floating HUD Mode)**
+  - **規格**：支援一鍵將視窗切換為螢幕角落半透明精簡膠囊條，僅顯示當前任務狀態、即時 CPS 計數器與 Stop 按鈕，支援滑鼠穿透或永遠置頂，全螢幕遊戲時不遮蔽視野。
+- [ ] **[P3-14] 點擊類型擴充 (Click Types: Double & Triple Click)**
+  - **規格**：Auto Clicker 支援單擊 (Single)、雙擊 (Double)、三擊 (Triple) 點擊模擬。
 
 ---
 
