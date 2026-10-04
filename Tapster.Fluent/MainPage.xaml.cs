@@ -11,6 +11,7 @@ namespace Tapster_Fluent;
 
 public sealed partial class MainPage : Page
 {
+    public static MainPage? Instance { get; private set; }
     private string _activeTab = "Typer";
     private bool _isRunning = false;
     private CancellationTokenSource? _cts;
@@ -21,6 +22,7 @@ public sealed partial class MainPage : Page
 
     public MainPage()
     {
+        Instance = this;
         InitializeComponent();
         Loaded += MainPage_Loaded;
     }
@@ -65,6 +67,16 @@ public sealed partial class MainPage : Page
         HolderDelayBox.Value = 3;
         ClickerDelayBox.Value = 3;
         MacroDelayBox.Value = 3;
+
+        // Restore Clicker and Key Spammer Preferences
+        ClickTriggerModeCombo.SelectedIndex = AppSettings.Current.ClickerHoldMode ? 1 : 0;
+        ClickTargetTypeCombo.SelectedIndex = AppSettings.Current.ClickerIsKeySpammer ? 1 : 0;
+        SpamKeyBox.Text = string.IsNullOrEmpty(AppSettings.Current.ClickerSpamKey) ? "space" : AppSettings.Current.ClickerSpamKey;
+        SpamKeyBox.TextChanged += (_, _) =>
+        {
+            AppSettings.Current.ClickerSpamKey = SpamKeyBox.Text;
+            AppSettings.Current.Save();
+        };
 
         GenerateVirtualKeyboard();
 
@@ -416,6 +428,89 @@ public sealed partial class MainPage : Page
     // ══════════════════════════════════════════════════════════
     // Per-Panel Action Handlers (Plan A: Self-Contained Execution)
     // ══════════════════════════════════════════════════════════
+    // Clicker & Spammer Mode Selection Handlers
+    // ══════════════════════════════════════════════════════════
+
+    private void ClickTargetTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ClickTargetTypeCombo == null || MouseButtonLabel == null || SpamKeyLabel == null) return;
+        bool isSpammer = ClickTargetTypeCombo.SelectedIndex == 1;
+        MouseButtonLabel.Visibility = isSpammer ? Visibility.Collapsed : Visibility.Visible;
+        MouseButtonCombo.Visibility = isSpammer ? Visibility.Collapsed : Visibility.Visible;
+        ClickCoordsLabel.Visibility = isSpammer ? Visibility.Collapsed : Visibility.Visible;
+        ClickCoordsPanel.Visibility = isSpammer ? Visibility.Collapsed : Visibility.Visible;
+
+        SpamKeyLabel.Visibility = isSpammer ? Visibility.Visible : Visibility.Collapsed;
+        SpamKeyBox.Visibility = isSpammer ? Visibility.Visible : Visibility.Collapsed;
+
+        AppSettings.Current.ClickerIsKeySpammer = isSpammer;
+        AppSettings.Current.Save();
+    }
+
+    private void ClickTriggerModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ClickTriggerModeCombo == null || HoldModeHint == null) return;
+        bool isHold = ClickTriggerModeCombo.SelectedIndex == 1;
+        HoldModeHint.Visibility = isHold ? Visibility.Visible : Visibility.Collapsed;
+
+        AppSettings.Current.ClickerHoldMode = isHold;
+        AppSettings.Current.Save();
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // Global Hotkey Remote Triggers
+    // ══════════════════════════════════════════════════════════
+
+    public void ToggleClickerFromHotkey()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            NavView.SelectedItem = NavView.MenuItems[2];
+            ClickerActionBtn_Click(this, new RoutedEventArgs());
+        });
+    }
+
+    public void ToggleHolderFromHotkey()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            NavView.SelectedItem = NavView.MenuItems[1];
+            HolderActionBtn_Click(this, new RoutedEventArgs());
+        });
+    }
+
+    public void ToggleTyperFromHotkey()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            NavView.SelectedItem = NavView.MenuItems[0];
+            TyperActionBtn_Click(this, new RoutedEventArgs());
+        });
+    }
+
+    public void ToggleMacroFromHotkey()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            NavView.SelectedItem = NavView.MenuItems[3];
+            MacroActionBtn_Click(this, new RoutedEventArgs());
+        });
+    }
+
+    public void PanicKillAll()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_isRunning)
+            {
+                StopTask("Emergency stop triggered via F10 panic key");
+            }
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // Per-Panel Action Handlers
+    // ══════════════════════════════════════════════════════════
 
     private string? _runningTaskName = null;
 
@@ -429,7 +524,7 @@ public sealed partial class MainPage : Page
             TyperActionBtn,
             TyperActionIcon,
             TyperActionText,
-            "Start Typer",
+            "Start Typer (F8)",
             RunAutoTyperAsync);
     }
 
@@ -443,7 +538,7 @@ public sealed partial class MainPage : Page
             HolderActionBtn,
             HolderActionIcon,
             HolderActionText,
-            "Start Holder",
+            "Start Holder (F7)",
             RunKeyHolderAsync);
     }
 
@@ -457,7 +552,7 @@ public sealed partial class MainPage : Page
             ClickerActionBtn,
             ClickerActionIcon,
             ClickerActionText,
-            "Start Clicker",
+            "Start Clicker (F6)",
             RunAutoClickerAsync);
     }
 
@@ -471,7 +566,7 @@ public sealed partial class MainPage : Page
             MacroActionBtn,
             MacroActionIcon,
             MacroActionText,
-            "Replay Macro",
+            "Replay Macro (F9)",
             RunMacroReplayAsync);
     }
 
@@ -632,6 +727,10 @@ public sealed partial class MainPage : Page
 
     private async Task RunAutoClickerAsync(CancellationToken token, Action<string, double> reportProgress)
     {
+        bool isSpammer = ClickTargetTypeCombo.SelectedIndex == 1;
+        string spamKey = SpamKeyBox.Text.Trim();
+        bool isHoldMode = ClickTriggerModeCombo.SelectedIndex == 1;
+
         int buttonIndex = MouseButtonCombo.SelectedIndex;
         string button = buttonIndex switch
         {
@@ -648,29 +747,47 @@ public sealed partial class MainPage : Page
         int? targetX = double.IsNaN(ClickXBox.Value) ? null : (int)ClickXBox.Value;
         int? targetY = double.IsNaN(ClickYBox.Value) ? null : (int)ClickYBox.Value;
 
+        // F6 virtual key code
+        const int HOTKEY_VK = 0x75;
+
         await Task.Run(() =>
         {
             int count = 0;
             while (!token.IsCancellationRequested && (infinite || count < totalClicks))
             {
                 CheckEmergencyEsc();
-                if (targetX.HasValue && targetY.HasValue)
+
+                // If Hold-to-Click is enabled, automatically stop when the hotkey (F6) is released
+                if (isHoldMode && !KeySpammer.IsKeyDown(HOTKEY_VK))
                 {
-                    Mouse.ClickAt(targetX.Value, targetY.Value, button);
+                    break;
+                }
+
+                if (isSpammer)
+                {
+                    KeySpammer.Spam(spamKey);
                 }
                 else
                 {
-                    Mouse.Click(button);
+                    if (targetX.HasValue && targetY.HasValue)
+                    {
+                        Mouse.ClickAt(targetX.Value, targetY.Value, button);
+                    }
+                    else
+                    {
+                        Mouse.Click(button);
+                    }
                 }
                 count++;
 
+                string actionName = isSpammer ? $"Spamming [{spamKey}]" : "Clicking";
                 if (!infinite)
                 {
-                    reportProgress($"Clicking {count}/{totalClicks}...", (double)count / totalClicks * 100);
+                    reportProgress($"{actionName} {count}/{totalClicks}...", (double)count / totalClicks * 100);
                 }
                 else
                 {
-                    reportProgress($"Clicking count: {count} (Infinite)...", 100);
+                    reportProgress($"{actionName} count: {count} (Infinite)...", 100);
                 }
 
                 if (intervalMs > 0)
@@ -715,22 +832,22 @@ public sealed partial class MainPage : Page
         _isRunning = false;
 
         // Reset Typer UI
-        TyperActionText.Text = "Start Typer";
+        TyperActionText.Text = "Start Typer (F8)";
         TyperActionIcon.Glyph = "\uE768";
         TyperProgressBar.Value = 0;
 
         // Reset Holder UI
-        HolderActionText.Text = "Start Holder";
+        HolderActionText.Text = "Start Holder (F7)";
         HolderActionIcon.Glyph = "\uE768";
         HolderProgressBar.Value = 0;
 
         // Reset Clicker UI
-        ClickerActionText.Text = "Start Clicker";
+        ClickerActionText.Text = "Start Clicker (F6)";
         ClickerActionIcon.Glyph = "\uE768";
         ClickerProgressBar.Value = 0;
 
         // Reset Macro UI
-        MacroActionText.Text = "Replay Macro";
+        MacroActionText.Text = "Replay Macro (F9)";
         MacroActionIcon.Glyph = "\uE768";
         MacroProgressBar.Value = 0;
 

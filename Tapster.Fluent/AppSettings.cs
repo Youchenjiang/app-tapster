@@ -23,6 +23,15 @@ public class AppSettings
     public bool MinimizeToTrayOnClose { get; set; } = true;
     public double DelaySeconds { get; set; } = 3;
 
+    public string HotkeyClicker { get; set; } = "F6";
+    public string HotkeyHolder { get; set; } = "F7";
+    public string HotkeyTyper { get; set; } = "F8";
+    public string HotkeyMacro { get; set; } = "F9";
+    public string HotkeyPanicKill { get; set; } = "F10";
+    public bool ClickerHoldMode { get; set; } = false;
+    public bool ClickerIsKeySpammer { get; set; } = false;
+    public string ClickerSpamKey { get; set; } = "space";
+
     public bool StartOnBoot
     {
         get

@@ -12,9 +12,11 @@ public sealed partial class MainWindow : Window
     public static MainWindow? Instance { get; private set; }
     private bool _isAlwaysOnTop = false;
     public bool IsAlwaysOnTop => _isAlwaysOnTop;
-    private const int HOTKEY_ID = 0x5412;
     private readonly IntPtr _hWnd;
     private SystemTrayManager? _trayManager;
+    private GlobalHotkeyService? _hotkeyService;
+    private NativeMethods.SubclassProc? _hotkeySubclassProc;
+    private const uint HOTKEY_SUBCLASS_ID = 2;
     private bool _isExplicitExit = false;
 
     public MainWindow()
@@ -44,8 +46,11 @@ public sealed partial class MainWindow : Window
             }
         }
 
-        // Register Ctrl+Alt+T global wake hotkey
-        NativeMethods.RegisterHotKey(_hWnd, HOTKEY_ID, NativeMethods.MOD_CONTROL | NativeMethods.MOD_ALT, (uint)'T');
+        // Initialize Global Hotkey Dispatcher via Window Subclassing
+        _hotkeyService = new GlobalHotkeyService(_hWnd);
+        _hotkeySubclassProc = HotkeySubclassCallback;
+        NativeMethods.SetWindowSubclass(_hWnd, _hotkeySubclassProc, (UIntPtr)HOTKEY_SUBCLASS_ID, IntPtr.Zero);
+        RegisterAllGlobalHotkeys();
 
         // Initialize System Tray Manager
         _trayManager = new SystemTrayManager(
@@ -61,6 +66,45 @@ public sealed partial class MainWindow : Window
         Closed += MainWindow_Closed;
 
         RootFrame.Navigate(typeof(MainPage));
+    }
+
+    private void RegisterAllGlobalHotkeys()
+    {
+        if (_hotkeyService == null) return;
+
+        // Wake / Hide: Ctrl+Alt+T
+        _hotkeyService.Register(GlobalHotkeyService.HOTKEY_WAKE, NativeMethods.MOD_CONTROL | NativeMethods.MOD_ALT, (uint)'T', ToggleVisibility);
+
+        // Clicker / Spammer: F6
+        _hotkeyService.Register(GlobalHotkeyService.HOTKEY_CLICKER, AppSettings.Current.HotkeyClicker, () => MainPage.Instance?.ToggleClickerFromHotkey());
+
+        // Key Holder: F7
+        _hotkeyService.Register(GlobalHotkeyService.HOTKEY_HOLDER, AppSettings.Current.HotkeyHolder, () => MainPage.Instance?.ToggleHolderFromHotkey());
+
+        // Auto Typer: F8
+        _hotkeyService.Register(GlobalHotkeyService.HOTKEY_TYPER, AppSettings.Current.HotkeyTyper, () => MainPage.Instance?.ToggleTyperFromHotkey());
+
+        // Macro Replay: F9
+        _hotkeyService.Register(GlobalHotkeyService.HOTKEY_MACRO, AppSettings.Current.HotkeyMacro, () => MainPage.Instance?.ToggleMacroFromHotkey());
+
+        // Panic Kill All: F10
+        _hotkeyService.Register(GlobalHotkeyService.HOTKEY_PANIC_KILL, AppSettings.Current.HotkeyPanicKill, () => MainPage.Instance?.PanicKillAll());
+    }
+
+    private IntPtr HotkeySubclassCallback(
+        IntPtr hWnd,
+        uint uMsg,
+        IntPtr wParam,
+        IntPtr lParam,
+        UIntPtr uIdSubclass,
+        IntPtr dwRefData)
+    {
+        if (_hotkeyService != null && _hotkeyService.ProcessWindowMessage(uMsg, wParam))
+        {
+            return IntPtr.Zero;
+        }
+
+        return NativeMethods.DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
 
     private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
@@ -110,12 +154,23 @@ public sealed partial class MainWindow : Window
         Activate();
     }
 
+    private void CleanupHotkeys()
+    {
+        if (_hotkeySubclassProc != null)
+        {
+            NativeMethods.RemoveWindowSubclass(_hWnd, _hotkeySubclassProc, (UIntPtr)HOTKEY_SUBCLASS_ID);
+            _hotkeySubclassProc = null;
+        }
+        _hotkeyService?.Dispose();
+        _hotkeyService = null;
+    }
+
     public void ExitApplication()
     {
         _isExplicitExit = true;
         _trayManager?.Dispose();
         _trayManager = null;
-        NativeMethods.UnregisterHotKey(_hWnd, HOTKEY_ID);
+        CleanupHotkeys();
         Keyboard.ReleaseAllModifiers();
         Close();
         Application.Current.Exit();
@@ -125,7 +180,7 @@ public sealed partial class MainWindow : Window
     {
         _trayManager?.Dispose();
         _trayManager = null;
-        NativeMethods.UnregisterHotKey(_hWnd, HOTKEY_ID);
+        CleanupHotkeys();
         Keyboard.ReleaseAllModifiers();
     }
 }
