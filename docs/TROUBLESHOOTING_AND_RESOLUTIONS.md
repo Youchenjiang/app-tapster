@@ -68,3 +68,32 @@
 - **現象**：本地端編譯時出現 `MSB3026: Could not copy file because it is being used by another process`。
 - **原因**：Roslyn 編譯器快取（`VBCSCompiler.exe`）與 MSBuild 背景 Worker 在編譯完成後未釋放產物控制代碼。
 - **解決方案**：每次本地執行 `dotnet build` 後，務必執行 `dotnet build-server shutdown` 徹底關閉後台快取處理序。
+
+---
+
+## 3. WinUI 3 (Windows App SDK) Fluent 視窗拖曳卡頓與高更新率 (144Hz+) 踩坑歷程
+
+### 3.1 `ExtendsContentIntoTitleBar = true` 引發 DirectComposition 拖曳掉幀與游標遲滯
+- **現象**：在 120Hz/144Hz/240Hz 高更新率螢幕與高回報率（1000Hz）滑鼠環境下，拖曳視窗時游標與視窗不同步，產生嚴重頓挫感與掉幀（體感 30~45 FPS）。
+- **原因**：
+  1. `ExtendsContentIntoTitleBar = true` 將非客戶區拖曳訊息轉交由 Windows App SDK XAML 執行緒與 DirectComposition 接管。
+  2. 每一幀位移皆觸發 XAML Visual Tree 重新 Hit-test 與排版運算，導致訊息佇列阻塞。
+  3. 搭配 `<MicaBackdrop />` 時，DWM 在視窗位移期間會強制將背景高斯模糊取樣節流至 30~45 FPS。
+- **錯誤嘗試**：
+  - *嘗試 1*：呼叫 `AppWindow.TitleBar.ExtendsContentIntoTitleBar = false`，但未自訂標題列顏色，導致系統亮色邊框與暗色主題產生強烈違和（「順了但是變醜了」）。
+  - *嘗試 2*：使用 `SetDragRectangles` 手動動態計算拖曳矩形，依舊走 Windows App SDK 接管路徑，卡頓依舊。
+  - *嘗試 3*：在程式碼中存取 `AppWindowTitleBar` / `AppWindow.TitleBar` 屬性，即使設定背景色，仍會觸發 Windows App SDK 的非客戶區攔截鈎子。
+- **終極解決方案**：
+  1. **完全不呼叫 `AppWindowTitleBar` / `AppWindow.TitleBar`**：不觸發 App SDK 攔截，讓視窗非客戶區 100% 由 Windows 內核 DWM（`user32.dll` / `dwm.exe`）處理，解鎖滿血 144Hz~360Hz 零延遲拖曳。
+  2. **注入 Windows 11 DWM 核心層級色彩屬性**：
+     ```csharp
+     int darkMode = 1;
+     NativeMethods.DwmSetWindowAttribute(_hWnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+     uint captionColor = 0x00202020; // #202020 (BGR)
+     NativeMethods.DwmSetWindowAttribute(_hWnd, NativeMethods.DWMWA_CAPTION_COLOR, ref captionColor, sizeof(uint));
+     uint textColor = 0x00FFFFFF;
+     NativeMethods.DwmSetWindowAttribute(_hWnd, NativeMethods.DWMWA_TEXT_COLOR, ref textColor, sizeof(uint));
+     ```
+  3. **將非必要按鈕移出標題列**：如「Always on top」核取方塊移至 `NavigationView.PaneFooter`，保持頂部拖曳區域乾淨完整。
+- **詳細指南**：請參閱完整開發規範文件 [`docs/development/fluent_window_drag_performance_guide.md`](file:///c:/Users/g1014308/Documents/GitHub/Youchen/Tapster/docs/development/fluent_window_drag_performance_guide.md)。
+

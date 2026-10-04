@@ -72,6 +72,7 @@ public sealed partial class MainPage : Page
         StartOnBootToggle.IsOn = AppSettings.Current.StartOnBoot;
         StartMinimizedToggle.IsOn = AppSettings.Current.StartMinimizedToTray;
         MinimizeOnCloseToggle.IsOn = AppSettings.Current.MinimizeToTrayOnClose;
+        AlwaysOnTopCheckBox.IsChecked = MainWindow.Instance?.IsAlwaysOnTop ?? false;
     }
 
     private void GenerateVirtualKeyboard()
@@ -734,5 +735,10 @@ public sealed partial class MainPage : Page
 
         _runningTaskName = null;
         Keyboard.ReleaseAllModifiers();
+    }
+
+    private void AlwaysOnTopCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
+    {
+        MainWindow.Instance?.SetAlwaysOnTop(AlwaysOnTopCheckBox.IsChecked == true);
     }
 }
