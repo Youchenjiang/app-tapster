@@ -117,7 +117,7 @@ timeline
   - **規格**：在打字與連點間隔中加入可配置的正態分佈隨機波動（Jitter ±5~15%），模擬真人手速，防止機械式操作判定。
 - [ ] **[P3-6] 智慧像素 / 影像顏色條件觸發 (Pixel & Image Trigger)**
   - **規格**：偵測指定螢幕座標之像素顏色或區域特徵，符合條件時自動觸發連點或巨集。
-- [ ] **[P3-7] 全域功能熱鍵系統 (Global Function Hotkeys)**
+- [x] **[P3-7] 全域功能熱鍵系統 (Global Function Hotkeys)**
   - **規格**：各模組支援全域熱鍵直接啟動與停止（免切回 Tapster 視窗）：
     - `F6`：切換 Auto Clicker（連點開始/暫停）
     - `F7`：切換 Key Holder（按鍵長按開始/停止）
@@ -125,9 +125,9 @@ timeline
     - `F9`：切換 Macro Recorder（錄製/停止/回放）
     - `F10`：全域強制終止（Kill Switch）
   - 支援在 Settings 與各分頁錄製自訂快速鍵，透過 Win32 `RegisterHotKey` 動態註冊並持久化。
-- [ ] **[P3-8] 連點器按壓觸發模式 (Clicker Hold-to-Click Mode)**
+- [x] **[P3-8] 連點器按壓觸發模式 (Clicker Hold-to-Click Mode)**
   - **規格**：除現有 Toggle 模式（按一次啟動/停止）外，新增 Hold Mode。當按住指定熱鍵或滑鼠鍵時高速連點（如 50~100 CPS），放開即刻停止，大幅提升射擊與動作遊戲體驗。
-- [ ] **[P3-9] 鍵盤按鍵連打支援 (Keyboard Auto Clicker / Key Spammer)**
+- [x] **[P3-9] 鍵盤按鍵連打支援 (Keyboard Auto Clicker / Key Spammer)**
   - **規格**：將 Auto Clicker 擴展為支援「滑鼠按鍵」與「指定鍵盤按鍵」雙軌連點。使用者可設定單鍵（如 `F`、`Space`、`E`）以 1ms~1000ms 間隔高速連按，滿足遊戲狂刷與交互需求。
 - [ ] **[P3-10] 打字機剪貼簿直投與結尾鍵 (Clipboard Paste Mode & Trailing Enter)**
   - **規格**：
