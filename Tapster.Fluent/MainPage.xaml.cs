@@ -78,36 +78,10 @@ public sealed partial class MainPage : Page
             AppSettings.Current.Save();
         };
 
-        Action updateTargetType = () =>
-        {
-            if (ClickTargetTypeCombo == null || MouseButtonLabel == null || SpamKeyLabel == null) return;
-            bool isSpammer = ClickTargetTypeCombo.SelectedIndex == 1;
-            MouseButtonLabel.Visibility = isSpammer ? Visibility.Collapsed : Visibility.Visible;
-            MouseButtonCombo.Visibility = isSpammer ? Visibility.Collapsed : Visibility.Visible;
-            ClickCoordsLabel.Visibility = isSpammer ? Visibility.Collapsed : Visibility.Visible;
-            ClickCoordsPanel.Visibility = isSpammer ? Visibility.Collapsed : Visibility.Visible;
-
-            SpamKeyLabel.Visibility = isSpammer ? Visibility.Visible : Visibility.Collapsed;
-            SpamKeyBox.Visibility = isSpammer ? Visibility.Visible : Visibility.Collapsed;
-
-            AppSettings.Current.ClickerIsKeySpammer = isSpammer;
-            AppSettings.Current.Save();
-        };
-
-        Action updateTriggerMode = () =>
-        {
-            if (ClickTriggerModeCombo == null || HoldModeHint == null) return;
-            bool isHold = ClickTriggerModeCombo.SelectedIndex == 1;
-            HoldModeHint.Visibility = isHold ? Visibility.Visible : Visibility.Collapsed;
-
-            AppSettings.Current.ClickerHoldMode = isHold;
-            AppSettings.Current.Save();
-        };
-
-        ClickTargetTypeCombo.SelectionChanged += (_, _) => updateTargetType();
-        ClickTriggerModeCombo.SelectionChanged += (_, _) => updateTriggerMode();
-        updateTargetType();
-        updateTriggerMode();
+        ClickTargetTypeCombo.SelectionChanged += (_, _) => UpdateClickerTargetType(this);
+        ClickTriggerModeCombo.SelectionChanged += (_, _) => UpdateClickerTriggerMode(this);
+        UpdateClickerTargetType(this);
+        UpdateClickerTriggerMode(this);
 
         GenerateVirtualKeyboard();
 
@@ -459,6 +433,35 @@ public sealed partial class MainPage : Page
     // ══════════════════════════════════════════════════════════
     // Per-Panel Action Handlers (Plan A: Self-Contained Execution)
     // ══════════════════════════════════════════════════════════
+
+    private static void UpdateClickerTargetType(MainPage page)
+    {
+        if (page.ClickTargetTypeCombo == null || page.MouseButtonLabel == null || page.SpamKeyLabel == null) return;
+        bool isSpammer = page.ClickTargetTypeCombo.SelectedIndex == 1;
+        var mouseVis = isSpammer ? Visibility.Collapsed : Visibility.Visible;
+        var spamVis = isSpammer ? Visibility.Visible : Visibility.Collapsed;
+
+        page.MouseButtonLabel.Visibility = mouseVis;
+        page.MouseButtonCombo.Visibility = mouseVis;
+        page.ClickCoordsLabel.Visibility = mouseVis;
+        page.ClickCoordsPanel.Visibility = mouseVis;
+
+        page.SpamKeyLabel.Visibility = spamVis;
+        page.SpamKeyBox.Visibility = spamVis;
+
+        AppSettings.Current.ClickerIsKeySpammer = isSpammer;
+        AppSettings.Current.Save();
+    }
+
+    private static void UpdateClickerTriggerMode(MainPage page)
+    {
+        if (page.ClickTriggerModeCombo == null || page.HoldModeHint == null) return;
+        bool isHold = page.ClickTriggerModeCombo.SelectedIndex == 1;
+        page.HoldModeHint.Visibility = isHold ? Visibility.Visible : Visibility.Collapsed;
+
+        AppSettings.Current.ClickerHoldMode = isHold;
+        AppSettings.Current.Save();
+    }
 
     // ══════════════════════════════════════════════════════════
     // Global Hotkey Remote Triggers
