@@ -113,8 +113,8 @@ timeline
   - **規則**：透過 Win32 `Shell_NotifyIconW` 與 Window Subclassing 實作零依賴系統匣圖示；支援 `--tray` 啟動隱藏常駐、雙擊喚醒、視窗關閉縮排至系統匣，以及包含「顯示/隱藏」、「永遠置頂」、「結束」的原生右鍵彈出式選單。
 - [x] **[P3-4] 背景巨集錄製引擎 (Macro Recorder Engine)**
   - **規則**：基於 Win32 `GetAsyncKeyState` 狀態機與相對毫秒時間戳捕捉鍵盤與滑鼠點擊動作，支援即時動作捕獲回調、符號位元跨執行緒安全判定與多倍速回放。
-- [ ] **[P3-5] 擬人化隨機延遲 (Humanized Jitter & Anti-Detection)**
-  - **規格**：在打字與連點間隔中加入可配置的正態分佈隨機波動（Jitter ±5~15%），模擬真人手速，防止機械式操作判定。
+- [x] **[P3-5] 擬人化隨機延遲與空間座標抖動 (Humanized Jitter & Coordinate Randomization)**
+  - **規格**：實作 `JitterHelper` 核心演算法，支援連點/連打時間間隔隨機波動（Jitter ±%）與目標座標圓形半徑空間隨機抖動（Location Jitter ±px），模擬真人操作手感並防範反作弊偵測；搭配即時全域快速座標拾取器（Crosshair Picker）。
 - [ ] **[P3-6] 智慧像素 / 影像顏色條件觸發 (Pixel & Image Trigger)**
   - **規格**：偵測指定螢幕座標之像素顏色或區域特徵，符合條件時自動觸發連點或巨集。
 - [x] **[P3-7] 全域功能熱鍵系統 (Global Function Hotkeys)**
