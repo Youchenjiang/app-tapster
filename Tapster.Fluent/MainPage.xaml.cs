@@ -394,7 +394,7 @@ public sealed partial class MainPage : Page
         PickCoordText.Text = "Hover & Press Space (Esc=Cancel)...";
         ClickerStatusText.Text = "Move cursor to target. Press Space/Enter or click to lock (Esc to cancel)...";
 
-        var (picked, canceled, x, y) = await Task.Run(PollTargetCoordinatesAsync);
+        var (picked, canceled, x, y) = await Task.Run(PollTargetCoordinatesAsync, CancellationToken.None);
 
         PickCoordText.Text = "Pick Location";
         if (canceled || !picked)
@@ -823,7 +823,7 @@ public sealed partial class MainPage : Page
         int? targetX = double.IsNaN(ClickXBox.Value) ? null : (int)ClickXBox.Value;
         int? targetY = double.IsNaN(ClickYBox.Value) ? null : (int)ClickYBox.Value;
 
-        bool jitterEnabled = TimeJitterCheck.IsChecked == true;
+        bool jitterEnabled = TimeJitterCheck.IsChecked.GetValueOrDefault();
         double timeJitterPct = TimeJitterBox.Value;
         double locJitterPx = LocationJitterBox.Value;
 
