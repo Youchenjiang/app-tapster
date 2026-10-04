@@ -85,8 +85,8 @@ timeline
     - **Shift 排**：`Shift` (88px) + ZXCVBNM `,` `.` `/` + `Shift` (92px)。
     - **Bottom 排**：Ctrl/Win/Alt + `Space` (240px 超長鍵) + 方向鍵叢集 (`◄` `▲` `▼` `►`)。
   - **樣式規則**：每顆按鍵具備 Keycap 圓角立體外框與 Cascadia Code 等寬字型。
-- [x] **[P2-3] 視窗流暢拖曳修復 (TitleBar Drag Optimization)**
-  - **規則**：建立獨立的 `TitleBarDragRegion` 透明拖曳區，將 `SetTitleBar` 與標題列內的按鈕（如 AlwaysOnTop 勾選框）徹底解耦，消除拖曳卡頓。
+- [x] **[P2-3] 原生 144Hz+ 視窗流暢拖曳修復 (Native DWM Drag Optimization)**
+  - **規則**：徹底繞過 WinUI 3 `AppWindowTitleBar` 與 `ExtendsContentIntoTitleBar` 的 DirectComposition 攔截，回歸 Windows 核心 `user32.dll` 與 `dwm.exe` 原生非客戶區拖曳（滿血支援 120Hz/144Hz/240Hz 螢幕與 1000Hz 高回報率電競滑鼠）；結合 Win32 `DwmSetWindowAttribute` 注入深色沉浸外觀與 `#202020` 標題列色，並將控制項移至導航側欄底端，達成 100% 順暢與深色無縫美觀。
 - [x] **[P2-4] 符號渲染規範化 (Clean Fluent Glyphs)**
   - **規則**：移除 TextBlock 內混用 Emoji 導致渲染出藍色小方塊的瑕疵，統一使用 Microsoft Segoe Fluent Icons 動態 Glyph (`\uE7C8` 錄製、`\uE71A` 停止、`\uE707` 十字準星、`\uE765` 打字機)。
 - [x] **[P2-5] 全域喚醒快捷鍵 (Global Wake Hotkey)**

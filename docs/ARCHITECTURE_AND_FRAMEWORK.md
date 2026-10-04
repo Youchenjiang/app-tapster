@@ -41,5 +41,5 @@
 - **標準解決方案：純 Windows 11 DWM 屬性注入**：
   視窗拖曳維持由 Windows 核心 `user32.dll` 與 `dwm.exe` 處理（滿血原生更新率）；深色主題與外觀則透過 `DwmSetWindowAttribute` 注入 `DWMWA_USE_IMMERSIVE_DARK_MODE` (20)、`DWMWA_CAPTION_COLOR` (35, `#202020`) 與 `DWMWA_TEXT_COLOR` (36, 純白) 達成視覺無縫融合。
 - **互動控制項分離**：
-  將全域切換開關（如 Always on top）由標題列移置 `NavigationView.PaneFooter`，保證視窗非客戶區頂部具備 100% 完整之拖曳 Hit-Test 區域。完整開發指南請參閱 [`docs/development/fluent_window_drag_performance_guide.md`](file:///c:/Users/g1014308/Documents/GitHub/Youchen/Tapster/docs/development/fluent_window_drag_performance_guide.md)。
+  將全域切換開關（如 Always on top）由標題列移置 `NavigationView.PaneFooter`，保證視窗非客戶區頂部具備 100% 完整之拖曳 Hit-Test 區域。完整開發指南請參閱 [`docs/development/fluent_window_drag_performance_guide.md`](development/fluent_window_drag_performance_guide.md)。
 

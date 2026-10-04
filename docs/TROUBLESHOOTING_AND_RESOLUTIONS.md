@@ -95,5 +95,5 @@
      NativeMethods.DwmSetWindowAttribute(_hWnd, NativeMethods.DWMWA_TEXT_COLOR, ref textColor, sizeof(uint));
      ```
   3. **將非必要按鈕移出標題列**：如「Always on top」核取方塊移至 `NavigationView.PaneFooter`，保持頂部拖曳區域乾淨完整。
-- **詳細指南**：請參閱完整開發規範文件 [`docs/development/fluent_window_drag_performance_guide.md`](file:///c:/Users/g1014308/Documents/GitHub/Youchen/Tapster/docs/development/fluent_window_drag_performance_guide.md)。
+- **詳細指南**：請參閱完整開發規範文件 [`docs/development/fluent_window_drag_performance_guide.md`](development/fluent_window_drag_performance_guide.md)。
 
