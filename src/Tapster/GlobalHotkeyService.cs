@@ -139,36 +139,53 @@ public sealed class GlobalHotkeyService : IDisposable
     {
         if (key.Length == 1)
         {
-            char c = key[0];
-            if (c >= 'a' && c <= 'z') return (uint)(c - 'a' + 0x41);
-            if (c >= '0' && c <= '9') return (uint)(c - '0' + 0x30);
+            return ParseSingleChar(key[0]);
         }
 
+        uint fVk = ParseFunctionKey(key);
+        if (fVk != 0)
+        {
+            return fVk;
+        }
+
+        return ParseNamedKey(key);
+    }
+
+    private static uint ParseSingleChar(char c)
+    {
+        if (c is >= 'a' and <= 'z') return (uint)(c - 'a' + 0x41);
+        if (c is >= '0' and <= '9') return (uint)(c - '0' + 0x30);
+        return 0;
+    }
+
+    private static uint ParseFunctionKey(string key)
+    {
         if (key.StartsWith('f') && int.TryParse(key.AsSpan(1), out int fNum) && fNum is >= 1 and <= 24)
         {
             return (uint)(0x70 + (fNum - 1)); // VK_F1 is 0x70
         }
-
-        return key switch
-        {
-            "esc" or "escape" => 0x1B,
-            "space" => 0x20,
-            "enter" or "return" => 0x0D,
-            "tab" => 0x09,
-            "backspace" => 0x08,
-            "delete" or "del" => 0x2E,
-            "insert" or "ins" => 0x2D,
-            "home" => 0x24,
-            "end" => 0x23,
-            "pageup" or "pgup" => 0x21,
-            "pagedown" or "pgdn" => 0x22,
-            "up" => 0x26,
-            "down" => 0x28,
-            "left" => 0x25,
-            "right" => 0x27,
-            _ => 0
-        };
+        return 0;
     }
+
+    private static uint ParseNamedKey(string key) => key switch
+    {
+        "esc" or "escape" => 0x1B,
+        "space" => 0x20,
+        "enter" or "return" => 0x0D,
+        "tab" => 0x09,
+        "backspace" => 0x08,
+        "delete" or "del" => 0x2E,
+        "insert" or "ins" => 0x2D,
+        "home" => 0x24,
+        "end" => 0x23,
+        "pageup" or "pgup" => 0x21,
+        "pagedown" or "pgdn" => 0x22,
+        "up" => 0x26,
+        "down" => 0x28,
+        "left" => 0x25,
+        "right" => 0x27,
+        _ => 0
+    };
 
     public void Dispose()
     {

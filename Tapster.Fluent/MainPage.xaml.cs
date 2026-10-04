@@ -78,6 +78,11 @@ public sealed partial class MainPage : Page
             AppSettings.Current.Save();
         };
 
+        ClickTargetTypeCombo.SelectionChanged += (_, _) => OnClickTargetTypeChanged();
+        ClickTriggerModeCombo.SelectionChanged += (_, _) => OnClickTriggerModeChanged();
+        OnClickTargetTypeChanged();
+        OnClickTriggerModeChanged();
+
         GenerateVirtualKeyboard();
 
         // Load Settings
@@ -431,7 +436,7 @@ public sealed partial class MainPage : Page
     // Clicker & Spammer Mode Selection Handlers
     // ══════════════════════════════════════════════════════════
 
-    private void ClickTargetTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnClickTargetTypeChanged()
     {
         if (ClickTargetTypeCombo == null || MouseButtonLabel == null || SpamKeyLabel == null) return;
         bool isSpammer = ClickTargetTypeCombo.SelectedIndex == 1;
@@ -447,7 +452,7 @@ public sealed partial class MainPage : Page
         AppSettings.Current.Save();
     }
 
-    private void ClickTriggerModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnClickTriggerModeChanged()
     {
         if (ClickTriggerModeCombo == null || HoldModeHint == null) return;
         bool isHold = ClickTriggerModeCombo.SelectedIndex == 1;

@@ -5,11 +5,13 @@ namespace Tapster.Core.Tests;
 
 public class KeySpammerTests
 {
-    [Fact]
-    public void KeySpammer_SpamEmptyOrWhitespace_DoesNotThrow()
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void KeySpammer_SpamEmptyOrWhitespace_DoesNotThrow(string key)
     {
-        KeySpammer.Spam("");
-        KeySpammer.Spam("   ");
+        var ex = Record.Exception(() => KeySpammer.Spam(key));
+        Assert.Null(ex);
     }
 
     [Fact]

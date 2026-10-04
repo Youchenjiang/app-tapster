@@ -302,8 +302,7 @@
 
                                 <!-- Target Type: Mouse or Keyboard Spammer -->
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Target Type:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <ComboBox x:Name="ClickTargetTypeCombo" Grid.Row="0" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200"
-                                          SelectionChanged="ClickTargetTypeCombo_SelectionChanged">
+                                <ComboBox x:Name="ClickTargetTypeCombo" Grid.Row="0" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
                                     <ComboBoxItem Content="🖱️ Mouse Click"/>
                                     <ComboBoxItem Content="⌨️ Keyboard Spammer"/>
                                 </ComboBox>
@@ -311,8 +310,7 @@
                                 <!-- Trigger Mode: Toggle or Hold-to-Click -->
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Trigger Mode:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
                                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                    <ComboBox x:Name="ClickTriggerModeCombo" SelectedIndex="0" HorizontalAlignment="Left" Width="200"
-                                              SelectionChanged="ClickTriggerModeCombo_SelectionChanged">
+                                    <ComboBox x:Name="ClickTriggerModeCombo" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
                                         <ComboBoxItem Content="Toggle (Press to Start/Stop)"/>
                                         <ComboBoxItem Content="Hold to Click (Hold F6)"/>
                                     </ComboBox>
