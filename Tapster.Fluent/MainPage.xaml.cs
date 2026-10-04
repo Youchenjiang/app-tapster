@@ -47,6 +47,8 @@ public sealed partial class MainPage : Page
         ClickIntervalBox.NumberFormatter = fmt2;
         HoldDurationBox.NumberFormatter = fmtInt;
         ClickCountBox.NumberFormatter = fmtInt;
+        TimeJitterBox.NumberFormatter = fmtInt;
+        LocationJitterBox.NumberFormatter = fmtInt;
         MacroRepeatBox.NumberFormatter = fmtInt;
         MacroSpeedBox.NumberFormatter = fmt2;
 
@@ -68,13 +70,41 @@ public sealed partial class MainPage : Page
         ClickerDelayBox.Value = 3;
         MacroDelayBox.Value = 3;
 
-        // Restore Clicker and Key Spammer Preferences
+        // Restore Clicker, Key Spammer and Jitter Preferences
         ClickTriggerModeCombo.SelectedIndex = AppSettings.Current.ClickerHoldMode ? 1 : 0;
         ClickTargetTypeCombo.SelectedIndex = AppSettings.Current.ClickerIsKeySpammer ? 1 : 0;
         SpamKeyBox.Text = string.IsNullOrEmpty(AppSettings.Current.ClickerSpamKey) ? "space" : AppSettings.Current.ClickerSpamKey;
         SpamKeyBox.TextChanged += (_, _) =>
         {
             AppSettings.Current.ClickerSpamKey = SpamKeyBox.Text;
+            AppSettings.Current.Save();
+        };
+
+        TimeJitterCheck.IsChecked = AppSettings.Current.ClickerJitterEnabled;
+        TimeJitterBox.IsEnabled = AppSettings.Current.ClickerJitterEnabled;
+        TimeJitterBox.Value = AppSettings.Current.ClickerTimeJitterPercent;
+        LocationJitterBox.Value = AppSettings.Current.ClickerLocationJitterPx;
+
+        TimeJitterCheck.Checked += (_, _) =>
+        {
+            TimeJitterBox.IsEnabled = true;
+            AppSettings.Current.ClickerJitterEnabled = true;
+            AppSettings.Current.Save();
+        };
+        TimeJitterCheck.Unchecked += (_, _) =>
+        {
+            TimeJitterBox.IsEnabled = false;
+            AppSettings.Current.ClickerJitterEnabled = false;
+            AppSettings.Current.Save();
+        };
+        TimeJitterBox.ValueChanged += (_, _) =>
+        {
+            AppSettings.Current.ClickerTimeJitterPercent = TimeJitterBox.Value;
+            AppSettings.Current.Save();
+        };
+        LocationJitterBox.ValueChanged += (_, _) =>
+        {
+            AppSettings.Current.ClickerLocationJitterPx = LocationJitterBox.Value;
             AppSettings.Current.Save();
         };
 
@@ -361,17 +391,55 @@ public sealed partial class MainPage : Page
 
     private async void PickCoordBtn_Click(object sender, RoutedEventArgs e)
     {
-        ClickerStatusText.Text = "Move cursor to target location in 3s...";
-        for (int i = 3; i > 0; i--)
+        PickCoordText.Text = "Hover & Press Space (Esc=Cancel)...";
+        ClickerStatusText.Text = "Move cursor to target. Press Space/Enter or click to lock (Esc to cancel)...";
+
+        var (picked, canceled, x, y) = await Task.Run(PollTargetCoordinatesAsync);
+
+        PickCoordText.Text = "Pick Location";
+        if (canceled || !picked)
         {
-            ClickerStatusText.Text = $"Locking coordinates in {i}s... Move mouse to target!";
-            await Task.Delay(1000);
+            ClickerStatusText.Text = "Coordinate picking canceled";
+            return;
         }
 
-        var (x, y) = Mouse.GetPosition();
         ClickXBox.Value = x;
         ClickYBox.Value = y;
         ClickerStatusText.Text = $"Locked target coordinates: ({x}, {y})";
+    }
+
+    private static async Task<(bool Picked, bool Canceled, int X, int Y)> PollTargetCoordinatesAsync()
+    {
+        const int VK_SPACE = 0x20;
+        const int VK_RETURN = 0x0D;
+        const int VK_LBUTTON = 0x01;
+        const int VK_ESCAPE = 0x1B;
+
+        await Task.Delay(250);
+        var start = DateTime.UtcNow;
+
+        while ((DateTime.UtcNow - start).TotalSeconds < 4.0)
+        {
+            if ((NativeMethods.GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0)
+            {
+                return (false, true, 0, 0);
+            }
+
+            bool triggered = (NativeMethods.GetAsyncKeyState(VK_SPACE) & 0x8000) != 0 ||
+                             (NativeMethods.GetAsyncKeyState(VK_RETURN) & 0x8000) != 0 ||
+                             (NativeMethods.GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+
+            if (triggered)
+            {
+                var (x, y) = Mouse.GetPosition();
+                return (true, false, x, y);
+            }
+
+            await Task.Delay(20);
+        }
+
+        var (fx, fy) = Mouse.GetPosition();
+        return (true, false, fx, fy);
     }
 
     private void RecordMacroBtn_Click(object sender, RoutedEventArgs e)
@@ -445,6 +513,8 @@ public sealed partial class MainPage : Page
         page.MouseButtonCombo.Visibility = mouseVis;
         page.ClickCoordsLabel.Visibility = mouseVis;
         page.ClickCoordsPanel.Visibility = mouseVis;
+        page.LocationJitterLabel.Visibility = mouseVis;
+        page.LocationJitterPanel.Visibility = mouseVis;
 
         page.SpamKeyLabel.Visibility = spamVis;
         page.SpamKeyBox.Visibility = spamVis;
@@ -753,6 +823,10 @@ public sealed partial class MainPage : Page
         int? targetX = double.IsNaN(ClickXBox.Value) ? null : (int)ClickXBox.Value;
         int? targetY = double.IsNaN(ClickYBox.Value) ? null : (int)ClickYBox.Value;
 
+        bool jitterEnabled = TimeJitterCheck.IsChecked == true;
+        double timeJitterPct = TimeJitterBox.Value;
+        double locJitterPx = LocationJitterBox.Value;
+
         // F6 virtual key code
         const int HOTKEY_VK = 0x75;
 
@@ -775,14 +849,7 @@ public sealed partial class MainPage : Page
                 }
                 else
                 {
-                    if (targetX.HasValue && targetY.HasValue)
-                    {
-                        Mouse.ClickAt(targetX.Value, targetY.Value, button);
-                    }
-                    else
-                    {
-                        Mouse.Click(button);
-                    }
+                    PerformMouseClick(targetX, targetY, locJitterPx, button);
                 }
                 count++;
 
@@ -796,12 +863,29 @@ public sealed partial class MainPage : Page
                     reportProgress($"{actionName} count: {count} (Infinite)...", 100);
                 }
 
-                if (intervalMs > 0)
+                int sleepMs = jitterEnabled && timeJitterPct > 0
+                    ? JitterHelper.ApplyTimeJitter(intervalMs, timeJitterPct)
+                    : intervalMs;
+
+                if (sleepMs > 0)
                 {
-                    Thread.Sleep(intervalMs);
+                    Thread.Sleep(sleepMs);
                 }
             }
         }, token);
+    }
+
+    private static void PerformMouseClick(int? targetX, int? targetY, double locJitterPx, string button)
+    {
+        if (targetX.HasValue && targetY.HasValue)
+        {
+            var (clickX, clickY) = JitterHelper.ApplyLocationJitter(targetX.Value, targetY.Value, locJitterPx);
+            Mouse.ClickAt(clickX, clickY, button);
+        }
+        else
+        {
+            Mouse.Click(button);
+        }
     }
 
     private async Task RunMacroReplayAsync(CancellationToken token, Action<string, double> reportProgress)

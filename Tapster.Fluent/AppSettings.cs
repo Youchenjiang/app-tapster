@@ -31,6 +31,9 @@ public class AppSettings
     public bool ClickerHoldMode { get; set; } = false;
     public bool ClickerIsKeySpammer { get; set; } = false;
     public string ClickerSpamKey { get; set; } = "space";
+    public bool ClickerJitterEnabled { get; set; } = false;
+    public double ClickerTimeJitterPercent { get; set; } = 15;
+    public double ClickerLocationJitterPx { get; set; } = 0;
 
     public bool StartOnBoot
     {
