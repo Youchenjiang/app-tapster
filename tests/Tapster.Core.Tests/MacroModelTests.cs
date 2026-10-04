@@ -41,6 +41,7 @@ public class MacroModelTests
     [InlineData(MacroActionType.ClickLeft)]
     [InlineData(MacroActionType.ClickRight)]
     [InlineData(MacroActionType.ClickMiddle)]
+    [InlineData(MacroActionType.MouseMove)]
     [InlineData(MacroActionType.KeyPress)]
     [InlineData(MacroActionType.KeyRelease)]
     [InlineData(MacroActionType.TypeText)]
@@ -50,11 +51,52 @@ public class MacroModelTests
     }
 
     [Fact]
+    public void MacroRecorder_StepManipulation_WorksAccurately()
+    {
+        var recorder = new MacroRecorder();
+        var act1 = new MacroAction { Type = MacroActionType.MouseMove, X = 50, Y = 60, DelayMs = 10 };
+        var act2 = new MacroAction { Type = MacroActionType.ClickLeft, X = 50, Y = 60, DelayMs = 20 };
+
+        recorder.InsertAction(0, act1);
+        recorder.InsertAction(1, act2);
+        Assert.Equal(2, recorder.Actions.Count);
+        Assert.Equal(MacroActionType.MouseMove, recorder.Actions[0].Type);
+
+        var updatedAct = new MacroAction { Type = MacroActionType.MouseMove, X = 100, Y = 200, DelayMs = 15 };
+        bool updateSuccess = recorder.UpdateAction(0, updatedAct);
+        Assert.True(updateSuccess);
+        Assert.Equal(100, recorder.Actions[0].X);
+        Assert.Equal(200, recorder.Actions[0].Y);
+
+        bool outOfBoundsUpdate = recorder.UpdateAction(99, updatedAct);
+        Assert.False(outOfBoundsUpdate);
+
+        bool removeSuccess = recorder.RemoveActionAt(0);
+        Assert.True(removeSuccess);
+        Assert.Single(recorder.Actions);
+        Assert.Equal(MacroActionType.ClickLeft, recorder.Actions[0].Type);
+
+        bool outOfBoundsRemove = recorder.RemoveActionAt(99);
+        Assert.False(outOfBoundsRemove);
+    }
+
+    [Fact]
+    public void MacroRecorder_IgnoreMouseMove_PropertyDefaultsToTrue()
+    {
+        var recorder = new MacroRecorder();
+        Assert.True(recorder.IgnoreMouseMove);
+
+        recorder.IgnoreMouseMove = false;
+        Assert.False(recorder.IgnoreMouseMove);
+    }
+
+    [Fact]
     public void MacroAction_Serialization_RoundtripsAccurately()
     {
         var actions = new List<MacroAction>
         {
             new() { Type = MacroActionType.ClickLeft, X = 100, Y = 200, DelayMs = 50 },
+            new() { Type = MacroActionType.MouseMove, X = 150, Y = 250, DelayMs = 10 },
             new() { Type = MacroActionType.KeyPress, Data = "ctrl", DelayMs = 120 },
             new() { Type = MacroActionType.TypeText, Data = "Tapster Test", DelayMs = 300 },
             new() { Type = MacroActionType.KeyRelease, Data = "ctrl", DelayMs = 80 }
