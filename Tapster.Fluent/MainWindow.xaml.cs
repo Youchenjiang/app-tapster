@@ -25,12 +25,9 @@ public sealed partial class MainWindow : Window
         _hWnd = WindowNative.GetWindowHandle(this);
 
         // Pure Native DWM Dark Mode & Title Bar Styling for 100% native 144Hz+ zero-latency window dragging
-        int darkMode = 1;
-        NativeMethods.DwmSetWindowAttribute(_hWnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
-        uint captionColor = 0x00202020; // COLORREF 0x00BBGGRR -> #202020
-        NativeMethods.DwmSetWindowAttribute(_hWnd, NativeMethods.DWMWA_CAPTION_COLOR, ref captionColor, sizeof(uint));
-        uint textColor = 0x00FFFFFF;
-        NativeMethods.DwmSetWindowAttribute(_hWnd, NativeMethods.DWMWA_TEXT_COLOR, ref textColor, sizeof(uint));
+        NativeMethods.SetWindowAttribute(_hWnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, 1);
+        NativeMethods.SetWindowAttribute(_hWnd, NativeMethods.DWMWA_CAPTION_COLOR, 0x00202020u); // COLORREF 0x00BBGGRR -> #202020
+        NativeMethods.SetWindowAttribute(_hWnd, NativeMethods.DWMWA_TEXT_COLOR, 0x00FFFFFFu);
 
         // Set window & taskbar icon — must use .ico; .png is not supported by SetIcon()
         string[] iconCandidates =
@@ -81,6 +78,8 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    public event Action<bool>? AlwaysOnTopChanged;
+
     public void SetAlwaysOnTop(bool isTop)
     {
         _isAlwaysOnTop = isTop;
@@ -88,6 +87,7 @@ public sealed partial class MainWindow : Window
         {
             presenter.IsAlwaysOnTop = isTop;
         }
+        AlwaysOnTopChanged?.Invoke(isTop);
     }
 
     public void ToggleVisibility()

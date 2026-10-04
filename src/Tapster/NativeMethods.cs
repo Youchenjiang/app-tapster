@@ -213,7 +213,18 @@ public static partial class NativeMethods
     public const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
 
     [DllImport("dwmapi.dll", PreserveSig = true)]
-    public static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
     [DllImport("dwmapi.dll", PreserveSig = true)]
-    public static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref uint pvAttribute, int cbAttribute);
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref uint pvAttribute, int cbAttribute);
+
+    public static int SetWindowAttribute(IntPtr hwnd, int dwAttribute, int pvAttribute)
+    {
+        return DwmSetWindowAttribute(hwnd, dwAttribute, ref pvAttribute, sizeof(int));
+    }
+
+    public static int SetWindowAttribute(IntPtr hwnd, int dwAttribute, uint pvAttribute)
+    {
+        return DwmSetWindowAttribute(hwnd, dwAttribute, ref pvAttribute, sizeof(uint));
+    }
 }
