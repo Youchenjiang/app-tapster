@@ -748,10 +748,7 @@ public sealed partial class MainPage : Page
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (AlwaysOnTopCheckBox.IsChecked != isTop)
-            {
-                AlwaysOnTopCheckBox.IsChecked = isTop;
-            }
+            AlwaysOnTopCheckBox.IsChecked = isTop;
         });
     }
 }
