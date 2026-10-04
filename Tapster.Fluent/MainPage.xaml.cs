@@ -11,6 +11,12 @@ namespace Tapster_Fluent;
 
 public sealed partial class MainPage : Page
 {
+    private const string KeyEnter = "enter";
+    private const string KeyTab = "tab";
+    private const string KeyNone = "none";
+    private const string TyperModeClipboard = "clipboard";
+    private const string TyperModeKeystroke = "keystroke";
+
     public static MainPage? Instance { get; private set; }
     private string _activeTab = "Typer";
     private bool _isRunning = false;
@@ -109,11 +115,11 @@ public sealed partial class MainPage : Page
         };
 
         // Restore Typer Preferences
-        TypeModeCombo.SelectedIndex = AppSettings.Current.TyperInputMode == "clipboard" ? 1 : 0;
+        TypeModeCombo.SelectedIndex = AppSettings.Current.TyperInputMode == TyperModeClipboard ? 1 : 0;
         TypeTrailingKeyCombo.SelectedIndex = AppSettings.Current.TyperTrailingKey switch
         {
-            "enter" => 1,
-            "tab" => 2,
+            KeyEnter => 1,
+            KeyTab => 2,
             _ => 0
         };
         TypeJitterCheck.IsChecked = AppSettings.Current.TyperJitterEnabled;
@@ -123,9 +129,9 @@ public sealed partial class MainPage : Page
         {
             AppSettings.Current.TyperTrailingKey = TypeTrailingKeyCombo.SelectedIndex switch
             {
-                1 => "enter",
-                2 => "tab",
-                _ => "none"
+                1 => KeyEnter,
+                2 => KeyTab,
+                _ => KeyNone
             };
             AppSettings.Current.Save();
         };
@@ -186,7 +192,7 @@ public sealed partial class MainPage : Page
 
         // ── Row 2: QWERTY Row ──
         var row2 = CreateKeyboardRow();
-        AddKeyBtn(row2, "tab", "Tab", width: 54);
+        AddKeyBtn(row2, KeyTab, "Tab", width: 54);
         string[] r2Keys = { "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\" };
         foreach (var k in r2Keys) AddKeyBtn(row2, k, k.ToUpper());
         KeyboardContainer.Children.Add(row2);
@@ -196,7 +202,7 @@ public sealed partial class MainPage : Page
         AddKeyBtn(row3, "capslock", "Caps Lock", width: 66);
         string[] r3Keys = { "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" };
         foreach (var k in r3Keys) AddKeyBtn(row3, k, k.ToUpper());
-        AddKeyBtn(row3, "enter", "Enter", width: 80, isAccent: true);
+        AddKeyBtn(row3, KeyEnter, "Enter", width: 80, isAccent: true);
         KeyboardContainer.Children.Add(row3);
 
         // ── Row 4: Shift Row ──
@@ -574,7 +580,7 @@ public sealed partial class MainPage : Page
         page.TypeIntervalLabel.Visibility = isClipboard ? Visibility.Collapsed : Visibility.Visible;
         page.TypeIntervalPanel.Visibility = isClipboard ? Visibility.Collapsed : Visibility.Visible;
 
-        AppSettings.Current.TyperInputMode = isClipboard ? "clipboard" : "keystroke";
+        AppSettings.Current.TyperInputMode = isClipboard ? TyperModeClipboard : TyperModeKeystroke;
         AppSettings.Current.Save();
     }
 
@@ -777,9 +783,9 @@ public sealed partial class MainPage : Page
         int trailingIndex = TypeTrailingKeyCombo.SelectedIndex;
         string trailingKey = trailingIndex switch
         {
-            1 => "enter",
-            2 => "tab",
-            _ => "none"
+            1 => KeyEnter,
+            2 => KeyTab,
+            _ => KeyNone
         };
 
         if (isClipboard)
@@ -797,7 +803,7 @@ public sealed partial class MainPage : Page
         DispatcherQueue.TryEnqueue(() =>
         {
             string modeDesc = isClipboard ? "Pasted" : "Typed";
-            string summary = $"{DateTime.Now:HH:mm:ss} - {modeDesc} {text.Length} chars" + (trailingKey != "none" ? $" + [{trailingKey}]" : "");
+            string summary = $"{DateTime.Now:HH:mm:ss} - {modeDesc} {text.Length} chars" + (trailingKey != KeyNone ? $" + [{trailingKey}]" : "");
             HistoryList.Items.Insert(0, summary);
         });
     }
@@ -850,7 +856,7 @@ public sealed partial class MainPage : Page
 
     private static void ApplyTrailingKey(string trailingKey)
     {
-        if (trailingKey is "enter" or "tab")
+        if (trailingKey is KeyEnter or KeyTab)
         {
             Thread.Sleep(50);
             Keyboard.Tap(trailingKey);
