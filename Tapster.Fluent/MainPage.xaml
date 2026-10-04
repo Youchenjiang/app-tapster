@@ -298,6 +298,8 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <!-- Target Type: Mouse or Keyboard Spammer -->
@@ -351,10 +353,27 @@
                                     <NumberBox x:Name="ClickYBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
                                     <Button x:Name="PickCoordBtn" Click="PickCoordBtn_Click" Style="{StaticResource SubtleButtonStyle}">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon Glyph="&#xE707;" FontSize="12"/>
-                                            <TextBlock Text="Pick Location"/>
+                                            <FontIcon x:Name="PickCoordIcon" Glyph="&#xE707;" FontSize="12"/>
+                                            <TextBlock x:Name="PickCoordText" Text="Pick Location"/>
                                         </StackPanel>
                                     </Button>
+                                </StackPanel>
+
+                                <!-- Time Jitter (Random Interval) -->
+                                <TextBlock x:Name="TimeJitterLabel" Grid.Row="6" Grid.Column="0" Text="Time Jitter (±%):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <CheckBox x:Name="TimeJitterCheck" Content="Randomize interval" FontSize="12" VerticalAlignment="Center"/>
+                                    <NumberBox x:Name="TimeJitterBox" Width="80" Value="15" Minimum="1" Maximum="100"
+                                               FontSize="12" SpinButtonPlacementMode="Compact" IsEnabled="False"/>
+                                    <TextBlock Text="%" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </StackPanel>
+
+                                <!-- Location Jitter (Spatial Randomness) -->
+                                <TextBlock x:Name="LocationJitterLabel" Grid.Row="7" Grid.Column="0" Text="Location Jitter (±px):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                <StackPanel x:Name="LocationJitterPanel" Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <NumberBox x:Name="LocationJitterBox" Width="80" Value="0" Minimum="0" Maximum="100"
+                                               FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                    <TextBlock Text="px radius (0 = exact point)" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
