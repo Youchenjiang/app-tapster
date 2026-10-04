@@ -102,4 +102,18 @@ public class KeyboardTests
         var result = Keyboard.GetKeyName(vk);
         Assert.Equal(expected, result);
     }
+
+    [Fact]
+    public void Keyboard_Tap_DoesNotThrow()
+    {
+        var exception = Record.Exception(() => Keyboard.Tap("enter"));
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Keyboard_Paste_DoesNotThrow()
+    {
+        var exception = Record.Exception(() => Keyboard.Paste());
+        Assert.Null(exception);
+    }
 }

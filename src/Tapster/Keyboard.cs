@@ -70,6 +70,27 @@ public static partial class Keyboard
     }
 
     /// <summary>
+    /// Tap a key or combo (press and release with a brief delay).
+    /// </summary>
+    public static void Tap(string key)
+    {
+        Press(key);
+        Thread.Sleep(15);
+        Release(key);
+    }
+
+    /// <summary>
+    /// Simulates pasting content via Ctrl+V key combination.
+    /// </summary>
+    public static void Paste()
+    {
+        Press("ctrl+v");
+        Thread.Sleep(20);
+        Release("ctrl+v");
+        ReleaseAllModifiers();
+    }
+
+    /// <summary>
     /// Release all modifier keys to prevent stuck keys.
     /// </summary>
     public static void ReleaseAllModifiers()
