@@ -206,4 +206,25 @@ public static partial class NativeMethods
     [DllImport("comctl32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool RemoveWindowSubclass(IntPtr hWnd, SubclassProc pfnSubclass, UIntPtr uIdSubclass);
+
+    public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    public const int DWMWA_CAPTION_COLOR = 35;
+    public const int DWMWA_TEXT_COLOR = 36;
+    public const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
+
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref uint pvAttribute, int cbAttribute);
+
+    public static int SetWindowAttribute(IntPtr hwnd, int dwAttribute, int pvAttribute)
+    {
+        return DwmSetWindowAttribute(hwnd, dwAttribute, ref pvAttribute, sizeof(int));
+    }
+
+    public static int SetWindowAttribute(IntPtr hwnd, int dwAttribute, uint pvAttribute)
+    {
+        return DwmSetWindowAttribute(hwnd, dwAttribute, ref pvAttribute, sizeof(uint));
+    }
 }

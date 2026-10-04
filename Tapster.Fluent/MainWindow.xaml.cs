@@ -9,6 +9,9 @@ namespace Tapster_Fluent;
 
 public sealed partial class MainWindow : Window
 {
+    public static MainWindow? Instance { get; private set; }
+    private bool _isAlwaysOnTop = false;
+    public bool IsAlwaysOnTop => _isAlwaysOnTop;
     private const int HOTKEY_ID = 0x5412;
     private readonly IntPtr _hWnd;
     private SystemTrayManager? _trayManager;
@@ -16,12 +19,15 @@ public sealed partial class MainWindow : Window
 
     public MainWindow()
     {
+        Instance = this;
         InitializeComponent();
 
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(TitleBarDragRegion);
-
         _hWnd = WindowNative.GetWindowHandle(this);
+
+        // Pure Native DWM Dark Mode & Title Bar Styling for 100% native 144Hz+ zero-latency window dragging
+        NativeMethods.SetWindowAttribute(_hWnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, 1);
+        NativeMethods.SetWindowAttribute(_hWnd, NativeMethods.DWMWA_CAPTION_COLOR, 0x00202020u); // COLORREF 0x00BBGGRR -> #202020
+        NativeMethods.SetWindowAttribute(_hWnd, NativeMethods.DWMWA_TEXT_COLOR, 0x00FFFFFFu);
 
         // Set window & taskbar icon — must use .ico; .png is not supported by SetIcon()
         string[] iconCandidates =
@@ -46,7 +52,7 @@ public sealed partial class MainWindow : Window
             _hWnd,
             onToggleVisibility: ToggleVisibility,
             onSetAlwaysOnTop: SetAlwaysOnTop,
-            getAlwaysOnTop: () => AlwaysOnTopCheckBox.IsChecked == true,
+            getAlwaysOnTop: () => _isAlwaysOnTop,
             onExit: ExitApplication
         );
 
@@ -72,18 +78,16 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void AlwaysOnTopCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
-    {
-        SetAlwaysOnTop(AlwaysOnTopCheckBox.IsChecked == true);
-    }
+    public event Action<bool>? AlwaysOnTopChanged;
 
     public void SetAlwaysOnTop(bool isTop)
     {
+        _isAlwaysOnTop = isTop;
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.IsAlwaysOnTop = isTop;
-            AlwaysOnTopCheckBox.IsChecked = isTop;
         }
+        AlwaysOnTopChanged?.Invoke(isTop);
     }
 
     public void ToggleVisibility()

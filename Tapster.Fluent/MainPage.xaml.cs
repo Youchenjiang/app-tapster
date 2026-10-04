@@ -72,6 +72,14 @@ public sealed partial class MainPage : Page
         StartOnBootToggle.IsOn = AppSettings.Current.StartOnBoot;
         StartMinimizedToggle.IsOn = AppSettings.Current.StartMinimizedToTray;
         MinimizeOnCloseToggle.IsOn = AppSettings.Current.MinimizeToTrayOnClose;
+        if (MainWindow.Instance != null)
+        {
+            AlwaysOnTopCheckBox.IsChecked = MainWindow.Instance.IsAlwaysOnTop;
+            MainWindow.Instance.AlwaysOnTopChanged += OnMainWindowAlwaysOnTopChanged;
+        }
+
+        AlwaysOnTopCheckBox.Checked += (_, _) => MainWindow.Instance?.SetAlwaysOnTop(true);
+        AlwaysOnTopCheckBox.Unchecked += (_, _) => MainWindow.Instance?.SetAlwaysOnTop(false);
     }
 
     private void GenerateVirtualKeyboard()
@@ -734,5 +742,13 @@ public sealed partial class MainPage : Page
 
         _runningTaskName = null;
         Keyboard.ReleaseAllModifiers();
+    }
+
+    private void OnMainWindowAlwaysOnTopChanged(bool isTop)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            AlwaysOnTopCheckBox.IsChecked = isTop;
+        });
     }
 }

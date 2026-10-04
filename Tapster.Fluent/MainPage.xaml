@@ -47,6 +47,13 @@
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
+            <NavigationView.PaneFooter>
+                <StackPanel Margin="12,4" Spacing="2">
+                    <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Always on top" FontSize="11"/>
+                    <TextBlock Text="(Ctrl+Alt+T to Wake)" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="2,0,0,2"/>
+                </StackPanel>
+            </NavigationView.PaneFooter>
+
             <Grid Padding="20,12,20,16">
                 <!-- ══════════════════════════════════════════════════════════ -->
                 <!-- 1. Auto Typer Panel                                        -->
