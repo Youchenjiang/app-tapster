@@ -379,17 +379,20 @@
 
                                 <!-- Target Coordinates (Mouse only) -->
                                 <TextBlock x:Name="ClickCoordsLabel" Grid.Row="5" Grid.Column="0" Text="Target Coordinates:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel x:Name="ClickCoordsPanel" Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="X:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <NumberBox x:Name="ClickXBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                    <TextBlock Text="Y:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <NumberBox x:Name="ClickYBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                    <Button x:Name="PickCoordBtn" Click="PickCoordBtn_Click" Style="{StaticResource SubtleButtonStyle}">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon x:Name="PickCoordIcon" Glyph="&#xE707;" FontSize="12"/>
-                                            <TextBlock x:Name="PickCoordText" Text="Pick Location"/>
-                                        </StackPanel>
-                                    </Button>
+                                <StackPanel x:Name="ClickCoordsPanel" Grid.Row="5" Grid.Column="1" Orientation="Vertical" Spacing="6" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="X:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <NumberBox x:Name="ClickXBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                        <TextBlock Text="Y:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <NumberBox x:Name="ClickYBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                        <Button x:Name="PickCoordBtn" Click="PickCoordBtn_Click" Style="{StaticResource SubtleButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon x:Name="PickCoordIcon" Glyph="&#xE707;" FontSize="12"/>
+                                                <TextBlock x:Name="PickCoordText" Text="Pick Location"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                    <CheckBox x:Name="ShowTargetMarkerCheck" Content="Show Target Marker on Screen" FontSize="12" Margin="0,-2,0,0"/>
                                 </StackPanel>
 
                                 <!-- Time Jitter (Random Interval) -->
