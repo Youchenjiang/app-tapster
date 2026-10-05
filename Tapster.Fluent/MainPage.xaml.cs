@@ -467,8 +467,9 @@ public sealed partial class MainPage : Page
 
         ClickXBox.Value = x;
         ClickYBox.Value = y;
+        ShowTargetMarkerCheck.IsChecked = true;
+        OnTargetMarkerSettingsChanged();
         ClickerStatusText.Text = $"Locked target coordinates: ({x}, {y})";
-        UpdateTargetMarkerOverlay();
     }
 
     private static async Task<(bool Picked, bool Canceled, int X, int Y)> PollTargetCoordinatesAsync()

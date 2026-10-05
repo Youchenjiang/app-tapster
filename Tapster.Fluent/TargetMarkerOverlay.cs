@@ -67,11 +67,6 @@ public sealed class TargetMarkerOverlay : IDisposable
             IntPtr.Zero,
             IntPtr.Zero,
             IntPtr.Zero);
-
-        if (_hWnd != IntPtr.Zero)
-        {
-            NativeMethods.SetLayeredWindowAttributes(_hWnd, ColorKey, 235, NativeMethods.LWA_COLORKEY | NativeMethods.LWA_ALPHA);
-        }
     }
 
     private static IntPtr WndProcHandler(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
@@ -100,37 +95,28 @@ public sealed class TargetMarkerOverlay : IDisposable
         _model.IsVisible = true;
 
         var bounds = _model.CalculateWindowBounds();
-        NativeMethods.SetWindowPos(
-            _hWnd,
-            (IntPtr)NativeMethods.HWND_TOPMOST,
-            bounds.X,
-            bounds.Y,
-            bounds.Width,
-            bounds.Height,
-            NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
-
-        RenderMarker(bounds.Width, bounds.Height);
+        NativeMethods.ShowWindow(_hWnd, NativeMethods.SW_SHOWNOACTIVATE);
+        RenderMarker(bounds.X, bounds.Y, bounds.Width, bounds.Height);
     }
 
-    private void RenderMarker(int width, int height)
+    private void RenderMarker(int x, int y, int width, int height)
     {
-        IntPtr hDC = NativeMethods.GetDC(_hWnd);
-        if (hDC == IntPtr.Zero) return;
+        IntPtr screenDC = NativeMethods.GetDC(IntPtr.Zero);
+        if (screenDC == IntPtr.Zero) return;
 
         try
         {
-            IntPtr memDC = NativeMethods.CreateCompatibleDC(hDC);
+            IntPtr memDC = NativeMethods.CreateCompatibleDC(screenDC);
             if (memDC == IntPtr.Zero) return;
 
             try
             {
-                IntPtr hBitmap = NativeMethods.CreateCompatibleBitmap(hDC, width, height);
+                IntPtr hBitmap = NativeMethods.CreateCompatibleBitmap(screenDC, width, height);
                 if (hBitmap == IntPtr.Zero) return;
 
                 try
                 {
                     IntPtr oldBmp = NativeMethods.SelectObject(memDC, hBitmap);
-
                     DrawBackground(memDC, width, height);
 
                     var (cx, cy, crosshairRadius, jitterRadius) = _model.CalculateRelativeGeometry();
@@ -141,7 +127,7 @@ public sealed class TargetMarkerOverlay : IDisposable
 
                     DrawCrosshair(memDC, cx, cy, crosshairRadius);
 
-                    NativeMethods.BitBlt(hDC, 0, 0, width, height, memDC, 0, 0, NativeMethods.SRCCOPY);
+                    CommitLayeredWindow(screenDC, memDC, x, y, width, height);
                     NativeMethods.SelectObject(memDC, oldBmp);
                 }
                 finally
@@ -156,8 +142,33 @@ public sealed class TargetMarkerOverlay : IDisposable
         }
         finally
         {
-            NativeMethods.ReleaseDC(_hWnd, hDC);
+            NativeMethods.ReleaseDC(IntPtr.Zero, screenDC);
         }
+    }
+
+    private void CommitLayeredWindow(IntPtr screenDC, IntPtr memDC, int x, int y, int width, int height)
+    {
+        var ptDst = new NativeMethods.Point { X = x, Y = y };
+        var size = new NativeMethods.Size { Cx = width, Cy = height };
+        var ptSrc = new NativeMethods.Point { X = 0, Y = 0 };
+        var blend = new NativeMethods.BlendFunction
+        {
+            BlendOp = 0, // AC_SRC_OVER
+            BlendFlags = 0,
+            SourceConstantAlpha = 240,
+            AlphaFormat = 0
+        };
+
+        NativeMethods.UpdateLayeredWindow(
+            _hWnd,
+            screenDC,
+            ref ptDst,
+            ref size,
+            memDC,
+            ref ptSrc,
+            ColorKey,
+            ref blend,
+            NativeMethods.ULW_COLORKEY | NativeMethods.ULW_ALPHA);
     }
 
     private static void DrawBackground(IntPtr memDC, int width, int height)
@@ -266,16 +277,35 @@ public sealed class TargetMarkerOverlay : IDisposable
         internal const uint WS_POPUP = 0x80000000;
         internal const int SW_HIDE = 0;
 
-        internal const int HWND_TOPMOST = -1;
-        internal const uint SWP_NOACTIVATE = 0x0010;
-        internal const uint SWP_SHOWWINDOW = 0x0040;
-
-        internal const uint LWA_COLORKEY = 0x00000001;
-        internal const uint LWA_ALPHA = 0x00000002;
+        internal const uint ULW_COLORKEY = 0x00000001;
+        internal const uint ULW_ALPHA = 0x00000002;
+        internal const int SW_SHOWNOACTIVATE = 4;
 
         internal const int PS_SOLID = 0;
         internal const uint WM_ERASEBKGND = 0x0014;
-        internal const uint SRCCOPY = 0x00CC0020;
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Point
+        {
+            internal int X;
+            internal int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Size
+        {
+            internal int Cx;
+            internal int Cy;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct BlendFunction
+        {
+            internal byte BlendOp;
+            internal byte BlendFlags;
+            internal byte SourceConstantAlpha;
+            internal byte AlphaFormat;
+        }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         internal struct WndClassEx
@@ -325,11 +355,16 @@ public sealed class TargetMarkerOverlay : IDisposable
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+        internal static extern bool UpdateLayeredWindow(
+            IntPtr hwnd,
+            IntPtr hdcDst,
+            ref Point pptDst,
+            ref Size psize,
+            IntPtr hdcSrc,
+            ref Point pptSrc,
+            uint crKey,
+            ref BlendFunction pblend,
+            uint dwFlags);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern IntPtr DefWindowProcW(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
@@ -377,10 +412,6 @@ public sealed class TargetMarkerOverlay : IDisposable
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern int FillRect(IntPtr hDC, [In] ref Rect lprc, IntPtr hbr);
-
-        [DllImport("gdi32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct Rect
