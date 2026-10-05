@@ -25,6 +25,7 @@ public sealed partial class MainPage : Page
     private readonly MacroRecorder _macroRecorder = new();
     private bool _isRecordingMacro = false;
     private bool _isCapturingKey = false;
+    private readonly TargetMarkerOverlay _targetMarkerOverlay = new();
 
     public MainPage()
     {
@@ -113,6 +114,15 @@ public sealed partial class MainPage : Page
             AppSettings.Current.ClickerLocationJitterPx = LocationJitterBox.Value;
             AppSettings.Current.Save();
         };
+
+        ShowTargetMarkerCheck.IsChecked = AppSettings.Current.ClickerShowTargetMarker;
+        ShowTargetMarkerCheck.Checked += (_, _) => OnTargetMarkerSettingsChanged();
+        ShowTargetMarkerCheck.Unchecked += (_, _) => OnTargetMarkerSettingsChanged();
+        ClickXBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
+        ClickYBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
+        LocationJitterBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
+        Unloaded += (_, _) => _targetMarkerOverlay.Dispose();
+        UpdateTargetMarkerOverlay();
 
         // Restore Typer Preferences
         TypeModeCombo.SelectedIndex = AppSettings.Current.TyperInputMode == TyperModeClipboard ? 1 : 0;
@@ -458,6 +468,7 @@ public sealed partial class MainPage : Page
         ClickXBox.Value = x;
         ClickYBox.Value = y;
         ClickerStatusText.Text = $"Locked target coordinates: ({x}, {y})";
+        UpdateTargetMarkerOverlay();
     }
 
     private static async Task<(bool Picked, bool Canceled, int X, int Y)> PollTargetCoordinatesAsync()
@@ -732,6 +743,47 @@ public sealed partial class MainPage : Page
 
         AppSettings.Current.ClickerIsKeySpammer = isSpammer;
         AppSettings.Current.Save();
+
+        if (isSpammer)
+        {
+            page._targetMarkerOverlay.Hide();
+        }
+        else
+        {
+            page.UpdateTargetMarkerOverlay();
+        }
+    }
+
+    private void OnTargetMarkerSettingsChanged()
+    {
+        AppSettings.Current.ClickerShowTargetMarker = ShowTargetMarkerCheck.IsChecked.GetValueOrDefault(false);
+        AppSettings.Current.Save();
+        UpdateTargetMarkerOverlay();
+    }
+
+    private void UpdateTargetMarkerOverlay()
+    {
+        bool isSpammer = ClickTargetTypeCombo.SelectedIndex == 1;
+        bool isEnabled = ShowTargetMarkerCheck.IsChecked.GetValueOrDefault(false);
+
+        if (isSpammer || !isEnabled)
+        {
+            _targetMarkerOverlay.Hide();
+            return;
+        }
+
+        int? targetX = double.IsNaN(ClickXBox.Value) ? null : (int)ClickXBox.Value;
+        int? targetY = double.IsNaN(ClickYBox.Value) ? null : (int)ClickYBox.Value;
+
+        if (targetX.HasValue && targetY.HasValue)
+        {
+            double locJitterPx = LocationJitterBox.Value;
+            _targetMarkerOverlay.Update(targetX.Value, targetY.Value, locJitterPx, true);
+        }
+        else
+        {
+            _targetMarkerOverlay.Hide();
+        }
     }
 
     private static void UpdateClickerTriggerMode(MainPage page)

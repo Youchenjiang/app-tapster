@@ -137,13 +137,19 @@ timeline
   - **規格**：
     - **錄製過濾**：提供 `[x] 只錄製點擊與按鍵，忽略滑鼠移動軌跡`，將巨集精簡至關鍵動作，消除偏差。
     - **清單微調**：可在動作列表中雙擊修改特定動作的座標、按鍵或延遲毫秒（Delay ms），並支援刪除指定步驟。
-- [ ] **[P3-12] 音效回饋提示與安全緊急熔斷 (Audio Cue Feedback & Panic Kill)**
+- [x] **[P3-12] 點擊位置標記與視覺化指示器 (Click Target Marker & Visualizer Overlay)**
+  - **規格**：
+    - **十字靶心標記**：當選定固定座標 (Fixed Location) 或啟用標記時，於目標螢幕座標置頂呈現非侵入式穿透靶心（Crosshair），中心精準對齊點擊點。
+    - **抖動散佈範圍可視化**：當設定空間座標抖動 (Location Jitter ±px > 0) 時，標記外圈同步繪製半透明散佈圓環，直觀呈現隨機點擊落點邊界。
+    - **穿透與零延遲架構**：透過 Win32 Layered Window 與 `WS_EX_TRANSPARENT | WS_EX_NOACTIVATE` 實作完全點擊穿透與零焦點掠奪，不干擾遊戲或全螢幕操作。
+    - **設定持久化與即時連動**：於 Clicker 介面提供 `[x] Show Target Marker on Screen` 切換開關，調整座標或使用 Pick Location 時標記即時同步移動。
+- [ ] **[P3-13] 音效回饋提示與安全緊急熔斷 (Audio Cue Feedback & Panic Kill)**
   - **規格**：
     - **狀態提示音**：使用 Win32 `MessageBeep` / `Beep`，熱鍵啟動時發出高音嗶聲（1000Hz 80ms），停止時發出低音嗶聲（500Hz 80ms），全螢幕遊戲與盲打時提供即時人機反饋。
     - **緊急安全熔斷 (Panic Kill)**：連點速度過快導致游標被鎖死時，支援「連按三次 Esc」或「快速甩動滑鼠（Mouse Shake > 2500 px/s）」立刻無條件中斷所有 Worker 並釋放所有按鍵。
-- [ ] **[P3-13] 迷你懸浮膠囊模式 (Mini Floating HUD Mode)**
+- [ ] **[P3-14] 迷你懸浮膠囊模式 (Mini Floating HUD Mode)**
   - **規格**：支援一鍵將視窗切換為螢幕角落半透明精簡膠囊條，僅顯示當前任務狀態、即時 CPS 計數器與 Stop 按鈕，支援滑鼠穿透或永遠置頂，全螢幕遊戲時不遮蔽視野。
-- [ ] **[P3-14] 點擊類型擴充 (Click Types: Double & Triple Click)**
+- [ ] **[P3-15] 點擊類型擴充 (Click Types: Double & Triple Click)**
   - **規格**：Auto Clicker 支援單擊 (Single)、雙擊 (Double)、三擊 (Triple) 點擊模擬。
 
 ---

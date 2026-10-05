@@ -38,6 +38,7 @@ public class AppSettings
     public string TyperTrailingKey { get; set; } = "none";
     public bool TyperJitterEnabled { get; set; } = false;
     public bool MacroIgnoreMouseMove { get; set; } = true;
+    public bool ClickerShowTargetMarker { get; set; } = false;
 
     public bool StartOnBoot
     {
