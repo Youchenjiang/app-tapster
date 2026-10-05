@@ -37,6 +37,7 @@ public class AppSettings
     public string TyperInputMode { get; set; } = "keystroke";
     public string TyperTrailingKey { get; set; } = "none";
     public bool TyperJitterEnabled { get; set; } = false;
+    public bool MacroIgnoreMouseMove { get; set; } = true;
 
     public bool StartOnBoot
     {

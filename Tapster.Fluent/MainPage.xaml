@@ -480,6 +480,8 @@
                                             <TextBlock Text="Clear Macro"/>
                                         </StackPanel>
                                     </Button>
+                                    <CheckBox x:Name="IgnoreMouseMoveCheck" Content="Only Clicks &amp; Keys (Ignore Mouse Move)"
+                                              IsChecked="True" FontSize="12" VerticalAlignment="Center"/>
                                 </StackPanel>
 
                                 <Grid RowSpacing="8" ColumnSpacing="16">
@@ -500,9 +502,30 @@
                                 </Grid>
 
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Recorded Actions:" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Recorded Actions (Double-click step to edit):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="EditActionBtn" Click="EditActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <FontIcon Glyph="&#xE70F;" FontSize="11"/>
+                                                    <TextBlock Text="Edit Step" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="DeleteActionBtn" Click="DeleteActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <FontIcon Glyph="&#xE74D;" FontSize="11"/>
+                                                    <TextBlock Text="Delete Step" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
                                     <ListView x:Name="MacroActionList" MaxHeight="140"
-                                              FontFamily="Cascadia Code, Consolas" FontSize="11"/>
+                                              FontFamily="Cascadia Code, Consolas" FontSize="11"
+                                              SelectionMode="Single" DoubleTapped="MacroActionList_DoubleTapped"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>

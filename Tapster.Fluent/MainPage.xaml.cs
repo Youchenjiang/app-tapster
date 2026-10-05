@@ -147,6 +147,19 @@ public sealed partial class MainPage : Page
         };
         UpdateTyperMode(this);
 
+        // Restore Macro Preferences
+        IgnoreMouseMoveCheck.IsChecked = AppSettings.Current.MacroIgnoreMouseMove;
+        IgnoreMouseMoveCheck.Checked += (_, _) =>
+        {
+            AppSettings.Current.MacroIgnoreMouseMove = true;
+            AppSettings.Current.Save();
+        };
+        IgnoreMouseMoveCheck.Unchecked += (_, _) =>
+        {
+            AppSettings.Current.MacroIgnoreMouseMove = false;
+            AppSettings.Current.Save();
+        };
+
         ClickTargetTypeCombo.SelectionChanged += (_, _) => UpdateClickerTargetType(this);
         ClickTriggerModeCombo.SelectionChanged += (_, _) => UpdateClickerTriggerMode(this);
         UpdateClickerTargetType(this);
@@ -495,13 +508,14 @@ public sealed partial class MainPage : Page
         else
         {
             _isRecordingMacro = true;
+            bool ignoreMouseMove = IgnoreMouseMoveCheck.IsChecked.GetValueOrDefault(true);
             _macroRecorder.StartRecording(count =>
             {
                 DispatcherQueue.TryEnqueue(() =>
                 {
                     MacroStatusText.Text = $"Recording macro... {count} actions captured (Click Stop to finish)";
                 });
-            });
+            }, ignoreMouseMove);
             RecordIcon.Glyph = "\uE71A";
             RecordMacroText.Text = "Stop Recording";
             MacroStatusText.Text = "Recording macro... Click or type anywhere to record actions!";
@@ -522,18 +536,176 @@ public sealed partial class MainPage : Page
     {
         MacroActionList.Items.Clear();
         var actions = _macroRecorder.Actions;
-        foreach (var act in actions)
+        for (int i = 0; i < actions.Count; i++)
         {
-            string detail = act.Type switch
+            var act = actions[i];
+            string detail = FormatMacroActionDetail(act);
+            MacroActionList.Items.Add($"#{i + 1} (+{act.DelayMs}ms) — {detail}");
+        }
+    }
+
+    private static string FormatMacroActionDetail(MacroAction act) => act.Type switch
+    {
+        MacroActionType.ClickLeft => $"🖱️ Left Click at ({act.X}, {act.Y})",
+        MacroActionType.ClickRight => $"🖱️ Right Click at ({act.X}, {act.Y})",
+        MacroActionType.ClickMiddle => $"🖱️ Middle Click at ({act.X}, {act.Y})",
+        MacroActionType.MouseMove => $"↗️ Move Cursor to ({act.X}, {act.Y})",
+        MacroActionType.KeyPress => $"⌨️ Key Down [{act.Data}]",
+        MacroActionType.KeyRelease => $"⌨️ Key Up [{act.Data}]",
+        _ => $"🔤 Type [{act.Data}]"
+    };
+
+    private void DeleteActionBtn_Click(object sender, RoutedEventArgs e)
+    {
+        int index = MacroActionList.SelectedIndex;
+        if (index >= 0 && _macroRecorder.RemoveActionAt(index))
+        {
+            RefreshMacroActionList();
+            MacroStatusText.Text = $"Deleted step #{index + 1}";
+        }
+        else
+        {
+            MacroStatusText.Text = "Please select a step to delete first.";
+        }
+    }
+
+    private async void EditActionBtn_Click(object sender, RoutedEventArgs e)
+    {
+        int index = MacroActionList.SelectedIndex;
+        if (index >= 0)
+        {
+            await ShowEditActionDialogAsync(index);
+        }
+        else
+        {
+            MacroStatusText.Text = "Please select a step to edit first.";
+        }
+    }
+
+    private async void MacroActionList_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+    {
+        int index = MacroActionList.SelectedIndex;
+        if (index >= 0)
+        {
+            await ShowEditActionDialogAsync(index);
+        }
+    }
+
+    private async Task ShowEditActionDialogAsync(int index)
+    {
+        var actions = _macroRecorder.Actions;
+        if (index < 0 || index >= actions.Count) return;
+        var act = actions[index];
+
+        var typeCombo = new ComboBox
+        {
+            Header = "Action Type:",
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            ItemsSource = new[]
             {
-                MacroActionType.ClickLeft => $"🖱️ Left Click at ({act.X}, {act.Y})",
-                MacroActionType.ClickRight => $"🖱️ Right Click at ({act.X}, {act.Y})",
-                MacroActionType.ClickMiddle => $"🖱️ Middle Click at ({act.X}, {act.Y})",
-                MacroActionType.KeyPress => $"⌨️ Key Down [{act.Data}]",
-                MacroActionType.KeyRelease => $"⌨️ Key Up [{act.Data}]",
-                _ => $"🔤 Type [{act.Data}]"
+                "Left Click",
+                "Right Click",
+                "Middle Click",
+                "Move Cursor",
+                "Key Down",
+                "Key Up",
+                "Type Text"
+            },
+            SelectedIndex = act.Type switch
+            {
+                MacroActionType.ClickLeft => 0,
+                MacroActionType.ClickRight => 1,
+                MacroActionType.ClickMiddle => 2,
+                MacroActionType.MouseMove => 3,
+                MacroActionType.KeyPress => 4,
+                MacroActionType.KeyRelease => 5,
+                _ => 6
+            }
+        };
+
+        var delayBox = new NumberBox
+        {
+            Header = "Delay Before Action (ms):",
+            Value = act.DelayMs,
+            Minimum = 0,
+            Maximum = 60000,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+
+        var xBox = new NumberBox { Header = "X Coordinate:", Value = act.X, Minimum = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact };
+        var yBox = new NumberBox { Header = "Y Coordinate:", Value = act.Y, Minimum = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact };
+
+        var coordPanel = new Grid { ColumnSpacing = 12 };
+        coordPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        coordPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        Grid.SetColumn(xBox, 0);
+        Grid.SetColumn(yBox, 1);
+        coordPanel.Children.Add(xBox);
+        coordPanel.Children.Add(yBox);
+
+        var dataBox = new TextBox
+        {
+            Header = "Key Name / Text Data:",
+            Text = act.Data ?? string.Empty,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+
+        void UpdateVisibility()
+        {
+            int sel = typeCombo.SelectedIndex;
+            bool isMouse = sel is 0 or 1 or 2 or 3;
+            coordPanel.Visibility = isMouse ? Visibility.Visible : Visibility.Collapsed;
+            dataBox.Visibility = isMouse ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        typeCombo.SelectionChanged += (_, _) => UpdateVisibility();
+        UpdateVisibility();
+
+        var contentPanel = new StackPanel { Spacing = 12, Width = 320 };
+        contentPanel.Children.Add(typeCombo);
+        contentPanel.Children.Add(coordPanel);
+        contentPanel.Children.Add(dataBox);
+        contentPanel.Children.Add(delayBox);
+
+        var dialog = new ContentDialog
+        {
+            Title = $"Edit Step #{index + 1}",
+            PrimaryButtonText = "Save",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            Content = contentPanel,
+            XamlRoot = Content.XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            var newType = typeCombo.SelectedIndex switch
+            {
+                0 => MacroActionType.ClickLeft,
+                1 => MacroActionType.ClickRight,
+                2 => MacroActionType.ClickMiddle,
+                3 => MacroActionType.MouseMove,
+                4 => MacroActionType.KeyPress,
+                5 => MacroActionType.KeyRelease,
+                _ => MacroActionType.TypeText
             };
-            MacroActionList.Items.Add($"+{act.DelayMs}ms — {detail}");
+
+            var updated = new MacroAction
+            {
+                Type = newType,
+                X = (int)xBox.Value,
+                Y = (int)yBox.Value,
+                Data = dataBox.Text.Trim(),
+                DelayMs = (long)Math.Max(0, delayBox.Value)
+            };
+
+            if (_macroRecorder.UpdateAction(index, updated))
+            {
+                RefreshMacroActionList();
+                MacroStatusText.Text = $"Updated step #{index + 1}";
+            }
         }
     }
 
