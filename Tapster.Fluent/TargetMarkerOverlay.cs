@@ -165,7 +165,7 @@ public sealed class TargetMarkerOverlay : IDisposable
         IntPtr hMagentaBrush = NativeMethods.CreateSolidBrush(ColorKey);
         try
         {
-            var rc = new NativeMethods.RECT { Left = 0, Top = 0, Right = width, Bottom = height };
+            var rc = new NativeMethods.Rect { Left = 0, Top = 0, Right = width, Bottom = height };
             NativeMethods.FillRect(memDC, ref rc, hMagentaBrush);
         }
         finally
@@ -252,6 +252,143 @@ public sealed class TargetMarkerOverlay : IDisposable
         {
             NativeMethods.DestroyWindow(_hWnd);
             _hWnd = IntPtr.Zero;
+        }
+    }
+
+    private static class NativeMethods
+    {
+        internal const int WS_EX_TOPMOST = 0x00000008;
+        internal const int WS_EX_TRANSPARENT = 0x00000020;
+        internal const int WS_EX_TOOLWINDOW = 0x00000080;
+        internal const int WS_EX_LAYERED = 0x00080000;
+        internal const int WS_EX_NOACTIVATE = 0x08000000;
+
+        internal const uint WS_POPUP = 0x80000000;
+        internal const int SW_HIDE = 0;
+
+        internal const int HWND_TOPMOST = -1;
+        internal const uint SWP_NOACTIVATE = 0x0010;
+        internal const uint SWP_SHOWWINDOW = 0x0040;
+
+        internal const uint LWA_COLORKEY = 0x00000001;
+        internal const uint LWA_ALPHA = 0x00000002;
+
+        internal const int PS_SOLID = 0;
+        internal const uint WM_ERASEBKGND = 0x0014;
+        internal const uint SRCCOPY = 0x00CC0020;
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        internal struct WNDCLASSEXW
+        {
+            internal uint cbSize;
+            internal uint style;
+            internal WndProc lpfnWndProc;
+            internal int cbClsExtra;
+            internal int cbWndExtra;
+            internal IntPtr hInstance;
+            internal IntPtr hIcon;
+            internal IntPtr hCursor;
+            internal IntPtr hbrBackground;
+            internal string? lpszMenuName;
+            internal string lpszClassName;
+            internal IntPtr hIconSm;
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        internal delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        internal static extern ushort RegisterClassExW(ref WNDCLASSEXW lpwcx);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        internal static extern IntPtr CreateWindowExW(
+            int dwExStyle,
+            string lpClassName,
+            string lpWindowName,
+            uint dwStyle,
+            int X,
+            int Y,
+            int nWidth,
+            int nHeight,
+            IntPtr hWndParent,
+            IntPtr hMenu,
+            IntPtr hInstance,
+            IntPtr lpParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool DestroyWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        internal static extern IntPtr DefWindowProcW(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern IntPtr GetDC(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        internal static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        internal static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int cx, int cy);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        internal static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool DeleteObject(IntPtr hObject);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool DeleteDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        internal static extern IntPtr CreatePen(int fnPenStyle, int nWidth, uint crColor);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        internal static extern IntPtr CreateSolidBrush(uint crColor);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool Ellipse(IntPtr hdc, int left, int top, int right, int bottom);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool MoveToEx(IntPtr hdc, int x, int y, IntPtr lpPoint);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool LineTo(IntPtr hdc, int x, int y);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern int FillRect(IntPtr hDC, [In] ref Rect lprc, IntPtr hbr);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Rect
+        {
+            internal int Left;
+            internal int Top;
+            internal int Right;
+            internal int Bottom;
         }
     }
 }
