@@ -30,9 +30,9 @@ public sealed class TargetMarkerOverlay : IDisposable
 
     private void RegisterWindowClass()
     {
-        var wc = new NativeMethods.WNDCLASSEXW
+        var wc = new NativeMethods.WndClassEx
         {
-            cbSize = (uint)Marshal.SizeOf<NativeMethods.WNDCLASSEXW>(),
+            cbSize = (uint)Marshal.SizeOf<NativeMethods.WndClassEx>(),
             style = 0,
             lpfnWndProc = _wndProc,
             cbClsExtra = 0,
@@ -278,7 +278,7 @@ public sealed class TargetMarkerOverlay : IDisposable
         internal const uint SRCCOPY = 0x00CC0020;
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        internal struct WNDCLASSEXW
+        internal struct WndClassEx
         {
             internal uint cbSize;
             internal uint style;
@@ -298,7 +298,7 @@ public sealed class TargetMarkerOverlay : IDisposable
         internal delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        internal static extern ushort RegisterClassExW(ref WNDCLASSEXW lpwcx);
+        internal static extern ushort RegisterClassExW(ref WndClassEx lpwcx);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern IntPtr CreateWindowExW(
