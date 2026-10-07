@@ -323,25 +323,7 @@ public sealed class TargetMarkerOverlay : IDisposable
             _markers.Add(new MarkerPoint(index, x, y));
         }
 
-        CancelRippleTokenSource();
-        _rippleCts = new System.Threading.CancellationTokenSource();
-        var token = _rippleCts.Token;
-
-        _ripplePoint = new MarkerPoint(index, x, y);
-        EnsureWindowPosition();
-        NativeMethods.InvalidateRect(_hWnd, IntPtr.Zero, false);
-
-        System.Threading.Tasks.Task.Delay(durationMs, token).ContinueWith(t =>
-        {
-            if (!t.IsCanceled && !_isDisposed)
-            {
-                _ripplePoint = null;
-                if (_hWnd != IntPtr.Zero)
-                {
-                    NativeMethods.InvalidateRect(_hWnd, IntPtr.Zero, false);
-                }
-            }
-        }, System.Threading.Tasks.TaskScheduler.Default);
+        TriggerMomentaryRipple(index, x, y, durationMs);
     }
 
     public void AddMarker(int index, int x, int y)
@@ -462,6 +444,11 @@ public sealed class TargetMarkerOverlay : IDisposable
     }
 
     public void ShowClickRipple(int x, int y, int index = 0, int durationMs = 350)
+    {
+        TriggerMomentaryRipple(index, x, y, durationMs);
+    }
+
+    private void TriggerMomentaryRipple(int index, int x, int y, int durationMs)
     {
         if (_hWnd == IntPtr.Zero || _isDisposed) return;
 
