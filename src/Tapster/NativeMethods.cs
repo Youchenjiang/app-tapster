@@ -233,7 +233,7 @@ public static partial class NativeMethods
     // ── Cursor Position Control ────────────────────────────────────────────────
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetCursorPos(int X, int Y);
+    internal static extern bool SetCursorPos(int X, int Y);
 
     // ── Low-Level Hooks (WH_KEYBOARD_LL / WH_MOUSE_LL) ─────────────────────────
     public const int WH_KEYBOARD_LL = 13;
@@ -250,7 +250,7 @@ public static partial class NativeMethods
     public delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct KBDLLHOOKSTRUCT
+    public struct Kbdllhookstruct
     {
         public uint vkCode;
         public uint scanCode;
@@ -260,7 +260,7 @@ public static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct MSLLHOOKSTRUCT
+    public struct Msllhookstruct
     {
         public POINT pt;
         public uint mouseData;
@@ -270,7 +270,7 @@ public static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct MSG
+    public struct Msg
     {
         public IntPtr hwnd;
         public uint message;
@@ -281,32 +281,32 @@ public static partial class NativeMethods
     }
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    public static extern IntPtr SetWindowsHookExW(int idHook, HookProc lpfn, IntPtr hmod, uint dwThreadId);
+    internal static extern IntPtr SetWindowsHookExW(int idHook, HookProc lpfn, IntPtr hmod, uint dwThreadId);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool UnhookWindowsHookEx(IntPtr hhk);
+    internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+    internal static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
     [DllImport("user32.dll")]
-    public static extern sbyte GetMessageW(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+    internal static extern sbyte GetMessageW(out Msg lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool TranslateMessage(ref MSG lpMsg);
+    internal static extern bool TranslateMessage(ref Msg lpMsg);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr DispatchMessageW(ref MSG lpMsg);
+    internal static extern IntPtr DispatchMessageW(ref Msg lpMsg);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PostThreadMessageW(uint idThread, uint msg, IntPtr wParam, IntPtr lParam);
+    internal static extern bool PostThreadMessageW(uint idThread, uint msg, IntPtr wParam, IntPtr lParam);
 
     [DllImport("kernel32.dll")]
-    public static extern uint GetCurrentThreadId();
+    internal static extern uint GetCurrentThreadId();
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern IntPtr GetModuleHandleW(string? lpModuleName);
+    internal static extern IntPtr GetModuleHandleW(string? lpModuleName);
 }

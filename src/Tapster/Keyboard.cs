@@ -215,44 +215,68 @@ public static partial class Keyboard
             if (ch >= '0' && ch <= '9') return (ushort)(ch - '0' + 0x30); // VK_0 .. VK_9
         }
 
-        return k switch
+        ushort namedKey = MapNamedKey(k);
+        if (namedKey != 0)
         {
-            "shift" => 0x10,
-            "ctrl" or "control" => 0x11,
-            "alt" => 0x12,
-            "windows" or "win" => 0x5B,
-            "enter" or "return" => 0x0D,
-            "space" => 0x20,
-            "tab" => 0x09,
-            "esc" or "escape" => 0x1B,
-            "backspace" => 0x08,
-            "delete" or "del" => 0x2E,
-            "insert" or "ins" => 0x2D,
-            "home" => 0x24,
-            "end" => 0x23,
-            "pageup" or "pgup" => 0x21,
-            "pagedown" or "pgdn" => 0x22,
-            "capslock" => 0x14,
-            "up" => 0x26,
-            "down" => 0x28,
-            "left" => 0x25,
-            "right" => 0x27,
-            "`" or "~" => 0xC0,
-            "-" or "_" => 0xBD,
-            "=" or "+" => 0xBB,
-            "[" or "{" => 0xDB,
-            "]" or "}" => 0xDD,
-            "\\" or "|" => 0xDC,
-            ";" or ":" => 0xBA,
-            "'" or "\"" => 0xDE,
-            "," or "<" => 0xBC,
-            "." or ">" => 0xBE,
-            "/" or "?" => 0xBF,
-            "f1" => 0x70, "f2" => 0x71, "f3" => 0x72, "f4" => 0x73,
-            "f5" => 0x74, "f6" => 0x75, "f7" => 0x76, "f8" => 0x77,
-            "f9" => 0x78, "f10" => 0x79, "f11" => 0x7A, "f12" => 0x7B,
-            _ => (ushort)(k.Length > 0 ? (VkKeyScan(k[0]) is var scan && scan != -1 ? (scan & 0xFF) : k[0]) : 0)
-        };
+            return namedKey;
+        }
+
+        return ResolveFallbackKey(k);
+    }
+
+    private static ushort MapNamedKey(string k) => k switch
+    {
+        "shift" => 0x10,
+        "ctrl" or "control" => 0x11,
+        "alt" => 0x12,
+        "windows" or "win" => 0x5B,
+        "enter" or "return" => 0x0D,
+        "space" => 0x20,
+        "tab" => 0x09,
+        "esc" or "escape" => 0x1B,
+        "backspace" => 0x08,
+        "delete" or "del" => 0x2E,
+        "insert" or "ins" => 0x2D,
+        "home" => 0x24,
+        "end" => 0x23,
+        "pageup" or "pgup" => 0x21,
+        "pagedown" or "pgdn" => 0x22,
+        "capslock" => 0x14,
+        "up" => 0x26,
+        "down" => 0x28,
+        "left" => 0x25,
+        "right" => 0x27,
+        "`" or "~" => 0xC0,
+        "-" or "_" => 0xBD,
+        "=" or "+" => 0xBB,
+        "[" or "{" => 0xDB,
+        "]" or "}" => 0xDD,
+        "\\" or "|" => 0xDC,
+        ";" or ":" => 0xBA,
+        "'" or "\"" => 0xDE,
+        "," or "<" => 0xBC,
+        "." or ">" => 0xBE,
+        "/" or "?" => 0xBF,
+        "f1" => 0x70, "f2" => 0x71, "f3" => 0x72, "f4" => 0x73,
+        "f5" => 0x74, "f6" => 0x75, "f7" => 0x76, "f8" => 0x77,
+        "f9" => 0x78, "f10" => 0x79, "f11" => 0x7A, "f12" => 0x7B,
+        _ => 0
+    };
+
+    private static ushort ResolveFallbackKey(string k)
+    {
+        if (k.Length == 0)
+        {
+            return 0;
+        }
+
+        short scan = VkKeyScan(k[0]);
+        if (scan != -1)
+        {
+            return (ushort)(scan & 0xFF);
+        }
+
+        return k[0];
     }
 
     [DllImport("user32.dll")]

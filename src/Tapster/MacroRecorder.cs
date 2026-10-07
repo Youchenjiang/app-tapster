@@ -35,8 +35,6 @@ public class MacroRecorder
     private uint _recordThreadId;
     private IntPtr _mouseHook = IntPtr.Zero;
     private IntPtr _keyboardHook = IntPtr.Zero;
-    private NativeMethods.HookProc? _mouseProcDelegate;
-    private NativeMethods.HookProc? _kbdProcDelegate;
     private readonly ManualResetEventSlim _startedEvent = new(false);
 
     private readonly Stopwatch _stopwatch = new();
@@ -89,12 +87,12 @@ public class MacroRecorder
         _recordThreadId = NativeMethods.GetCurrentThreadId();
         IntPtr hMod = NativeMethods.GetModuleHandleW(null);
 
-        // Keep delegates alive in fields to prevent GC collection while hooks are active
-        _mouseProcDelegate = MouseHookCallback;
-        _kbdProcDelegate = KeyboardHookCallback;
+        // Keep delegates alive as local variables on the thread stack for the duration of the message loop
+        NativeMethods.HookProc mouseProc = MouseHookCallback;
+        NativeMethods.HookProc kbdProc = KeyboardHookCallback;
 
-        _mouseHook = NativeMethods.SetWindowsHookExW(NativeMethods.WH_MOUSE_LL, _mouseProcDelegate, hMod, 0);
-        _keyboardHook = NativeMethods.SetWindowsHookExW(NativeMethods.WH_KEYBOARD_LL, _kbdProcDelegate, hMod, 0);
+        _mouseHook = NativeMethods.SetWindowsHookExW(NativeMethods.WH_MOUSE_LL, mouseProc, hMod, 0);
+        _keyboardHook = NativeMethods.SetWindowsHookExW(NativeMethods.WH_KEYBOARD_LL, kbdProc, hMod, 0);
 
         _stopwatch.Restart();
         _lastActionTimeMs = 0;
@@ -108,6 +106,8 @@ public class MacroRecorder
         }
 
         CleanupHooks();
+        GC.KeepAlive(mouseProc);
+        GC.KeepAlive(kbdProc);
     }
 
     private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
@@ -116,7 +116,7 @@ public class MacroRecorder
         {
             try
             {
-                var hookStruct = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
+                var hookStruct = Marshal.PtrToStructure<NativeMethods.Msllhookstruct>(lParam);
                 int msg = wParam.ToInt32();
                 long now = _stopwatch.ElapsedMilliseconds;
 
@@ -146,39 +146,40 @@ public class MacroRecorder
     {
         if (nCode >= 0 && _isRecording)
         {
-            try
-            {
-                var hookStruct = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
-                int msg = wParam.ToInt32();
-                long now = _stopwatch.ElapsedMilliseconds;
-
-                bool isKeyDown = msg is NativeMethods.WM_KEYDOWN or NativeMethods.WM_SYSKEYDOWN;
-                bool isKeyUp = msg is NativeMethods.WM_KEYUP or NativeMethods.WM_SYSKEYUP;
-
-                if (isKeyDown || isKeyUp)
-                {
-                    int vk = (int)hookStruct.vkCode;
-                    string keyName = Keyboard.GetKeyName(vk);
-                    if (!string.IsNullOrEmpty(keyName))
-                    {
-                        var type = isKeyDown ? MacroActionType.KeyPress : MacroActionType.KeyRelease;
-                        RecordCapturedAction(type, 0, 0, keyName, now);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Keyboard hook error: {ex.Message}");
-            }
+            ProcessKeyboardHookEvent(wParam.ToInt32(), lParam);
         }
 
         return NativeMethods.CallNextHookEx(_keyboardHook, nCode, wParam, lParam);
     }
 
+    private void ProcessKeyboardHookEvent(int msg, IntPtr lParam)
+    {
+        bool isKeyDown = msg is NativeMethods.WM_KEYDOWN or NativeMethods.WM_SYSKEYDOWN;
+        bool isKeyUp = msg is NativeMethods.WM_KEYUP or NativeMethods.WM_SYSKEYUP;
+        if (!isKeyDown && !isKeyUp)
+        {
+            return;
+        }
+
+        try
+        {
+            var hookStruct = Marshal.PtrToStructure<NativeMethods.Kbdllhookstruct>(lParam);
+            int vk = (int)hookStruct.vkCode;
+            string keyName = Keyboard.GetKeyName(vk);
+            if (!string.IsNullOrEmpty(keyName))
+            {
+                var type = isKeyDown ? MacroActionType.KeyPress : MacroActionType.KeyRelease;
+                RecordCapturedAction(type, 0, 0, keyName, _stopwatch.ElapsedMilliseconds);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Keyboard hook error: {ex.Message}");
+        }
+    }
+
     private void RecordCapturedAction(MacroActionType type, int x, int y, string data, long now)
     {
-        if (!_isRecording) return;
-
         MacroAction action;
         int totalCount;
         lock (_actions)
@@ -199,11 +200,8 @@ public class MacroRecorder
             totalCount = _actions.Count;
         }
 
-        if (_isRecording)
-        {
-            _countCallback?.Invoke(totalCount);
-            _detailedCallback?.Invoke(action, totalCount);
-        }
+        _countCallback?.Invoke(totalCount);
+        _detailedCallback?.Invoke(action, totalCount);
     }
 
     private void CleanupHooks()
