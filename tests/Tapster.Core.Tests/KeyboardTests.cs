@@ -110,6 +110,30 @@ public class KeyboardTests
         Assert.Null(exception);
     }
 
+    [Theory]
+    [InlineData("insert")]
+    [InlineData("home")]
+    [InlineData("end")]
+    [InlineData("pageup")]
+    [InlineData("pagedown")]
+    [InlineData(".")]
+    [InlineData("-")]
+    [InlineData("=")]
+    [InlineData("/")]
+    [InlineData("vk_65")]
+    public void Keyboard_Tap_SpecialKeysAndSymbols_DoesNotThrow(string key)
+    {
+        var exception = Record.Exception(() => Keyboard.Tap(key));
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Keyboard_ResetEscState_DoesNotThrow()
+    {
+        var exception = Record.Exception(() => Keyboard.ResetEscState());
+        Assert.Null(exception);
+    }
+
     [Fact]
     public void Keyboard_Paste_DoesNotThrow()
     {

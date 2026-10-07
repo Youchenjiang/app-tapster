@@ -118,6 +118,14 @@ public static partial class Keyboard
     }
 
     /// <summary>
+    /// Resets the GetAsyncKeyState buffer for Esc key by reading it once.
+    /// </summary>
+    public static void ResetEscState()
+    {
+        _ = GetAsyncKeyState(0x1B);
+    }
+
+    /// <summary>
     /// Maps a virtual key code to a friendly key name string.
     /// </summary>
     public static string GetKeyName(int vk)
@@ -138,6 +146,11 @@ public static partial class Keyboard
             0x1B => "esc",
             0x08 => "backspace",
             0x2E => "delete",
+            0x2D => "insert",
+            0x24 => "home",
+            0x23 => "end",
+            0x21 => "pageup",
+            0x22 => "pagedown",
             0x14 => "capslock",
             0x26 => "up",
             0x28 => "down",
@@ -190,6 +203,11 @@ public static partial class Keyboard
     private static ushort MapKeyName(string name)
     {
         string k = name.ToLower();
+        if (k.StartsWith("vk_") && int.TryParse(k[3..], out int parsedVk))
+        {
+            return (ushort)parsedVk;
+        }
+
         if (k.Length == 1)
         {
             char ch = k[0];
@@ -209,15 +227,31 @@ public static partial class Keyboard
             "esc" or "escape" => 0x1B,
             "backspace" => 0x08,
             "delete" or "del" => 0x2E,
+            "insert" or "ins" => 0x2D,
+            "home" => 0x24,
+            "end" => 0x23,
+            "pageup" or "pgup" => 0x21,
+            "pagedown" or "pgdn" => 0x22,
             "capslock" => 0x14,
             "up" => 0x26,
             "down" => 0x28,
             "left" => 0x25,
             "right" => 0x27,
+            "`" or "~" => 0xC0,
+            "-" or "_" => 0xBD,
+            "=" or "+" => 0xBB,
+            "[" or "{" => 0xDB,
+            "]" or "}" => 0xDD,
+            "\\" or "|" => 0xDC,
+            ";" or ":" => 0xBA,
+            "'" or "\"" => 0xDE,
+            "," or "<" => 0xBC,
+            "." or ">" => 0xBE,
+            "/" or "?" => 0xBF,
             "f1" => 0x70, "f2" => 0x71, "f3" => 0x72, "f4" => 0x73,
             "f5" => 0x74, "f6" => 0x75, "f7" => 0x76, "f8" => 0x77,
             "f9" => 0x78, "f10" => 0x79, "f11" => 0x7A, "f12" => 0x7B,
-            _ => (ushort)k[0]
+            _ => (ushort)(k.Length > 0 ? (VkKeyScan(k[0]) is var scan && scan != -1 ? (scan & 0xFF) : k[0]) : 0)
         };
     }
 
