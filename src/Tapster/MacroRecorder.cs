@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,8 +32,18 @@ public class MacroRecorder
     private readonly List<MacroAction> _actions = new();
     private volatile bool _isRecording;
     private Thread? _recordThread;
+    private uint _recordThreadId;
+    private IntPtr _mouseHook = IntPtr.Zero;
+    private IntPtr _keyboardHook = IntPtr.Zero;
+    private NativeMethods.HookProc? _mouseProcDelegate;
+    private NativeMethods.HookProc? _kbdProcDelegate;
+    private readonly ManualResetEventSlim _startedEvent = new(false);
+
     private readonly Stopwatch _stopwatch = new();
     private long _lastActionTimeMs;
+
+    private Action<int>? _countCallback;
+    private Action<MacroAction, int>? _detailedCallback;
 
     public bool IgnoreMouseMove { get; set; } = true;
 
@@ -47,7 +58,7 @@ public class MacroRecorder
         }
     }
 
-    public void StartRecording(Action<int>? onActionCaptured = null, bool ignoreMouseMove = true)
+    public void StartRecording(Action<int>? onActionCaptured = null, bool ignoreMouseMove = true, Action<MacroAction, int>? onActionDetailed = null)
     {
         IgnoreMouseMove = ignoreMouseMove;
         StopRecording();
@@ -57,165 +68,182 @@ public class MacroRecorder
             _actions.Clear();
         }
 
+        _countCallback = onActionCaptured;
+        _detailedCallback = onActionDetailed;
         _isRecording = true;
-        _stopwatch.Restart();
-        _lastActionTimeMs = 0;
+        _startedEvent.Reset();
 
-        _recordThread = new Thread(() => RecordLoop(onActionCaptured))
+        _recordThread = new Thread(RecordLoop)
         {
             IsBackground = true,
             Name = "Tapster_MacroRecordWorker"
         };
         _recordThread.Start();
+
+        // Wait until hooks are safely installed so recording starts immediately without missing first input
+        _startedEvent.Wait(1000);
     }
 
-    private void RecordLoop(Action<int>? onActionCaptured)
+    private void RecordLoop()
     {
-        bool prevLeft = false;
-        bool prevRight = false;
-        bool prevMiddle = false;
-        var prevKeyStates = new bool[256];
-        int prevMouseX = 0;
-        int prevMouseY = 0;
-        long lastMoveTimeMs = 0;
+        _recordThreadId = NativeMethods.GetCurrentThreadId();
+        IntPtr hMod = NativeMethods.GetModuleHandleW(null);
 
-        // Read initial key states
-        for (int i = 1; i < 256; i++)
-        {
-            short state = NativeMethods.GetAsyncKeyState(i);
-            prevKeyStates[i] = (state & 0x8000) != 0 || state < 0;
-        }
-        prevLeft = prevKeyStates[NativeMethods.VK_LBUTTON];
-        prevRight = prevKeyStates[NativeMethods.VK_RBUTTON];
-        prevMiddle = prevKeyStates[NativeMethods.VK_MBUTTON];
+        // Keep delegates alive in fields to prevent GC collection while hooks are active
+        _mouseProcDelegate = MouseHookCallback;
+        _kbdProcDelegate = KeyboardHookCallback;
 
-        if (NativeMethods.GetCursorPos(out var initPt))
+        _mouseHook = NativeMethods.SetWindowsHookExW(NativeMethods.WH_MOUSE_LL, _mouseProcDelegate, hMod, 0);
+        _keyboardHook = NativeMethods.SetWindowsHookExW(NativeMethods.WH_KEYBOARD_LL, _kbdProcDelegate, hMod, 0);
+
+        _stopwatch.Restart();
+        _lastActionTimeMs = 0;
+
+        _startedEvent.Set();
+
+        while (_isRecording && NativeMethods.GetMessageW(out var msg, IntPtr.Zero, 0, 0) > 0)
         {
-            prevMouseX = initPt.X;
-            prevMouseY = initPt.Y;
+            NativeMethods.TranslateMessage(ref msg);
+            NativeMethods.DispatchMessageW(ref msg);
         }
 
-        // Give a short buffer (150ms) so clicking the "Start Recording" button isn't recorded
-        Thread.Sleep(150);
+        CleanupHooks();
+    }
 
-        while (_isRecording)
+    private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        if (nCode >= 0 && _isRecording)
         {
-            long now = _stopwatch.ElapsedMilliseconds;
-
-            if (NativeMethods.GetCursorPos(out var pt))
+            try
             {
-                CheckMouseMove(pt, now, ref prevMouseX, ref prevMouseY, ref lastMoveTimeMs, onActionCaptured);
-                CheckMouseButtons(pt, now, ref prevLeft, ref prevRight, ref prevMiddle, onActionCaptured);
-            }
+                var hookStruct = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
+                int msg = wParam.ToInt32();
+                long now = _stopwatch.ElapsedMilliseconds;
 
-            CheckKeyboardKeys(now, prevKeyStates, onActionCaptured);
-            Thread.Sleep(10);
-        }
-    }
-
-    private void CheckMouseMove(NativeMethods.POINT pt, long now, ref int prevMouseX, ref int prevMouseY, ref long lastMoveTimeMs, Action<int>? onActionCaptured)
-    {
-        if (IgnoreMouseMove) return;
-
-        bool hasMoved = Math.Abs(pt.X - prevMouseX) > 2 || Math.Abs(pt.Y - prevMouseY) > 2;
-        if (hasMoved && now - lastMoveTimeMs >= 30)
-        {
-            AddAction(MacroActionType.MouseMove, pt.X, pt.Y, string.Empty, now);
-            prevMouseX = pt.X;
-            prevMouseY = pt.Y;
-            lastMoveTimeMs = now;
-            onActionCaptured?.Invoke(Actions.Count);
-        }
-    }
-
-    private void CheckMouseButtons(NativeMethods.POINT pt, long now, ref bool prevLeft, ref bool prevRight, ref bool prevMiddle, Action<int>? onActionCaptured)
-    {
-        short leftState = NativeMethods.GetAsyncKeyState(NativeMethods.VK_LBUTTON);
-        short rightState = NativeMethods.GetAsyncKeyState(NativeMethods.VK_RBUTTON);
-        short middleState = NativeMethods.GetAsyncKeyState(NativeMethods.VK_MBUTTON);
-
-        bool left = (leftState & 0x8000) != 0 || leftState < 0;
-        bool right = (rightState & 0x8000) != 0 || rightState < 0;
-        bool middle = (middleState & 0x8000) != 0 || middleState < 0;
-
-        if (left && !prevLeft)
-        {
-            AddAction(MacroActionType.ClickLeft, pt.X, pt.Y, string.Empty, now);
-            onActionCaptured?.Invoke(Actions.Count);
-        }
-        if (right && !prevRight)
-        {
-            AddAction(MacroActionType.ClickRight, pt.X, pt.Y, string.Empty, now);
-            onActionCaptured?.Invoke(Actions.Count);
-        }
-        if (middle && !prevMiddle)
-        {
-            AddAction(MacroActionType.ClickMiddle, pt.X, pt.Y, string.Empty, now);
-            onActionCaptured?.Invoke(Actions.Count);
-        }
-
-        prevLeft = left;
-        prevRight = right;
-        prevMiddle = middle;
-    }
-
-    private void CheckKeyboardKeys(long now, bool[] prevKeyStates, Action<int>? onActionCaptured)
-    {
-        for (int vk = 0x08; vk <= 0xFE; vk++)
-        {
-            if (vk is NativeMethods.VK_LBUTTON or NativeMethods.VK_RBUTTON or NativeMethods.VK_MBUTTON)
-                continue;
-
-            short keyState = NativeMethods.GetAsyncKeyState(vk);
-            bool isDown = (keyState & 0x8000) != 0 || keyState < 0;
-            if (isDown != prevKeyStates[vk])
-            {
-                prevKeyStates[vk] = isDown;
-                string keyName = Keyboard.GetKeyName(vk);
-                if (!string.IsNullOrEmpty(keyName))
+                switch (msg)
                 {
-                    AddAction(isDown ? MacroActionType.KeyPress : MacroActionType.KeyRelease, 0, 0, keyName, now);
-                    onActionCaptured?.Invoke(Actions.Count);
+                    case (int)NativeMethods.WM_LBUTTONDOWN:
+                        RecordCapturedAction(MacroActionType.ClickLeft, hookStruct.pt.X, hookStruct.pt.Y, string.Empty, now);
+                        break;
+                    case (int)NativeMethods.WM_RBUTTONDOWN:
+                        RecordCapturedAction(MacroActionType.ClickRight, hookStruct.pt.X, hookStruct.pt.Y, string.Empty, now);
+                        break;
+                    case 0x0207: // WM_MBUTTONDOWN
+                        RecordCapturedAction(MacroActionType.ClickMiddle, hookStruct.pt.X, hookStruct.pt.Y, string.Empty, now);
+                        break;
                 }
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Mouse hook error: {ex.Message}");
+            }
         }
+
+        return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
     }
 
-    private void AddAction(MacroActionType type, int x, int y, string data, long now)
+    private IntPtr KeyboardHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
+        if (nCode >= 0 && _isRecording)
+        {
+            try
+            {
+                var hookStruct = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
+                int msg = wParam.ToInt32();
+                long now = _stopwatch.ElapsedMilliseconds;
+
+                bool isKeyDown = msg is NativeMethods.WM_KEYDOWN or NativeMethods.WM_SYSKEYDOWN;
+                bool isKeyUp = msg is NativeMethods.WM_KEYUP or NativeMethods.WM_SYSKEYUP;
+
+                if (isKeyDown || isKeyUp)
+                {
+                    int vk = (int)hookStruct.vkCode;
+                    string keyName = Keyboard.GetKeyName(vk);
+                    if (!string.IsNullOrEmpty(keyName))
+                    {
+                        var type = isKeyDown ? MacroActionType.KeyPress : MacroActionType.KeyRelease;
+                        RecordCapturedAction(type, 0, 0, keyName, now);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Keyboard hook error: {ex.Message}");
+            }
+        }
+
+        return NativeMethods.CallNextHookEx(_keyboardHook, nCode, wParam, lParam);
+    }
+
+    private void RecordCapturedAction(MacroActionType type, int x, int y, string data, long now)
+    {
+        if (!_isRecording) return;
+
+        MacroAction action;
+        int totalCount;
         lock (_actions)
         {
-            long delay = now - _lastActionTimeMs;
+            if (!_isRecording) return;
+
+            long delay = _actions.Count == 0 ? 0 : Math.Max(0, now - _lastActionTimeMs);
             _lastActionTimeMs = now;
-            _actions.Add(new MacroAction
+            action = new MacroAction
             {
                 Type = type,
                 X = x,
                 Y = y,
                 Data = data,
                 DelayMs = delay
-            });
+            };
+            _actions.Add(action);
+            totalCount = _actions.Count;
+        }
+
+        if (_isRecording)
+        {
+            _countCallback?.Invoke(totalCount);
+            _detailedCallback?.Invoke(action, totalCount);
+        }
+    }
+
+    private void CleanupHooks()
+    {
+        if (_mouseHook != IntPtr.Zero)
+        {
+            NativeMethods.UnhookWindowsHookEx(_mouseHook);
+            _mouseHook = IntPtr.Zero;
+        }
+        if (_keyboardHook != IntPtr.Zero)
+        {
+            NativeMethods.UnhookWindowsHookEx(_keyboardHook);
+            _keyboardHook = IntPtr.Zero;
         }
     }
 
     public void StopRecording()
     {
         _isRecording = false;
+        _countCallback = null;
+        _detailedCallback = null;
+
+        if (_recordThreadId != 0)
+        {
+            NativeMethods.PostThreadMessageW(_recordThreadId, NativeMethods.WM_QUIT, IntPtr.Zero, IntPtr.Zero);
+        }
+
         try
         {
-            _recordThread?.Join(300);
+            _recordThread?.Join(400);
         }
-        catch (ThreadStateException ex)
+        catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to join recording thread: {ex.Message}");
-        }
-        catch (ThreadInterruptedException ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to join recording thread: {ex.Message}");
+            Debug.WriteLine($"Failed to join recording thread: {ex.Message}");
         }
         finally
         {
+            CleanupHooks();
             _recordThread = null;
+            _recordThreadId = 0;
             _stopwatch.Stop();
         }
     }
@@ -229,7 +257,12 @@ public class MacroRecorder
         }
     }
 
-    public async Task ReplayAsync(int repeatCount, double speedMultiplier, CancellationToken token, Action<int, int>? progressCallback = null)
+    public async Task ReplayAsync(
+        int repeatCount,
+        double speedMultiplier,
+        CancellationToken token,
+        Action<int, int>? progressCallback = null,
+        Action<MacroAction>? actionExecutingCallback = null)
     {
         List<MacroAction> actionsSnapshot;
         lock (_actions)
@@ -239,6 +272,9 @@ public class MacroRecorder
         if (actionsSnapshot.Count == 0) return;
         bool infinite = repeatCount <= 0;
 
+        // Reset previous Esc key buffer state before starting replay
+        Keyboard.ResetEscState();
+
         int currentLoop = 0;
         while (!token.IsCancellationRequested && (infinite || currentLoop < repeatCount))
         {
@@ -246,7 +282,10 @@ public class MacroRecorder
             for (int i = 0; i < actionsSnapshot.Count; i++)
             {
                 token.ThrowIfCancellationRequested();
-                if (Keyboard.IsEscPressed()) throw new OperationCanceledException("Esc pressed");
+                if (Keyboard.IsEscPressed())
+                {
+                    throw new OperationCanceledException("Esc pressed during macro replay");
+                }
 
                 var action = actionsSnapshot[i];
                 progressCallback?.Invoke(currentLoop, i + 1);
@@ -257,6 +296,13 @@ public class MacroRecorder
                     await Task.Delay(delay, token);
                 }
 
+                token.ThrowIfCancellationRequested();
+                if (Keyboard.IsEscPressed())
+                {
+                    throw new OperationCanceledException("Esc pressed during macro replay");
+                }
+
+                actionExecutingCallback?.Invoke(action);
                 ExecuteAction(action);
             }
         }
