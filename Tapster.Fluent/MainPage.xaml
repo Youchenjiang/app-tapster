@@ -483,8 +483,7 @@
                                             <TextBlock Text="Clear Macro"/>
                                         </StackPanel>
                                     </Button>
-                                    <CheckBox x:Name="IgnoreMouseMoveCheck" Content="Only Clicks &amp; Keys (Ignore Mouse Move)"
-                                              IsChecked="True" FontSize="12" VerticalAlignment="Center"/>
+                                    
                                 </StackPanel>
 
                                 <Grid RowSpacing="8" ColumnSpacing="16">

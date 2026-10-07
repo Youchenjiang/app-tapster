@@ -118,6 +118,14 @@ public static partial class Keyboard
     }
 
     /// <summary>
+    /// Resets the GetAsyncKeyState buffer for Esc key by reading it once.
+    /// </summary>
+    public static void ResetEscState()
+    {
+        _ = GetAsyncKeyState(0x1B);
+    }
+
+    /// <summary>
     /// Maps a virtual key code to a friendly key name string.
     /// </summary>
     public static string GetKeyName(int vk)
@@ -138,6 +146,11 @@ public static partial class Keyboard
             0x1B => "esc",
             0x08 => "backspace",
             0x2E => "delete",
+            0x2D => "insert",
+            0x24 => "home",
+            0x23 => "end",
+            0x21 => "pageup",
+            0x22 => "pagedown",
             0x14 => "capslock",
             0x26 => "up",
             0x28 => "down",
@@ -190,6 +203,11 @@ public static partial class Keyboard
     private static ushort MapKeyName(string name)
     {
         string k = name.ToLower();
+        if (k.StartsWith("vk_") && int.TryParse(k[3..], out int parsedVk))
+        {
+            return (ushort)parsedVk;
+        }
+
         if (k.Length == 1)
         {
             char ch = k[0];
@@ -197,28 +215,89 @@ public static partial class Keyboard
             if (ch >= '0' && ch <= '9') return (ushort)(ch - '0' + 0x30); // VK_0 .. VK_9
         }
 
-        return k switch
+        ushort namedKey = MapNamedKey(k);
+        if (namedKey != 0)
         {
-            "shift" => 0x10,
-            "ctrl" or "control" => 0x11,
-            "alt" => 0x12,
-            "windows" or "win" => 0x5B,
-            "enter" or "return" => 0x0D,
-            "space" => 0x20,
-            "tab" => 0x09,
-            "esc" or "escape" => 0x1B,
-            "backspace" => 0x08,
-            "delete" or "del" => 0x2E,
-            "capslock" => 0x14,
-            "up" => 0x26,
-            "down" => 0x28,
-            "left" => 0x25,
-            "right" => 0x27,
-            "f1" => 0x70, "f2" => 0x71, "f3" => 0x72, "f4" => 0x73,
-            "f5" => 0x74, "f6" => 0x75, "f7" => 0x76, "f8" => 0x77,
-            "f9" => 0x78, "f10" => 0x79, "f11" => 0x7A, "f12" => 0x7B,
-            _ => (ushort)k[0]
-        };
+            return namedKey;
+        }
+
+        return ResolveFallbackKey(k);
+    }
+
+    private static readonly System.Collections.Generic.Dictionary<string, ushort> NamedKeyMap = new(System.StringComparer.OrdinalIgnoreCase)
+    {
+        ["shift"] = 0x10,
+        ["ctrl"] = 0x11,
+        ["control"] = 0x11,
+        ["alt"] = 0x12,
+        ["windows"] = 0x5B,
+        ["win"] = 0x5B,
+        ["enter"] = 0x0D,
+        ["return"] = 0x0D,
+        ["space"] = 0x20,
+        ["tab"] = 0x09,
+        ["esc"] = 0x1B,
+        ["escape"] = 0x1B,
+        ["backspace"] = 0x08,
+        ["delete"] = 0x2E,
+        ["del"] = 0x2E,
+        ["insert"] = 0x2D,
+        ["ins"] = 0x2D,
+        ["home"] = 0x24,
+        ["end"] = 0x23,
+        ["pageup"] = 0x21,
+        ["pgup"] = 0x21,
+        ["pagedown"] = 0x22,
+        ["pgdn"] = 0x22,
+        ["capslock"] = 0x14,
+        ["up"] = 0x26,
+        ["down"] = 0x28,
+        ["left"] = 0x25,
+        ["right"] = 0x27,
+        ["`"] = 0xC0,
+        ["~"] = 0xC0,
+        ["-"] = 0xBD,
+        ["_"] = 0xBD,
+        ["="] = 0xBB,
+        ["+"] = 0xBB,
+        ["["] = 0xDB,
+        ["{"] = 0xDB,
+        ["]"] = 0xDD,
+        ["}"] = 0xDD,
+        ["\\"] = 0xDC,
+        ["|"] = 0xDC,
+        [";"] = 0xBA,
+        [":"] = 0xBA,
+        ["'"] = 0xDE,
+        ["\""] = 0xDE,
+        [","] = 0xBC,
+        ["<"] = 0xBC,
+        ["."] = 0xBE,
+        [">"] = 0xBE,
+        ["/"] = 0xBF,
+        ["?"] = 0xBF,
+        ["f1"] = 0x70, ["f2"] = 0x71, ["f3"] = 0x72, ["f4"] = 0x73,
+        ["f5"] = 0x74, ["f6"] = 0x75, ["f7"] = 0x76, ["f8"] = 0x77,
+        ["f9"] = 0x78, ["f10"] = 0x79, ["f11"] = 0x7A, ["f12"] = 0x7B
+    };
+
+    private static ushort MapNamedKey(string k) =>
+        NamedKeyMap.TryGetValue(k, out ushort vk) ? vk : (ushort)0;
+
+    private static ushort ResolveFallbackKey(string k)
+    {
+        if (k.Length == 0)
+        {
+            return 0;
+        }
+
+        short scan = VkKeyScan(k[0]);
+        if (scan != -1)
+        {
+            return (ushort)(scan & 0xFF);
+        }
+
+        return k[0];
     }
 
     [DllImport("user32.dll")]

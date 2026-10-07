@@ -44,27 +44,7 @@ public static class Mouse
     /// </summary>
     public static void MoveTo(int x, int y)
     {
-        int screenW = GetSystemMetrics(SM_CXSCREEN);
-        int screenH = GetSystemMetrics(SM_CYSCREEN);
-
-        int absX = (int)(x * 65535.0 / screenW);
-        int absY = (int)(y * 65535.0 / screenH);
-
-        var input = new INPUT
-        {
-            type = INPUT_MOUSE,
-            u = new INPUTUNION
-            {
-                mi = new MOUSEINPUT
-                {
-                    dx = absX,
-                    dy = absY,
-                    dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE
-                }
-            }
-        };
-
-        SendInput(1, [input], Marshal.SizeOf<INPUT>());
+        SetCursorPos(x, y);
     }
 
     /// <summary>

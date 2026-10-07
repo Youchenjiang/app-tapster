@@ -63,6 +63,20 @@ public sealed partial class MainWindow : Window
 
         // Close button minimizes to tray instead of exiting
         AppWindow.Closing += AppWindow_Closing;
+        AppWindow.Changed += (sender, args) =>
+        {
+            if (args.DidPresenterChange && AppWindow.Presenter is OverlappedPresenter presenter)
+            {
+                if (presenter.State == OverlappedPresenterState.Minimized)
+                {
+                    MainPage.Instance?.OnGuiHidden();
+                }
+                else if (presenter.State is OverlappedPresenterState.Restored or OverlappedPresenterState.Maximized)
+                {
+                    MainPage.Instance?.OnGuiRestored();
+                }
+            }
+        };
         Closed += MainWindow_Closed;
 
         RootFrame.Navigate(typeof(MainPage));
@@ -111,6 +125,8 @@ public sealed partial class MainWindow : Window
     {
         if (_isExplicitExit) return;
 
+        MainPage.Instance?.OnGuiHidden();
+
         if (AppSettings.Current.MinimizeToTrayOnClose)
         {
             args.Cancel = true;
@@ -138,6 +154,7 @@ public sealed partial class MainWindow : Window
     {
         if (AppWindow.IsVisible)
         {
+            MainPage.Instance?.OnGuiHidden();
             AppWindow.Hide();
         }
         else
@@ -152,6 +169,7 @@ public sealed partial class MainWindow : Window
         AppWindow.Show();
         NativeMethods.SetForegroundWindow(_hWnd);
         Activate();
+        MainPage.Instance?.OnGuiRestored();
     }
 
     private void CleanupHotkeys()
@@ -168,6 +186,7 @@ public sealed partial class MainWindow : Window
     public void ExitApplication()
     {
         _isExplicitExit = true;
+        MainPage.Instance?.OnGuiHidden();
         _trayManager?.Dispose();
         _trayManager = null;
         CleanupHotkeys();
@@ -178,6 +197,7 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        MainPage.Instance?.OnGuiHidden();
         _trayManager?.Dispose();
         _trayManager = null;
         CleanupHotkeys();

@@ -10,6 +10,7 @@
 - **Style**: Direct, no fluff. Get things done with high engineering rigor.
 - **Git Commit Protocol**: Strict Conventional Commits (`type(scope): subject` <= 72 chars, no trailing period, numbered English body `1. ...`).
 - **Authorization Gate**: Always confirm before any external mutations (`git push`, release tags, PR creation).
+- **Zero GitHub Comments / Chat**: 嚴禁在 GitHub PR / Issue 上留下任何文字評論、回覆或機器人文字。處理 Review Feedback 時只需完成代碼修復、推送到分支、並將 review thread 標記為 resolved，絕對不發布任何文字留言。
 
 ---
 
@@ -33,6 +34,8 @@
   - [x] Scaffold `tests/Tapster.Core.Tests` (xUnit test project linked to `Tapster.sln`)
   - [x] Add unit tests for key parsing, action recording/playback models, and speed calculations
   - [x] Integrate `dotnet test` into `.github/workflows/ci.yml`
+- [x] **Market Convenience - [P3-8] & [P3-9]**: Global Hotkeys, Hold Mode, and Key Spammer (PR #36)
+- [x] **Market Convenience - [P3-10]**: Clipboard Paste Mode, Trailing Keys, Jitter & Auto-Restore (PR #38)
 
 ---
 
@@ -61,3 +64,4 @@
 - **WinUI 3 Window Dragging Performance vs. Native DWM (PR #35)**: Never use `ExtendsContentIntoTitleBar = true`, `SetTitleBar()`, or `AppWindow.TitleBar` in WinUI 3 as they funnel non-client drag events into DirectComposition, dropping framerate to 30~45 FPS under 1000Hz mice. Always maintain native Win32 non-client drag and inject Windows 11 DWM attributes (`DWMWA_USE_IMMERSIVE_DARK_MODE`, `DWMWA_CAPTION_COLOR = 0x00202020`, `DWMWA_TEXT_COLOR = 0x00FFFFFF`) via encapsulated safe wrappers (`NativeMethods.SetWindowAttribute`). Relocate title bar controls (e.g. Always on top) to `NavigationView.PaneFooter`.
 - **WinUI 3 XAML Event Handlers vs. Static Method Linters**: Generated code in `*.g.cs` references `this.MethodName`, so making event handlers static causes compiler error `CS0176`. For simple controls, wire events dynamically in code-behind (`Loaded`) via lambdas to eliminate false positive code smells (SonarCloud S2325).
 - **PR Creation & Body Validation Protocol (`tools/pr_helper.py`)**: Never run `gh pr create --body "..."` directly via PowerShell strings, which causes quote stripping, backtick escaping to backslashes, and markdown truncation. Always use `python tools/pr_helper.py` (`generate`, `lint`, or `create` with `--body-file`) to enforce the 3 mandatory sections (`## Summary`, `## Key Changes`, `## Verification`) and apply repository labels.
+- **Zero GitHub Comment Noise**: 永遠不要在 GitHub PR / Issue 上調用 comment/reply API 發表任何文字回覆。自動化/機器人審查只需要用「代碼修復 + Resolve Thread」回應即可，發送文字評論純屬多餘噪音並冒用使用者發言，已被永久列入禁用操作。
