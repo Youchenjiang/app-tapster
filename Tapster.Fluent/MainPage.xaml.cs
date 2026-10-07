@@ -16,6 +16,7 @@ public sealed partial class MainPage : Page
     private const string KeyNone = "none";
     private const string TyperModeClipboard = "clipboard";
     private const string TyperModeKeystroke = "keystroke";
+    private const string TabClicker = "Clicker";
 
     public static MainPage? Instance { get; private set; }
     private string _activeTab = "Typer";
@@ -303,7 +304,7 @@ public sealed partial class MainPage : Page
             _activeTab = tag;
             TyperPanel.Visibility = tag == "Typer" ? Visibility.Visible : Visibility.Collapsed;
             HolderPanel.Visibility = tag == "Holder" ? Visibility.Visible : Visibility.Collapsed;
-            ClickerPanel.Visibility = tag == "Clicker" ? Visibility.Visible : Visibility.Collapsed;
+            ClickerPanel.Visibility = tag == TabClicker ? Visibility.Visible : Visibility.Collapsed;
             MacroPanel.Visibility = tag == "Macro" ? Visibility.Visible : Visibility.Collapsed;
             SettingsPanel.Visibility = Visibility.Collapsed;
             AboutPanel.Visibility = tag == "About" ? Visibility.Visible : Visibility.Collapsed;
@@ -499,55 +500,65 @@ public sealed partial class MainPage : Page
     {
         if (_isRecordingMacro)
         {
-            _isRecordingMacro = false;
-            _macroRecorder.StopRecording();
-            _targetMarkerOverlay.ClearAndHide();
-            RecordIcon.Glyph = "\uE7C8";
-            RecordMacroText.Text = "Start Recording";
-            MacroStatusText.Text = $"Macro recorded: {_macroRecorder.Actions.Count} actions";
-            RefreshMacroActionList();
+            StopMacroRecording();
         }
         else
         {
-            _isRecordingMacro = true;
-            MacroActionList.Items.Clear();
-            _targetMarkerOverlay.ClearAndHide();
-            int clickOrder = 0;
-            _macroRecorder.StartRecording(
-                count =>
+            StartMacroRecording();
+        }
+    }
+
+    private void StopMacroRecording()
+    {
+        _isRecordingMacro = false;
+        _macroRecorder.StopRecording();
+        _targetMarkerOverlay.ClearAndHide();
+        RecordIcon.Glyph = "\uE7C8";
+        RecordMacroText.Text = "Start Recording";
+        MacroStatusText.Text = $"Macro recorded: {_macroRecorder.Actions.Count} actions";
+        RefreshMacroActionList();
+    }
+
+    private void StartMacroRecording()
+    {
+        _isRecordingMacro = true;
+        MacroActionList.Items.Clear();
+        _targetMarkerOverlay.ClearAndHide();
+        int clickOrder = 0;
+        _macroRecorder.StartRecording(
+            count =>
+            {
+                DispatcherQueue.TryEnqueue(() =>
                 {
-                    DispatcherQueue.TryEnqueue(() =>
-                    {
-                        MacroStatusText.Text = $"Recording macro... {count} actions captured (Click Stop to finish)";
-                    });
-                },
-                true,
-                (action, count) =>
+                    MacroStatusText.Text = $"Recording macro... {count} actions captured (Click Stop to finish)";
+                });
+            },
+            true,
+            (action, count) =>
+            {
+                if (!_isRecordingMacro) return;
+
+                DispatcherQueue.TryEnqueue(() =>
                 {
                     if (!_isRecordingMacro) return;
 
-                    DispatcherQueue.TryEnqueue(() =>
+                    if (action.Type is MacroActionType.ClickLeft or MacroActionType.ClickRight or MacroActionType.ClickMiddle)
                     {
-                        if (!_isRecordingMacro) return;
+                        clickOrder++;
+                        _targetMarkerOverlay.AddMarkerWithRipple(clickOrder, action.X, action.Y);
+                    }
 
-                        if (action.Type is MacroActionType.ClickLeft or MacroActionType.ClickRight or MacroActionType.ClickMiddle)
-                        {
-                            clickOrder++;
-                            _targetMarkerOverlay.AddMarkerWithRipple(clickOrder, action.X, action.Y);
-                        }
-
-                        string detail = FormatMacroActionDetail(action);
-                        MacroActionList.Items.Add($"#{count} (+{action.DelayMs}ms) — {detail}");
-                        if (MacroActionList.Items.Count > 0)
-                        {
-                            MacroActionList.ScrollIntoView(MacroActionList.Items[^1]);
-                        }
-                    });
+                    string detail = FormatMacroActionDetail(action);
+                    MacroActionList.Items.Add($"#{count} (+{action.DelayMs}ms) — {detail}");
+                    if (MacroActionList.Items.Count > 0)
+                    {
+                        MacroActionList.ScrollIntoView(MacroActionList.Items[^1]);
+                    }
                 });
-            RecordIcon.Glyph = "\uE71A";
-            RecordMacroText.Text = "Stop Recording";
-            MacroStatusText.Text = "Recording macro... Click or type anywhere to record actions!";
-        }
+            });
+        RecordIcon.Glyph = "\uE71A";
+        RecordMacroText.Text = "Stop Recording";
+        MacroStatusText.Text = "Recording macro... Click or type anywhere to record actions!";
     }
 
     private void ClearMacroBtn_Click(object sender, RoutedEventArgs e)
@@ -786,7 +797,7 @@ public sealed partial class MainPage : Page
 
     private void UpdateTargetMarkerOverlay()
     {
-        if (_activeTab != "Clicker")
+        if (_activeTab != TabClicker)
         {
             _targetMarkerOverlay.Update(0, 0, 0, false);
             return;
@@ -936,7 +947,7 @@ public sealed partial class MainPage : Page
     private async void ClickerActionBtn_Click(object sender, RoutedEventArgs e)
     {
         await RunTaskAsync(
-            "Clicker",
+            TabClicker,
             ClickerDelayBox,
             ClickerStatusText,
             ClickerProgressBar,
@@ -1338,16 +1349,10 @@ public sealed partial class MainPage : Page
         double speed = MacroSpeedBox.Value;
 
         // Display all recorded click markers with sequential numbering ①, ②, ③...
-        var clickPoints = new List<MarkerPoint>();
-        int clickIdx = 0;
-        foreach (var act in _macroRecorder.Actions)
-        {
-            if (act.Type is MacroActionType.ClickLeft or MacroActionType.ClickRight or MacroActionType.ClickMiddle)
-            {
-                clickIdx++;
-                clickPoints.Add(new MarkerPoint(clickIdx, act.X, act.Y));
-            }
-        }
+        var clickPoints = _macroRecorder.Actions
+            .Where(act => act.Type is MacroActionType.ClickLeft or MacroActionType.ClickRight or MacroActionType.ClickMiddle)
+            .Select((act, idx) => new MarkerPoint(idx + 1, act.X, act.Y))
+            .ToList();
 
         DispatcherQueue.TryEnqueue(() =>
         {
@@ -1430,7 +1435,7 @@ public sealed partial class MainPage : Page
         // Set status message on the active/relevant panel
         if (_runningTaskName == "Typer") TyperStatusText.Text = message;
         else if (_runningTaskName == "Holder") HolderStatusText.Text = message;
-        else if (_runningTaskName == "Clicker") ClickerStatusText.Text = message;
+        else if (_runningTaskName == TabClicker) ClickerStatusText.Text = message;
         else if (_runningTaskName == "Macro") MacroStatusText.Text = message;
 
         _runningTaskName = null;

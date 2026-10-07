@@ -231,72 +231,83 @@ public sealed class TargetMarkerOverlay : IDisposable
 
         if (msg == NativeMethods.WM_PAINT)
         {
-            IntPtr hdc = NativeMethods.BeginPaint(hWnd, out var ps);
-            if (hdc != IntPtr.Zero)
-            {
-                try
-                {
-                    int width = _vWidth > 0 ? _vWidth : (ps.rcPaint.Right - ps.rcPaint.Left);
-                    int height = _vHeight > 0 ? _vHeight : (ps.rcPaint.Bottom - ps.rcPaint.Top);
-                    if (width <= 0 || height <= 0)
-                    {
-                        width = 1920;
-                        height = 1080;
-                    }
-
-                    EnsureMemoryBuffer(hdc, width, height);
-
-                    if (_memDC != IntPtr.Zero)
-                    {
-                        // 1. Fill entire memory buffer with ColorKey (Magenta -> fully transparent)
-                        var rc = new NativeMethods.Rect { Left = 0, Top = 0, Right = width, Bottom = height };
-                        NativeMethods.FillRect(_memDC, ref rc, _hMagentaBrush);
-
-                        // 2. Draw single target crosshair & jitter boundary if visible
-                        if (_isSingleTargetVisible)
-                        {
-                            int cx = _singleTargetX - _vx;
-                            int cy = _singleTargetY - _vy;
-                            if (_singleJitterRadius > 0)
-                            {
-                                DrawJitterBoundary(_memDC, cx, cy, (int)_singleJitterRadius);
-                            }
-                            DrawCrosshair(_memDC, cx, cy, 14);
-                        }
-
-                        // 3. Draw numbered markers
-                        lock (_lock)
-                        {
-                            foreach (var marker in _markers)
-                            {
-                                int mx = marker.X - _vx;
-                                int my = marker.Y - _vy;
-                                DrawNumberedMarker(_memDC, mx, my, marker.Index);
-                            }
-                        }
-
-                        // 4. Draw ripple if active
-                        var ripple = _ripplePoint;
-                        if (ripple != null)
-                        {
-                            int rx = ripple.X - _vx;
-                            int ry = ripple.Y - _vy;
-                            DrawRippleRing(_memDC, rx, ry);
-                        }
-
-                        // BitBlt pre-buffered frame to layered window
-                        NativeMethods.BitBlt(hdc, 0, 0, width, height, _memDC, 0, 0, NativeMethods.SRCCOPY);
-                    }
-                }
-                finally
-                {
-                    NativeMethods.EndPaint(hWnd, ref ps);
-                }
-            }
+            HandlePaintMessage(hWnd);
             return IntPtr.Zero;
         }
 
         return NativeMethods.DefWindowProcW(hWnd, msg, wParam, lParam);
+    }
+
+    private void HandlePaintMessage(IntPtr hWnd)
+    {
+        IntPtr hdc = NativeMethods.BeginPaint(hWnd, out var ps);
+        if (hdc == IntPtr.Zero)
+        {
+            return;
+        }
+
+        try
+        {
+            int width = _vWidth > 0 ? _vWidth : (ps.rcPaint.Right - ps.rcPaint.Left);
+            int height = _vHeight > 0 ? _vHeight : (ps.rcPaint.Bottom - ps.rcPaint.Top);
+            if (width <= 0 || height <= 0)
+            {
+                width = 1920;
+                height = 1080;
+            }
+
+            EnsureMemoryBuffer(hdc, width, height);
+            if (_memDC != IntPtr.Zero)
+            {
+                RenderOverlayFrame(hdc, width, height);
+            }
+        }
+        finally
+        {
+            NativeMethods.EndPaint(hWnd, ref ps);
+        }
+    }
+
+    private void RenderOverlayFrame(IntPtr hdc, int width, int height)
+    {
+        // 1. Fill entire memory buffer with ColorKey (Magenta -> fully transparent)
+        var rc = new NativeMethods.Rect { Left = 0, Top = 0, Right = width, Bottom = height };
+        NativeMethods.FillRect(_memDC, ref rc, _hMagentaBrush);
+
+        // 2. Draw single target crosshair & jitter boundary if visible
+        if (_isSingleTargetVisible)
+        {
+            int cx = _singleTargetX - _vx;
+            int cy = _singleTargetY - _vy;
+            if (_singleJitterRadius > 0)
+            {
+                DrawJitterBoundary(_memDC, cx, cy, (int)_singleJitterRadius);
+            }
+            DrawCrosshair(_memDC, cx, cy, 14);
+        }
+
+        // 3. Draw numbered markers
+        lock (_lock)
+        {
+            foreach (var marker in _markers)
+            {
+                int mx = marker.X - _vx;
+                int my = marker.Y - _vy;
+                DrawNumberedMarker(_memDC, mx, my, marker.Index);
+            }
+        }
+
+        // 4. Draw ripple if active
+        var ripple = _ripplePoint;
+        if (ripple != null)
+        {
+            int rx = ripple.X - _vx;
+            int ry = ripple.Y - _vy;
+            DrawRippleRing(_memDC, rx, ry);
+        }
+
+        // BitBlt pre-buffered frame to layered window
+        NativeMethods.BitBlt(hdc, 0, 0, width, height, _memDC, 0, 0, NativeMethods.SRCCOPY);
     }
 
     /// <summary>
@@ -312,13 +323,7 @@ public sealed class TargetMarkerOverlay : IDisposable
             _markers.Add(new MarkerPoint(index, x, y));
         }
 
-        try
-        {
-            _rippleCts?.Cancel();
-            _rippleCts?.Dispose();
-        }
-        catch { }
-
+        CancelRippleTokenSource();
         _rippleCts = new System.Threading.CancellationTokenSource();
         var token = _rippleCts.Token;
 
@@ -394,19 +399,30 @@ public sealed class TargetMarkerOverlay : IDisposable
         }
     }
 
+    private void CancelRippleTokenSource()
+    {
+        if (_rippleCts == null) return;
+        try
+        {
+            _rippleCts.Cancel();
+            _rippleCts.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
+            // CTS already disposed during teardown; safe to ignore
+        }
+        finally
+        {
+            _rippleCts = null;
+        }
+    }
+
     /// <summary>
     /// Unconditionally clears all macro markers and dismisses the overlay window immediately.
     /// </summary>
     public void ClearAndHide()
     {
-        try
-        {
-            _rippleCts?.Cancel();
-            _rippleCts?.Dispose();
-            _rippleCts = null;
-        }
-        catch { }
-
+        CancelRippleTokenSource();
         _ripplePoint = null;
 
         lock (_lock)
@@ -449,13 +465,7 @@ public sealed class TargetMarkerOverlay : IDisposable
     {
         if (_hWnd == IntPtr.Zero || _isDisposed) return;
 
-        try
-        {
-            _rippleCts?.Cancel();
-            _rippleCts?.Dispose();
-        }
-        catch { }
-
+        CancelRippleTokenSource();
         _rippleCts = new System.Threading.CancellationTokenSource();
         var token = _rippleCts.Token;
 
@@ -742,14 +752,14 @@ public sealed class TargetMarkerOverlay : IDisposable
         internal static extern IntPtr DefWindowProcW(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
-        internal static extern IntPtr BeginPaint(IntPtr hWnd, out PAINTSTRUCT lpPaint);
+        internal static extern IntPtr BeginPaint(IntPtr hWnd, out Paintstruct lpPaint);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT lpPaint);
+        internal static extern bool EndPaint(IntPtr hWnd, ref Paintstruct lpPaint);
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct PAINTSTRUCT
+        internal struct Paintstruct
         {
             internal IntPtr hdc;
             [MarshalAs(UnmanagedType.Bool)]
