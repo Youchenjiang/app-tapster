@@ -157,19 +157,6 @@ public sealed partial class MainPage : Page
         };
         UpdateTyperMode(this);
 
-        // Restore Macro Preferences
-        IgnoreMouseMoveCheck.IsChecked = AppSettings.Current.MacroIgnoreMouseMove;
-        IgnoreMouseMoveCheck.Checked += (_, _) =>
-        {
-            AppSettings.Current.MacroIgnoreMouseMove = true;
-            AppSettings.Current.Save();
-        };
-        IgnoreMouseMoveCheck.Unchecked += (_, _) =>
-        {
-            AppSettings.Current.MacroIgnoreMouseMove = false;
-            AppSettings.Current.Save();
-        };
-
         ClickTargetTypeCombo.SelectionChanged += (_, _) => UpdateClickerTargetType(this);
         ClickTriggerModeCombo.SelectionChanged += (_, _) => UpdateClickerTriggerMode(this);
         UpdateClickerTargetType(this);
@@ -320,6 +307,8 @@ public sealed partial class MainPage : Page
             MacroPanel.Visibility = tag == "Macro" ? Visibility.Visible : Visibility.Collapsed;
             SettingsPanel.Visibility = Visibility.Collapsed;
             AboutPanel.Visibility = tag == "About" ? Visibility.Visible : Visibility.Collapsed;
+
+            UpdateTargetMarkerOverlay();
         }
     }
 
@@ -512,6 +501,7 @@ public sealed partial class MainPage : Page
         {
             _isRecordingMacro = false;
             _macroRecorder.StopRecording();
+            _targetMarkerOverlay.ClearAndHide();
             RecordIcon.Glyph = "\uE7C8";
             RecordMacroText.Text = "Start Recording";
             MacroStatusText.Text = $"Macro recorded: {_macroRecorder.Actions.Count} actions";
@@ -520,14 +510,40 @@ public sealed partial class MainPage : Page
         else
         {
             _isRecordingMacro = true;
-            bool ignoreMouseMove = IgnoreMouseMoveCheck.IsChecked.GetValueOrDefault(true);
-            _macroRecorder.StartRecording(count =>
-            {
-                DispatcherQueue.TryEnqueue(() =>
+            MacroActionList.Items.Clear();
+            _targetMarkerOverlay.ClearAndHide();
+            int clickOrder = 0;
+            _macroRecorder.StartRecording(
+                count =>
                 {
-                    MacroStatusText.Text = $"Recording macro... {count} actions captured (Click Stop to finish)";
+                    DispatcherQueue.TryEnqueue(() =>
+                    {
+                        MacroStatusText.Text = $"Recording macro... {count} actions captured (Click Stop to finish)";
+                    });
+                },
+                true,
+                (action, count) =>
+                {
+                    if (!_isRecordingMacro) return;
+
+                    DispatcherQueue.TryEnqueue(() =>
+                    {
+                        if (!_isRecordingMacro) return;
+
+                        if (action.Type is MacroActionType.ClickLeft or MacroActionType.ClickRight or MacroActionType.ClickMiddle)
+                        {
+                            clickOrder++;
+                            _targetMarkerOverlay.AddMarkerWithRipple(clickOrder, action.X, action.Y);
+                        }
+
+                        string detail = FormatMacroActionDetail(action);
+                        MacroActionList.Items.Add($"#{count} (+{action.DelayMs}ms) — {detail}");
+                        if (MacroActionList.Items.Count > 0)
+                        {
+                            MacroActionList.ScrollIntoView(MacroActionList.Items[^1]);
+                        }
+                    });
                 });
-            }, ignoreMouseMove);
             RecordIcon.Glyph = "\uE71A";
             RecordMacroText.Text = "Stop Recording";
             MacroStatusText.Text = "Recording macro... Click or type anywhere to record actions!";
@@ -536,11 +552,16 @@ public sealed partial class MainPage : Page
 
     private void ClearMacroBtn_Click(object sender, RoutedEventArgs e)
     {
-        _isRecordingMacro = false;
+        if (_isRecordingMacro)
+        {
+            _isRecordingMacro = false;
+            _macroRecorder.StopRecording();
+        }
         RecordIcon.Glyph = "\uE7C8";
         RecordMacroText.Text = "Start Recording";
         _macroRecorder.Clear();
         MacroActionList.Items.Clear();
+        _targetMarkerOverlay.ClearAndHide();
         MacroStatusText.Text = "Macro cleared";
     }
 
@@ -572,6 +593,7 @@ public sealed partial class MainPage : Page
         int index = MacroActionList.SelectedIndex;
         if (index >= 0 && _macroRecorder.RemoveActionAt(index))
         {
+            _targetMarkerOverlay.ClearAndHide();
             RefreshMacroActionList();
             MacroStatusText.Text = $"Deleted step #{index + 1}";
         }
@@ -764,26 +786,33 @@ public sealed partial class MainPage : Page
 
     private void UpdateTargetMarkerOverlay()
     {
+        if (_activeTab != "Clicker")
+        {
+            _targetMarkerOverlay.Update(0, 0, 0, false);
+            return;
+        }
+
         bool isSpammer = ClickTargetTypeCombo.SelectedIndex == 1;
         bool isEnabled = ShowTargetMarkerCheck.IsChecked.GetValueOrDefault(false);
 
         if (isSpammer || !isEnabled)
         {
-            _targetMarkerOverlay.Hide();
+            _targetMarkerOverlay.Update(0, 0, 0, false);
             return;
         }
 
         int? targetX = double.IsNaN(ClickXBox.Value) ? null : (int)ClickXBox.Value;
         int? targetY = double.IsNaN(ClickYBox.Value) ? null : (int)ClickYBox.Value;
+        double locJitterPx = LocationJitterBox.Value;
 
         if (targetX.HasValue && targetY.HasValue)
         {
-            double locJitterPx = LocationJitterBox.Value;
             _targetMarkerOverlay.Update(targetX.Value, targetY.Value, locJitterPx, true);
         }
         else
         {
-            _targetMarkerOverlay.Hide();
+            // If fixed coordinates are not locked (e.g. Current cursor mode), hide static target marker
+            _targetMarkerOverlay.Update(0, 0, 0, false);
         }
     }
 
@@ -807,6 +836,16 @@ public sealed partial class MainPage : Page
 
         AppSettings.Current.TyperInputMode = isClipboard ? TyperModeClipboard : TyperModeKeystroke;
         AppSettings.Current.Save();
+    }
+
+    public void OnGuiHidden()
+    {
+        _targetMarkerOverlay.ClearAndHide();
+    }
+
+    public void OnGuiRestored()
+    {
+        UpdateTargetMarkerOverlay();
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1207,7 +1246,10 @@ public sealed partial class MainPage : Page
         double timeJitterPct = TimeJitterBox.Value;
         double locJitterPx = LocationJitterBox.Value;
 
-        // F6 virtual key code
+        // Ensure target marker overlay is fresh and visible
+        UpdateTargetMarkerOverlay();
+
+        bool markerEnabled = ShowTargetMarkerCheck.IsChecked.GetValueOrDefault(false) && !isSpammer;
         const int HOTKEY_VK = 0x75;
 
         await Task.Run(() =>
@@ -1229,7 +1271,24 @@ public sealed partial class MainPage : Page
                 }
                 else
                 {
-                    PerformMouseClick(targetX, targetY, locJitterPx, button);
+                    if (targetX.HasValue && targetY.HasValue)
+                    {
+                        var (clickX, clickY) = JitterHelper.ApplyLocationJitter(targetX.Value, targetY.Value, locJitterPx);
+                        if (markerEnabled)
+                        {
+                            DispatcherQueue.TryEnqueue(() => _targetMarkerOverlay.ShowClickRipple(clickX, clickY));
+                        }
+                        Mouse.ClickAt(clickX, clickY, button);
+                    }
+                    else
+                    {
+                        var (curX, curY) = Mouse.GetPosition();
+                        if (markerEnabled)
+                        {
+                            DispatcherQueue.TryEnqueue(() => _targetMarkerOverlay.ShowClickRipple(curX, curY));
+                        }
+                        Mouse.Click(button);
+                    }
                 }
                 count++;
 
@@ -1278,11 +1337,55 @@ public sealed partial class MainPage : Page
         int loops = (int)MacroRepeatBox.Value;
         double speed = MacroSpeedBox.Value;
 
-        await _macroRecorder.ReplayAsync(loops, speed, token, (loop, step) =>
+        // Display all recorded click markers with sequential numbering ①, ②, ③...
+        var clickPoints = new List<MarkerPoint>();
+        int clickIdx = 0;
+        foreach (var act in _macroRecorder.Actions)
         {
-            double pct = (double)step / _macroRecorder.Actions.Count * 100;
-            reportProgress($"Replaying Macro: Loop {loop}, Action {step}/{_macroRecorder.Actions.Count}", pct);
+            if (act.Type is MacroActionType.ClickLeft or MacroActionType.ClickRight or MacroActionType.ClickMiddle)
+            {
+                clickIdx++;
+                clickPoints.Add(new MarkerPoint(clickIdx, act.X, act.Y));
+            }
+        }
+
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _targetMarkerOverlay.SetMarkers(clickPoints);
         });
+
+        int currentClickInLoop = 0;
+
+        try
+        {
+            await _macroRecorder.ReplayAsync(loops, speed, token, (loop, step) =>
+            {
+                if (step == 1)
+                {
+                    currentClickInLoop = 0;
+                }
+                double pct = (double)step / _macroRecorder.Actions.Count * 100;
+                reportProgress($"Replaying Macro: Loop {loop}, Action {step}/{_macroRecorder.Actions.Count}", pct);
+            }, action =>
+            {
+                if (action.Type is MacroActionType.ClickLeft or MacroActionType.ClickRight or MacroActionType.ClickMiddle)
+                {
+                    currentClickInLoop++;
+                    int thisClick = currentClickInLoop;
+                    DispatcherQueue.TryEnqueue(() =>
+                    {
+                        _targetMarkerOverlay.ShowClickRipple(action.X, action.Y, thisClick);
+                    });
+                }
+            });
+        }
+        finally
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                _targetMarkerOverlay.ClearAndHide();
+            });
+        }
     }
 
     private static void CheckEmergencyEsc()
@@ -1300,6 +1403,9 @@ public sealed partial class MainPage : Page
         _cts = null;
 
         _isRunning = false;
+
+        _targetMarkerOverlay.ClearAndHide();
+        UpdateTargetMarkerOverlay();
 
         // Reset Typer UI
         TyperActionText.Text = "Start Typer (F8)";
