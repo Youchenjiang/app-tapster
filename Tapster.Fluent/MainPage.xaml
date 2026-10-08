@@ -309,111 +309,113 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Spacing="12">
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Auto Clicker" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Automates mouse clicks with precise interval and coordinate targeting."
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                        </StackPanel>
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                        <StackPanel Spacing="12" Margin="0,0,8,0">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Auto Clicker" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Automates mouse clicks with precise interval and coordinate targeting."
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
+                            </StackPanel>
 
-                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                                CornerRadius="8" Padding="14">
-                            <Grid RowSpacing="12" ColumnSpacing="16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                    CornerRadius="8" Padding="14">
+                                <Grid RowSpacing="12" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                                <!-- Target Type: Mouse or Keyboard Spammer -->
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Target Type:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <ComboBox x:Name="ClickTargetTypeCombo" Grid.Row="0" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
-                                    <ComboBoxItem Content="🖱️ Mouse Click"/>
-                                    <ComboBoxItem Content="⌨️ Keyboard Spammer"/>
-                                </ComboBox>
-
-                                <!-- Trigger Mode: Toggle or Hold-to-Click -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Trigger Mode:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                    <ComboBox x:Name="ClickTriggerModeCombo" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
-                                        <ComboBoxItem Content="Toggle (Press to Start/Stop)"/>
-                                        <ComboBoxItem Content="Hold to Click (Hold F6)"/>
+                                    <!-- Target Type: Mouse or Keyboard Spammer -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Target Type:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <ComboBox x:Name="ClickTargetTypeCombo" Grid.Row="0" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
+                                        <ComboBoxItem Content="🖱️ Mouse Click"/>
+                                        <ComboBoxItem Content="⌨️ Keyboard Spammer"/>
                                     </ComboBox>
-                                    <TextBlock x:Name="HoldModeHint" Text="💡 Hold hotkey to spam, release to stop"
-                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                               VerticalAlignment="Center" Visibility="Collapsed"/>
-                                </StackPanel>
 
-                                <!-- Mouse Button (Shown for Mouse Click) -->
-                                <TextBlock x:Name="MouseButtonLabel" Grid.Row="2" Grid.Column="0" Text="Mouse Button:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <ComboBox x:Name="MouseButtonCombo" Grid.Row="2" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
-                                    <ComboBoxItem Content="Left Click"/>
-                                    <ComboBoxItem Content="Right Click"/>
-                                    <ComboBoxItem Content="Middle Click"/>
-                                </ComboBox>
-
-                                <!-- Keyboard Key (Shown for Keyboard Spammer) -->
-                                <TextBlock x:Name="SpamKeyLabel" Grid.Row="2" Grid.Column="0" Text="Spam Key / Combo:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium" Visibility="Collapsed"/>
-                                <TextBox x:Name="SpamKeyBox" Grid.Row="2" Grid.Column="1" Text="space" PlaceholderText="Key to spam (e.g. space, f, 1, e)"
-                                         FontFamily="Cascadia Code, Consolas" FontSize="12" Width="200" HorizontalAlignment="Left" Visibility="Collapsed"/>
-
-                                <!-- Click / Spam Interval -->
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Interval (sec):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <NumberBox x:Name="ClickIntervalBox" Grid.Row="3" Grid.Column="1" Value="0.1" Minimum="0.005" SmallChange="0.05"
-                                           FontSize="12" SpinButtonPlacementMode="Compact" HorizontalAlignment="Left" Width="200"/>
-
-                                <!-- Repeat Count -->
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Repeat Count (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <NumberBox x:Name="ClickCountBox" Grid.Row="4" Grid.Column="1" Value="100" Minimum="0"
-                                           FontSize="12" SpinButtonPlacementMode="Compact" HorizontalAlignment="Left" Width="200"/>
-
-                                <!-- Target Coordinates (Mouse only) -->
-                                <TextBlock x:Name="ClickCoordsLabel" Grid.Row="5" Grid.Column="0" Text="Target Coordinates:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel x:Name="ClickCoordsPanel" Grid.Row="5" Grid.Column="1" Orientation="Vertical" Spacing="6" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="X:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <NumberBox x:Name="ClickXBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                        <TextBlock Text="Y:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <NumberBox x:Name="ClickYBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                        <Button x:Name="PickCoordBtn" Click="PickCoordBtn_Click" Style="{StaticResource SubtleButtonStyle}">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <FontIcon x:Name="PickCoordIcon" Glyph="&#xE707;" FontSize="12"/>
-                                                <TextBlock x:Name="PickCoordText" Text="Pick Location"/>
-                                            </StackPanel>
-                                        </Button>
+                                    <!-- Trigger Mode: Toggle or Hold-to-Click -->
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Trigger Mode:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <ComboBox x:Name="ClickTriggerModeCombo" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
+                                            <ComboBoxItem Content="Toggle (Press to Start/Stop)"/>
+                                            <ComboBoxItem Content="Hold to Click (Hold F6)"/>
+                                        </ComboBox>
+                                        <TextBlock x:Name="HoldModeHint" Text="💡 Hold hotkey to spam, release to stop"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   VerticalAlignment="Center" Visibility="Collapsed"/>
                                     </StackPanel>
-                                    <CheckBox x:Name="ShowTargetMarkerCheck" Content="Show Target Marker on Screen" FontSize="12" Margin="0,-2,0,0"/>
-                                </StackPanel>
 
-                                <!-- Time Jitter (Random Interval) -->
-                                <TextBlock x:Name="TimeJitterLabel" Grid.Row="6" Grid.Column="0" Text="Time Jitter (±%):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <CheckBox x:Name="TimeJitterCheck" Content="Randomize interval" FontSize="12" VerticalAlignment="Center"/>
-                                    <NumberBox x:Name="TimeJitterBox" Width="80" Value="15" Minimum="1" Maximum="100"
-                                               FontSize="12" SpinButtonPlacementMode="Compact" IsEnabled="False"/>
-                                    <TextBlock Text="%" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                </StackPanel>
+                                    <!-- Mouse Button (Shown for Mouse Click) -->
+                                    <TextBlock x:Name="MouseButtonLabel" Grid.Row="2" Grid.Column="0" Text="Mouse Button:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <ComboBox x:Name="MouseButtonCombo" Grid.Row="2" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
+                                        <ComboBoxItem Content="Left Click"/>
+                                        <ComboBoxItem Content="Right Click"/>
+                                        <ComboBoxItem Content="Middle Click"/>
+                                    </ComboBox>
 
-                                <!-- Location Jitter (Spatial Randomness) -->
-                                <TextBlock x:Name="LocationJitterLabel" Grid.Row="7" Grid.Column="0" Text="Location Jitter (±px):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel x:Name="LocationJitterPanel" Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <NumberBox x:Name="LocationJitterBox" Width="80" Value="0" Minimum="0" Maximum="100"
-                                               FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                    <TextBlock Text="px radius (0 = exact point)" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </StackPanel>
+                                    <!-- Keyboard Key (Shown for Keyboard Spammer) -->
+                                    <TextBlock x:Name="SpamKeyLabel" Grid.Row="2" Grid.Column="0" Text="Spam Key / Combo:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium" Visibility="Collapsed"/>
+                                    <TextBox x:Name="SpamKeyBox" Grid.Row="2" Grid.Column="1" Text="space" PlaceholderText="Key to spam (e.g. space, f, 1, e)"
+                                             FontFamily="Cascadia Code, Consolas" FontSize="12" Width="200" HorizontalAlignment="Left" Visibility="Collapsed"/>
+
+                                    <!-- Click / Spam Interval -->
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Interval (sec):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <NumberBox x:Name="ClickIntervalBox" Grid.Row="3" Grid.Column="1" Value="0.1" Minimum="0.005" SmallChange="0.05"
+                                               FontSize="12" SpinButtonPlacementMode="Compact" HorizontalAlignment="Left" Width="200"/>
+
+                                    <!-- Repeat Count -->
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Repeat Count (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <NumberBox x:Name="ClickCountBox" Grid.Row="4" Grid.Column="1" Value="100" Minimum="0"
+                                               FontSize="12" SpinButtonPlacementMode="Compact" HorizontalAlignment="Left" Width="200"/>
+
+                                    <!-- Target Coordinates (Mouse only) -->
+                                    <TextBlock x:Name="ClickCoordsLabel" Grid.Row="5" Grid.Column="0" Text="Target Coordinates:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel x:Name="ClickCoordsPanel" Grid.Row="5" Grid.Column="1" Orientation="Vertical" Spacing="6" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="X:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            <NumberBox x:Name="ClickXBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                            <TextBlock Text="Y:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            <NumberBox x:Name="ClickYBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                            <Button x:Name="PickCoordBtn" Click="PickCoordBtn_Click" Style="{StaticResource SubtleButtonStyle}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon x:Name="PickCoordIcon" Glyph="&#xE707;" FontSize="12"/>
+                                                    <TextBlock x:Name="PickCoordText" Text="Pick Location"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                        <CheckBox x:Name="ShowTargetMarkerCheck" Content="Show Target Marker on Screen" FontSize="12" Margin="0,-2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Time Jitter (Random Interval) -->
+                                    <TextBlock x:Name="TimeJitterLabel" Grid.Row="6" Grid.Column="0" Text="Time Jitter (±%):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <CheckBox x:Name="TimeJitterCheck" Content="Randomize interval" FontSize="12" VerticalAlignment="Center"/>
+                                        <NumberBox x:Name="TimeJitterBox" Width="80" Value="15" Minimum="1" Maximum="100"
+                                                   FontSize="12" SpinButtonPlacementMode="Compact" IsEnabled="False"/>
+                                        <TextBlock Text="%" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Location Jitter (Spatial Randomness) -->
+                                    <TextBlock x:Name="LocationJitterLabel" Grid.Row="7" Grid.Column="0" Text="Location Jitter (±px):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel x:Name="LocationJitterPanel" Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <NumberBox x:Name="LocationJitterBox" Width="80" Value="0" Minimum="0" Maximum="100"
+                                                   FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                        <TextBlock Text="px radius (0 = exact point)" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <!-- Dedicated Action Card for Clicker -->
                     <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
@@ -459,79 +461,81 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Spacing="12">
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Macro Recorder" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Record user mouse clicks and keystrokes and replay them back."
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                        </StackPanel>
-
-                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                                CornerRadius="8" Padding="14">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Button x:Name="RecordMacroBtn" Click="RecordMacroBtn_Click" Style="{StaticResource AccentButtonStyle}">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon x:Name="RecordIcon" Glyph="&#xE7C8;" FontSize="12"/>
-                                            <TextBlock x:Name="RecordMacroText" Text="Start Recording"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Click="ClearMacroBtn_Click" Style="{StaticResource SubtleButtonStyle}">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon Glyph="&#xE894;" FontSize="12"/>
-                                            <TextBlock Text="Clear Macro"/>
-                                        </StackPanel>
-                                    </Button>
-                                    
-                                </StackPanel>
-
-                                <Grid RowSpacing="8" ColumnSpacing="16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Replay Loop Count (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                    <NumberBox x:Name="MacroRepeatBox" Grid.Row="0" Grid.Column="1" Value="1" Minimum="0" Width="100" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact"/>
-
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Replay Speed Multiplier:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                    <NumberBox x:Name="MacroSpeedBox" Grid.Row="1" Grid.Column="1" Value="1.0" Minimum="0.1" Maximum="10.0" SmallChange="0.5" Width="100" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact"/>
-                                </Grid>
-
-                                <StackPanel Spacing="4">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="Recorded Actions (Double-click step to edit):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                            <Button x:Name="EditActionBtn" Click="EditActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <FontIcon Glyph="&#xE70F;" FontSize="11"/>
-                                                    <TextBlock Text="Edit Step" FontSize="11"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button x:Name="DeleteActionBtn" Click="DeleteActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <FontIcon Glyph="&#xE74D;" FontSize="11"/>
-                                                    <TextBlock Text="Delete Step" FontSize="11"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-                                    <ListView x:Name="MacroActionList" MaxHeight="140"
-                                              FontFamily="Cascadia Code, Consolas" FontSize="11"
-                                              SelectionMode="Single" DoubleTapped="MacroActionList_DoubleTapped"/>
-                                </StackPanel>
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                        <StackPanel Spacing="12" Margin="0,0,8,0">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Macro Recorder" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Record user mouse clicks and keystrokes and replay them back."
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
                             </StackPanel>
-                        </Border>
-                    </StackPanel>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                    CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <Button x:Name="RecordMacroBtn" Click="RecordMacroBtn_Click" Style="{StaticResource AccentButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon x:Name="RecordIcon" Glyph="&#xE7C8;" FontSize="12"/>
+                                                <TextBlock x:Name="RecordMacroText" Text="Start Recording"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Click="ClearMacroBtn_Click" Style="{StaticResource SubtleButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE894;" FontSize="12"/>
+                                                <TextBlock Text="Clear Macro"/>
+                                            </StackPanel>
+                                        </Button>
+                                        
+                                    </StackPanel>
+
+                                    <Grid RowSpacing="8" ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Replay Loop Count (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                        <NumberBox x:Name="MacroRepeatBox" Grid.Row="0" Grid.Column="1" Value="1" Minimum="0" Width="100" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Replay Speed Multiplier:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                        <NumberBox x:Name="MacroSpeedBox" Grid.Row="1" Grid.Column="1" Value="1.0" Minimum="0.1" Maximum="10.0" SmallChange="0.5" Width="100" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact"/>
+                                    </Grid>
+
+                                    <StackPanel Spacing="4">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Recorded Actions (Double-click step to edit):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                                <Button x:Name="EditActionBtn" Click="EditActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <FontIcon Glyph="&#xE70F;" FontSize="11"/>
+                                                        <TextBlock Text="Edit Step" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button x:Name="DeleteActionBtn" Click="DeleteActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <FontIcon Glyph="&#xE74D;" FontSize="11"/>
+                                                        <TextBlock Text="Delete Step" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                        <ListView x:Name="MacroActionList" MaxHeight="140"
+                                                  FontFamily="Cascadia Code, Consolas" FontSize="11"
+                                                  SelectionMode="Single" DoubleTapped="MacroActionList_DoubleTapped"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <!-- Dedicated Action Card for Macro Replay -->
                     <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"

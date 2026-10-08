@@ -77,8 +77,30 @@ public sealed partial class MainWindow : Window
                 }
             }
         };
-        Closed += MainWindow_Closed;
+        // Set responsive default window size and center on active display
+        if (AppWindow != null)
+        {
+            var displayArea = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
+            int defaultWidth = 980;
+            int defaultHeight = 680;
+            if (displayArea != null)
+            {
+                int targetWidth = Math.Min(defaultWidth, (int)(displayArea.WorkArea.Width * 0.9));
+                int targetHeight = Math.Min(defaultHeight, (int)(displayArea.WorkArea.Height * 0.9));
+                var centeredPosition = new Windows.Graphics.PointInt32
+                {
+                    X = displayArea.WorkArea.X + (displayArea.WorkArea.Width - targetWidth) / 2,
+                    Y = displayArea.WorkArea.Y + (displayArea.WorkArea.Height - targetHeight) / 2
+                };
+                AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(centeredPosition.X, centeredPosition.Y, targetWidth, targetHeight));
+            }
+            else
+            {
+                AppWindow.Resize(new Windows.Graphics.SizeInt32(defaultWidth, defaultHeight));
+            }
+        }
 
+        Closed += MainWindow_Closed;
         RootFrame.Navigate(typeof(MainPage));
     }
 
