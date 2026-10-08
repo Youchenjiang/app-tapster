@@ -91,7 +91,7 @@
                                                     <TextBlock Text="Paste"/>
                                                 </StackPanel>
                                             </Button>
-                                            <Button Click="ClearText_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Clear All Text">
+                                            <Button x:Name="ClearTextBtn" Click="ClearText_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Clear All Text" IsEnabled="False">
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                                     <FontIcon Glyph="&#xE894;" FontSize="12"/>
                                                     <TextBlock Text="Clear"/>
@@ -231,7 +231,7 @@
                                                     <TextBlock x:Name="CaptureKeyText" Text="Capture Key"/>
                                                 </StackPanel>
                                             </Button>
-                                            <Button Click="ClearHolderKey_Click" Style="{StaticResource SubtleButtonStyle}">
+                                            <Button x:Name="ClearHolderKeyBtn" Click="ClearHolderKey_Click" Style="{StaticResource SubtleButtonStyle}">
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                                     <FontIcon Glyph="&#xE894;" FontSize="12"/>
                                                     <TextBlock Text="Clear"/>
@@ -480,7 +480,7 @@
                                                 <TextBlock x:Name="RecordMacroText" Text="Start Recording"/>
                                             </StackPanel>
                                         </Button>
-                                        <Button Click="ClearMacroBtn_Click" Style="{StaticResource SubtleButtonStyle}">
+                                        <Button x:Name="ClearMacroBtn" Click="ClearMacroBtn_Click" Style="{StaticResource SubtleButtonStyle}" IsEnabled="False">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <FontIcon Glyph="&#xE894;" FontSize="12"/>
                                                 <TextBlock Text="Clear Macro"/>
@@ -514,13 +514,13 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Recorded Actions (Double-click step to edit):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                                <Button x:Name="EditActionBtn" Click="EditActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
+                                                <Button x:Name="EditActionBtn" Click="EditActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
                                                     <StackPanel Orientation="Horizontal" Spacing="4">
                                                         <FontIcon Glyph="&#xE70F;" FontSize="11"/>
                                                         <TextBlock Text="Edit Step" FontSize="11"/>
                                                     </StackPanel>
                                                 </Button>
-                                                <Button x:Name="DeleteActionBtn" Click="DeleteActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
+                                                <Button x:Name="DeleteActionBtn" Click="DeleteActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
                                                     <StackPanel Orientation="Horizontal" Spacing="4">
                                                         <FontIcon Glyph="&#xE74D;" FontSize="11"/>
                                                         <TextBlock Text="Delete Step" FontSize="11"/>

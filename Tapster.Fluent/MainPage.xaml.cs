@@ -171,6 +171,7 @@ public sealed partial class MainPage : Page
 
         TypeTextBox.TextChanged += (_, _) => UpdateTyperActionBtnState();
         HolderKeyBox.TextChanged += (_, _) => UpdateHolderActionBtnState();
+        MacroActionList.SelectionChanged += (_, _) => UpdateMacroItemActionBtns();
         UpdateAllActionBtnStates();
 
         GenerateVirtualKeyboard();
@@ -964,10 +965,13 @@ public sealed partial class MainPage : Page
         if (_isRunning && _runningTaskName == "Typer")
         {
             TyperActionBtn.IsEnabled = true;
+            if (ClearTextBtn != null) ClearTextBtn.IsEnabled = false;
             return;
         }
 
-        TyperActionBtn.IsEnabled = !string.IsNullOrWhiteSpace(TypeTextBox?.Text);
+        bool hasText = !string.IsNullOrWhiteSpace(TypeTextBox?.Text);
+        TyperActionBtn.IsEnabled = hasText;
+        if (ClearTextBtn != null) ClearTextBtn.IsEnabled = hasText;
     }
 
     private void UpdateHolderActionBtnState()
@@ -975,10 +979,13 @@ public sealed partial class MainPage : Page
         if (_isRunning && _runningTaskName == "Holder")
         {
             HolderActionBtn.IsEnabled = true;
+            if (ClearHolderKeyBtn != null) ClearHolderKeyBtn.IsEnabled = false;
             return;
         }
 
-        HolderActionBtn.IsEnabled = !string.IsNullOrWhiteSpace(HolderKeyBox?.Text);
+        bool hasKey = !string.IsNullOrWhiteSpace(HolderKeyBox?.Text);
+        HolderActionBtn.IsEnabled = hasKey;
+        if (ClearHolderKeyBtn != null) ClearHolderKeyBtn.IsEnabled = hasKey;
     }
 
     private void UpdateClickerActionBtnState()
@@ -1000,21 +1007,32 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private void UpdateMacroItemActionBtns()
+    {
+        bool hasSelection = !_isRunning && !_isRecordingMacro && MacroActionList != null && MacroActionList.SelectedIndex >= 0;
+        if (EditActionBtn != null) EditActionBtn.IsEnabled = hasSelection;
+        if (DeleteActionBtn != null) DeleteActionBtn.IsEnabled = hasSelection;
+        if (ClearMacroBtn != null) ClearMacroBtn.IsEnabled = !_isRunning && (_macroRecorder.Actions.Count > 0 || _isRecordingMacro);
+    }
+
     private void UpdateMacroActionBtnState()
     {
         if (_isRunning && _runningTaskName == "Macro")
         {
             MacroActionBtn.IsEnabled = true;
+            UpdateMacroItemActionBtns();
             return;
         }
 
         if (_isRecordingMacro)
         {
             MacroActionBtn.IsEnabled = false;
+            UpdateMacroItemActionBtns();
             return;
         }
 
         MacroActionBtn.IsEnabled = _macroRecorder.Actions.Count > 0;
+        UpdateMacroItemActionBtns();
     }
 
     private async void TyperActionBtn_Click(object sender, RoutedEventArgs e)
