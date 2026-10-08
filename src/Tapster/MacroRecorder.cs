@@ -260,7 +260,8 @@ public class MacroRecorder
         double speedMultiplier,
         CancellationToken token,
         Action<int, int>? progressCallback = null,
-        Action<MacroAction>? actionExecutingCallback = null)
+        Action<MacroAction>? actionExecutingCallback = null,
+        Action? checkPanicCallback = null)
     {
         List<MacroAction> actionsSnapshot;
         lock (_actions)
@@ -280,7 +281,11 @@ public class MacroRecorder
             for (int i = 0; i < actionsSnapshot.Count; i++)
             {
                 token.ThrowIfCancellationRequested();
-                if (Keyboard.IsEscPressed())
+                if (checkPanicCallback != null)
+                {
+                    checkPanicCallback();
+                }
+                else if (Keyboard.IsEscPressed())
                 {
                     throw new OperationCanceledException("Esc pressed during macro replay");
                 }
@@ -295,7 +300,11 @@ public class MacroRecorder
                 }
 
                 token.ThrowIfCancellationRequested();
-                if (Keyboard.IsEscPressed())
+                if (checkPanicCallback != null)
+                {
+                    checkPanicCallback();
+                }
+                else if (Keyboard.IsEscPressed())
                 {
                     throw new OperationCanceledException("Esc pressed during macro replay");
                 }
