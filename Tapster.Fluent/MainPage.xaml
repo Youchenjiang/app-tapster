@@ -191,7 +191,7 @@
                             </StackPanel>
 
                             <Button x:Name="TyperActionBtn" Grid.Column="2" Width="136" Height="34" Click="TyperActionBtn_Click"
-                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
+                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6" IsEnabled="False">
                                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                     <FontIcon x:Name="TyperActionIcon" Glyph="&#xE768;" FontSize="12"/>
                                     <TextBlock x:Name="TyperActionText" Text="Start Typer (F8)" FontSize="12" FontWeight="SemiBold"/>
@@ -564,7 +564,7 @@
                             </StackPanel>
 
                             <Button x:Name="MacroActionBtn" Grid.Column="2" Width="136" Height="34" Click="MacroActionBtn_Click"
-                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
+                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6" IsEnabled="False">
                                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                     <FontIcon x:Name="MacroActionIcon" Glyph="&#xE768;" FontSize="12"/>
                                     <TextBlock x:Name="MacroActionText" Text="Replay Macro (F9)" FontSize="12" FontWeight="SemiBold"/>

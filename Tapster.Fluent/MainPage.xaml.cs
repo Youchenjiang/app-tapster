@@ -87,6 +87,7 @@ public sealed partial class MainPage : Page
         {
             AppSettings.Current.ClickerSpamKey = SpamKeyBox.Text;
             AppSettings.Current.Save();
+            UpdateClickerActionBtnState();
         };
 
         TimeJitterCheck.IsChecked = AppSettings.Current.ClickerJitterEnabled;
@@ -159,10 +160,18 @@ public sealed partial class MainPage : Page
         };
         UpdateTyperMode(this);
 
-        ClickTargetTypeCombo.SelectionChanged += (_, _) => UpdateClickerTargetType(this);
+        ClickTargetTypeCombo.SelectionChanged += (_, _) =>
+        {
+            UpdateClickerTargetType(this);
+            UpdateClickerActionBtnState();
+        };
         ClickTriggerModeCombo.SelectionChanged += (_, _) => UpdateClickerTriggerMode(this);
         UpdateClickerTargetType(this);
         UpdateClickerTriggerMode(this);
+
+        TypeTextBox.TextChanged += (_, _) => UpdateTyperActionBtnState();
+        HolderKeyBox.TextChanged += (_, _) => UpdateHolderActionBtnState();
+        UpdateAllActionBtnStates();
 
         GenerateVirtualKeyboard();
 
@@ -379,6 +388,7 @@ public sealed partial class MainPage : Page
             {
                 string text = await dataPackageView.GetTextAsync();
                 TypeTextBox.Text = text;
+                UpdateTyperActionBtnState();
             }
         }
         catch (Exception ex)
@@ -390,11 +400,13 @@ public sealed partial class MainPage : Page
     private void ClearText_Click(object sender, RoutedEventArgs e)
     {
         TypeTextBox.Text = "";
+        UpdateTyperActionBtnState();
     }
 
     private void ClearHolderKey_Click(object sender, RoutedEventArgs e)
     {
         HolderKeyBox.Text = "";
+        UpdateHolderActionBtnState();
     }
 
     private async void CaptureKeyBtn_Click(object sender, RoutedEventArgs e)
@@ -518,11 +530,13 @@ public sealed partial class MainPage : Page
         RecordMacroText.Text = "Start Recording";
         MacroStatusText.Text = $"Macro recorded: {_macroRecorder.Actions.Count} actions";
         RefreshMacroActionList();
+        UpdateMacroActionBtnState();
     }
 
     private void StartMacroRecording()
     {
         _isRecordingMacro = true;
+        UpdateMacroActionBtnState();
         MacroActionList.Items.Clear();
         _targetMarkerOverlay.ClearAndHide();
         int clickOrder = 0;
@@ -575,6 +589,7 @@ public sealed partial class MainPage : Page
         MacroActionList.Items.Clear();
         _targetMarkerOverlay.ClearAndHide();
         MacroStatusText.Text = "Macro cleared";
+        UpdateMacroActionBtnState();
     }
 
     private void RefreshMacroActionList()
@@ -607,6 +622,7 @@ public sealed partial class MainPage : Page
         {
             _targetMarkerOverlay.ClearAndHide();
             RefreshMacroActionList();
+            UpdateMacroActionBtnState();
             MacroStatusText.Text = $"Deleted step #{index + 1}";
         }
         else
@@ -878,6 +894,12 @@ public sealed partial class MainPage : Page
         DispatcherQueue.TryEnqueue(() =>
         {
             NavView.SelectedItem = NavView.MenuItems[1];
+            if (!_isRunning && string.IsNullOrWhiteSpace(HolderKeyBox.Text))
+            {
+                HolderStatusText.Text = "Please enter a key to hold";
+                UpdateAllActionBtnStates();
+                return;
+            }
             HolderActionBtn_Click(this, new RoutedEventArgs());
         });
     }
@@ -887,6 +909,12 @@ public sealed partial class MainPage : Page
         DispatcherQueue.TryEnqueue(() =>
         {
             NavView.SelectedItem = NavView.MenuItems[0];
+            if (!_isRunning && string.IsNullOrWhiteSpace(TypeTextBox.Text))
+            {
+                TyperStatusText.Text = "Please enter text to type";
+                UpdateAllActionBtnStates();
+                return;
+            }
             TyperActionBtn_Click(this, new RoutedEventArgs());
         });
     }
@@ -896,6 +924,12 @@ public sealed partial class MainPage : Page
         DispatcherQueue.TryEnqueue(() =>
         {
             NavView.SelectedItem = NavView.MenuItems[3];
+            if (!_isRunning && _macroRecorder.Actions.Count == 0)
+            {
+                MacroStatusText.Text = "No recorded macro actions to replay! Please record first.";
+                UpdateAllActionBtnStates();
+                return;
+            }
             MacroActionBtn_Click(this, new RoutedEventArgs());
         });
     }
@@ -916,6 +950,72 @@ public sealed partial class MainPage : Page
     // ══════════════════════════════════════════════════════════
 
     private string? _runningTaskName = null;
+
+    private void UpdateAllActionBtnStates()
+    {
+        UpdateTyperActionBtnState();
+        UpdateHolderActionBtnState();
+        UpdateClickerActionBtnState();
+        UpdateMacroActionBtnState();
+    }
+
+    private void UpdateTyperActionBtnState()
+    {
+        if (_isRunning && _runningTaskName == "Typer")
+        {
+            TyperActionBtn.IsEnabled = true;
+            return;
+        }
+
+        TyperActionBtn.IsEnabled = !string.IsNullOrWhiteSpace(TypeTextBox?.Text);
+    }
+
+    private void UpdateHolderActionBtnState()
+    {
+        if (_isRunning && _runningTaskName == "Holder")
+        {
+            HolderActionBtn.IsEnabled = true;
+            return;
+        }
+
+        HolderActionBtn.IsEnabled = !string.IsNullOrWhiteSpace(HolderKeyBox?.Text);
+    }
+
+    private void UpdateClickerActionBtnState()
+    {
+        if (_isRunning && _runningTaskName == TabClicker)
+        {
+            ClickerActionBtn.IsEnabled = true;
+            return;
+        }
+
+        bool isSpammer = ClickTargetTypeCombo?.SelectedIndex == 1;
+        if (isSpammer)
+        {
+            ClickerActionBtn.IsEnabled = !string.IsNullOrWhiteSpace(SpamKeyBox?.Text);
+        }
+        else
+        {
+            ClickerActionBtn.IsEnabled = true;
+        }
+    }
+
+    private void UpdateMacroActionBtnState()
+    {
+        if (_isRunning && _runningTaskName == "Macro")
+        {
+            MacroActionBtn.IsEnabled = true;
+            return;
+        }
+
+        if (_isRecordingMacro)
+        {
+            MacroActionBtn.IsEnabled = false;
+            return;
+        }
+
+        MacroActionBtn.IsEnabled = _macroRecorder.Actions.Count > 0;
+    }
 
     private async void TyperActionBtn_Click(object sender, RoutedEventArgs e)
     {
@@ -997,6 +1097,35 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        // Pre-flight validation before countdown
+        if (taskName == "Typer" && string.IsNullOrWhiteSpace(TypeTextBox.Text))
+        {
+            statusText.Text = "Please enter text to type";
+            UpdateAllActionBtnStates();
+            return;
+        }
+
+        if (taskName == "Holder" && string.IsNullOrWhiteSpace(HolderKeyBox.Text))
+        {
+            statusText.Text = "Please enter a key to hold";
+            UpdateAllActionBtnStates();
+            return;
+        }
+
+        if (taskName == "Macro" && _macroRecorder.Actions.Count == 0)
+        {
+            statusText.Text = "No recorded macro actions to replay! Please record first.";
+            UpdateAllActionBtnStates();
+            return;
+        }
+
+        if (taskName == TabClicker && ClickTargetTypeCombo.SelectedIndex == 1 && string.IsNullOrWhiteSpace(SpamKeyBox.Text))
+        {
+            statusText.Text = "Please enter a key to spam";
+            UpdateAllActionBtnStates();
+            return;
+        }
+
         _isRunning = true;
         _runningTaskName = taskName;
         _cts = new CancellationTokenSource();
@@ -1005,6 +1134,7 @@ public sealed partial class MainPage : Page
 
         actionText.Text = "Stop";
         actionIcon.Glyph = "\uE71A";
+        actionBtn.IsEnabled = true;
 
         double delay = delayBox.Value;
         if (double.IsNaN(delay) || delay < 0) delay = 0;
@@ -1476,6 +1606,7 @@ public sealed partial class MainPage : Page
 
         _runningTaskName = null;
         Keyboard.ReleaseAllModifiers();
+        UpdateAllActionBtnStates();
     }
 
     private void OnMainWindowAlwaysOnTopChanged(bool isTop)
