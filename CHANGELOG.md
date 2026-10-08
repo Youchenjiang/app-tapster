@@ -12,7 +12,7 @@
 ### Changed
 - Refactored `MacroRecorder` replay execution to minimize cognitive complexity and improve thread safety.
 - Transitioned window drag handling to native DWM caption hit-testing, eliminating mouse drag latency on high-polling rate mice.
-- Updated project test tooling and dependencies to latest LTS versions.
+- Updated project test tooling (Microsoft.NET.Test.Sdk 18.10.1, xunit.runner.visualstudio 4.0.0, coverlet.collector 10.1.0) and dependencies to their latest compatible versions.
 
 ## [1.1.1.0] - 2026-10-04
 
