@@ -48,9 +48,9 @@
             </NavigationView.FooterMenuItems>
 
             <NavigationView.PaneFooter>
-                <StackPanel Margin="12,4" Spacing="2">
-                    <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Always on top" FontSize="11"/>
-                    <TextBlock Text="(Ctrl+Alt+T to Wake)" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="2,0,0,2"/>
+                <StackPanel x:Name="PaneFooterPanel" Margin="12,4" Spacing="2">
+                    <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Always on top" FontSize="11" ToolTipService.ToolTip="Always on top (Ctrl+Alt+T to Wake)"/>
+                    <TextBlock x:Name="AlwaysOnTopHintText" Text="(Ctrl+Alt+T to Wake)" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="2,0,0,2"/>
                 </StackPanel>
             </NavigationView.PaneFooter>
 
@@ -649,7 +649,27 @@
                                 </Grid>
                             </Border>
 
-                            <!-- Card 4: Global Hotkey Info -->
+                            <!-- Card 4: Always on Top -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="視窗置頂 (Always on Top)" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
+                                        <TextBlock Text="將 Tapster 視窗固定於其他視窗最上層 (全域喚醒熱鍵 Ctrl+Alt+T)"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="AlwaysOnTopToggle" Grid.Column="1"
+                                                  OnContent="" OffContent="" VerticalAlignment="Center"
+                                                  Toggled="AlwaysOnTopToggle_Toggled"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Card 5: Global Hotkey Info -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1" CornerRadius="8" Padding="16">
@@ -768,7 +788,7 @@
                                             <TextBlock Text="Tapster Fluent" FontSize="20" FontWeight="Bold"
                                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
                                             <Border Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="12" Padding="8,2">
-                                                <TextBlock Text="v1.2.0.0 Release" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                <TextBlock Text="v1.2.0.0 Release" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="Windows 11 原生超輕量自動化助手 (Native Automation Utility)"
@@ -798,16 +818,16 @@
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="UI 框架" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="WinUI 3 (Windows App SDK 2.3.1) Mica &amp; Acrylic" FontSize="11"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="WinUI 3 (Windows App SDK 2.3.1) Mica &amp; Acrylic" FontSize="11" TextWrapping="Wrap"/>
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="底層自動化核心" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="C# .NET 8 + Win32 Native P/Invoke (&lt; 35MB RAM, &lt; 1ms Latency)" FontSize="11"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="C# .NET 8 + Win32 Native P/Invoke (&lt; 35MB RAM, &lt; 1ms Latency)" FontSize="11" TextWrapping="Wrap"/>
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="發布架構" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="雙軌制：Microsoft Store MSIX 封裝 + Standalone 綠色純單檔 EXE" FontSize="11"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="雙軌制：Microsoft Store MSIX 封裝 + Standalone 綠色純單檔 EXE" FontSize="11" TextWrapping="Wrap"/>
 
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="授權條款" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="MIT License (開源且自由使用)" FontSize="11"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="MIT License (開源且自由使用)" FontSize="11" TextWrapping="Wrap"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
