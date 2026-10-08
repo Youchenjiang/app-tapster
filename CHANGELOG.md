@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0.0] - 2026-10-08
+
+### Added
+- **Hardware Panic Kill & Safety Safeguards**: Mouse shake gesture detection (>2500 px/s threshold), rapid triple-Esc cancellation guard (<500ms sliding window), and global F10 panic hotkey.
+- **Click Target Marker Overlay**: Zero-lag layered overlay window using native GDI `UpdateLayeredWindow`, sequential numbering tags, dynamic click ripple animations, and coordinate picker.
+- **Market Convenience Suite**: Global action hotkeys (F6–F9), Hold-to-Click mode, dedicated Key Spammer, time and position jitter anti-detection.
+- **Macro Filtering & Editor**: Live mouse move noise filtering, macro step deletion, and fine-grained macro inspector.
+- **Clipboard Typer Mode**: High-speed large text typing via Windows clipboard with trailing Enter/Tab keys and automated clipboard content restoration.
+
+### Changed
+- Refactored `MacroRecorder` replay execution to minimize cognitive complexity and improve thread safety.
+- Transitioned window drag handling to native DWM caption hit-testing, eliminating mouse drag latency on high-polling rate mice.
+- Updated project test tooling and dependencies to latest LTS versions.
+
 ## [1.1.1.0] - 2026-10-04
 
 ### Fixed
