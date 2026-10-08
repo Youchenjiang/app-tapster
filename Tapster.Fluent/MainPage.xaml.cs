@@ -121,8 +121,16 @@ public sealed partial class MainPage : Page
         ShowTargetMarkerCheck.IsChecked = AppSettings.Current.ClickerShowTargetMarker;
         ShowTargetMarkerCheck.Checked += (_, _) => OnTargetMarkerSettingsChanged();
         ShowTargetMarkerCheck.Unchecked += (_, _) => OnTargetMarkerSettingsChanged();
-        ClickXBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
-        ClickYBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
+        ClickXBox.ValueChanged += (_, _) =>
+        {
+            OnTargetMarkerSettingsChanged();
+            UpdateClearCoordsBtnState();
+        };
+        ClickYBox.ValueChanged += (_, _) =>
+        {
+            OnTargetMarkerSettingsChanged();
+            UpdateClearCoordsBtnState();
+        };
         LocationJitterBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
         Unloaded += (_, _) => _targetMarkerOverlay.Dispose();
         UpdateTargetMarkerOverlay();
@@ -480,6 +488,15 @@ public sealed partial class MainPage : Page
         ShowTargetMarkerCheck.IsChecked = true;
         OnTargetMarkerSettingsChanged();
         ClickerStatusText.Text = $"Locked target coordinates: ({x}, {y})";
+    }
+
+    private void ClearCoordsBtn_Click(object sender, RoutedEventArgs e)
+    {
+        ClickXBox.Value = double.NaN;
+        ClickYBox.Value = double.NaN;
+        OnTargetMarkerSettingsChanged();
+        UpdateClearCoordsBtnState();
+        ClickerStatusText.Text = "Coordinates cleared (clicking at current cursor location)";
     }
 
     private static async Task<(bool Picked, bool Canceled, int X, int Y)> PollTargetCoordinatesAsync()
@@ -1010,6 +1027,17 @@ public sealed partial class MainPage : Page
         else
         {
             ClickerActionBtn.IsEnabled = true;
+        }
+
+        UpdateClearCoordsBtnState();
+    }
+
+    private void UpdateClearCoordsBtnState()
+    {
+        if (ClearCoordsBtn != null && ClickXBox != null && ClickYBox != null)
+        {
+            bool hasCoords = !double.IsNaN(ClickXBox.Value) || !double.IsNaN(ClickYBox.Value);
+            ClearCoordsBtn.IsEnabled = !_isRunning && hasCoords;
         }
     }
 

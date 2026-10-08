@@ -392,6 +392,12 @@
                                                     <TextBlock x:Name="PickCoordText" Text="Pick Location"/>
                                                 </StackPanel>
                                             </Button>
+                                            <Button x:Name="ClearCoordsBtn" Click="ClearCoordsBtn_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Clear coordinates to click at current cursor position" IsEnabled="False">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE894;" FontSize="12"/>
+                                                    <TextBlock Text="Clear"/>
+                                                </StackPanel>
+                                            </Button>
                                         </StackPanel>
                                         <CheckBox x:Name="ShowTargetMarkerCheck" Content="Show Target Marker on Screen" FontSize="12" Margin="0,-2,0,0"/>
                                     </StackPanel>
