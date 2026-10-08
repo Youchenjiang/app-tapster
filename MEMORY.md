@@ -38,7 +38,7 @@
 - [x] **Market Convenience - [P3-10]**: Clipboard Paste Mode, Trailing Keys, Jitter & Auto-Restore (PR #38)
 - [x] **Hardware Safety Safeguards**: Panic Kill, Mouse Shake & Triple-Esc (PR #44)
 - [x] **Release 1.2.0.0**: Minor version bump across props, manifests and changelog (chore/bump-version-1.2.0.0)
-- [x] **UI Scrollability Fix**: Wrap Clicker & Macro panels in ScrollViewer for small screen accessibility (fix/fluent-scrollable-panels)
+- [x] **UI Scrollability Fix**: Wrap Typer, Clicker & Macro panels in ScrollViewer for small screen accessibility (fix/fluent-scrollable-panels)
 
 ---
 
@@ -68,4 +68,4 @@
 - **WinUI 3 XAML Event Handlers vs. Static Method Linters**: Generated code in `*.g.cs` references `this.MethodName`, so making event handlers static causes compiler error `CS0176`. For simple controls, wire events dynamically in code-behind (`Loaded`) via lambdas to eliminate false positive code smells (SonarCloud S2325).
 - **PR Creation & Body Validation Protocol (`tools/pr_helper.py`)**: Never run `gh pr create --body "..."` directly via PowerShell strings, which causes quote stripping, backtick escaping to backslashes, and markdown truncation. Always use `python tools/pr_helper.py` (`generate`, `lint`, or `create` with `--body-file`) to enforce the 3 mandatory sections (`## Summary`, `## Key Changes`, `## Verification`) and apply repository labels.
 - [x] **Zero GitHub Comment Noise**: 永遠不要在 GitHub PR / Issue 上調用 comment/reply API 發表任何文字回覆。自動化/機器人審查只需要用「代碼修復 + Resolve Thread」回應即可，發送文字評論純屬多餘噪音並冒用使用者發言，已被永久列入禁用操作。
-- **WinUI 3 Panel Scrollability & Window Sizing**: Fixed issue where controls below the fold (e.g. Target Coordinates, Jitter in Auto Clicker) were unreachable when window height is small. Wrapped panel content in `ScrollViewer` with `VerticalScrollBarVisibility="Auto"` and added responsive default window size (980x680) in `MainWindow.xaml.cs`.
+- **WinUI 3 Panel Scrollability & Window Sizing**: Fixed issue where controls below the fold (e.g. Target Coordinates, Jitter in Auto Clicker) or Target Text in Auto Typer were vertically collapsed or unreachable when window height is small. Wrapped all functional panels in `ScrollViewer` with `VerticalScrollBarVisibility="Auto"`, set `MinHeight="140"` on `TypeTextBox`, and added responsive default window size (980x680) in `MainWindow.xaml.cs`.
