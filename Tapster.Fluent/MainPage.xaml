@@ -12,7 +12,7 @@
         <NavigationView x:Name="NavView"
                         IsSettingsVisible="True"
                         IsBackButtonVisible="Collapsed"
-                        PaneDisplayMode="Left"
+                        PaneDisplayMode="Auto"
                         OpenPaneLength="180"
                         CompactPaneLength="48"
                         SelectionChanged="NavView_SelectionChanged">
@@ -64,7 +64,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
                         <StackPanel Spacing="10" Margin="0,0,8,0">
                             <!-- Header -->
                             <StackPanel Spacing="2">
@@ -210,7 +210,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
                         <StackPanel Spacing="10">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Key Holder" FontSize="18" FontWeight="SemiBold"/>
@@ -311,7 +311,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
                         <StackPanel Spacing="12" Margin="0,0,8,0">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Auto Clicker" FontSize="18" FontWeight="SemiBold"/>
@@ -463,7 +463,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
                         <StackPanel Spacing="12" Margin="0,0,8,0">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Macro Recorder" FontSize="18" FontWeight="SemiBold"/>

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using WinRT.Interop;
@@ -135,6 +136,17 @@ public sealed partial class MainWindow : Window
         UIntPtr uIdSubclass,
         IntPtr dwRefData)
     {
+        if (uMsg == NativeMethods.WM_GETMINMAXINFO)
+        {
+            uint dpi = NativeMethods.GetDpiForWindow(hWnd);
+            double scale = dpi > 0 ? dpi / 96.0 : 1.0;
+            var mmi = Marshal.PtrToStructure<NativeMethods.MINMAXINFO>(lParam);
+            mmi.ptMinTrackSize.X = (int)(680 * scale);
+            mmi.ptMinTrackSize.Y = (int)(480 * scale);
+            Marshal.StructureToPtr(mmi, lParam, true);
+            return IntPtr.Zero;
+        }
+
         if (_hotkeyService != null && _hotkeyService.ProcessWindowMessage(uMsg, wParam))
         {
             return IntPtr.Zero;

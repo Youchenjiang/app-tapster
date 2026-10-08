@@ -97,6 +97,20 @@ public static partial class NativeMethods
     public const int SW_RESTORE = 9;
     public const int SW_HIDE = 0;
     public const int SW_SHOW = 5;
+    public const uint WM_GETMINMAXINFO = 0x0024;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MINMAXINFO
+    {
+        public POINT ptReserved;
+        public POINT ptMaxSize;
+        public POINT ptMaxPosition;
+        public POINT ptMinTrackSize;
+        public POINT ptMaxTrackSize;
+    }
+
+    [LibraryImport("user32.dll")]
+    public static partial uint GetDpiForWindow(IntPtr hWnd);
 
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
