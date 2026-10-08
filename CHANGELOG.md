@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.0.0] - 2026-10-08
+
+### Added
+- **Hardware Panic Kill & Safety Safeguards**: Mouse shake gesture detection (>2500 px/s threshold), rapid triple-Esc cancellation guard (<500ms sliding window), and global F10 panic hotkey (PR #44).
+- **Click Target Marker Overlay**: Zero-lag layered overlay window using native GDI `UpdateLayeredWindow`, sequential numbering tags, dynamic click ripple animations, and coordinate picker (PR #40, PR #41).
+- **Market Convenience Suite**: Global action hotkeys (F6–F9), Hold-to-Click mode, dedicated Key Spammer, time and position jitter anti-detection (PR #36, PR #37).
+- **Macro Filtering & Editor**: Live mouse move noise filtering, macro step deletion, and fine-grained macro inspector (PR #39).
+- **Clipboard Typer Mode**: High-speed large text typing via Windows clipboard with trailing Enter/Tab keys and automated clipboard content restoration (PR #38).
+
+### Changed
+- Refactored `MacroRecorder` replay execution to minimize cognitive complexity and improve thread safety (PR #44).
+- Transitioned window drag handling to native DWM caption hit-testing, eliminating mouse drag latency on high-polling rate mice (PR #35).
+- Updated project test tooling (Microsoft.NET.Test.Sdk 18.10.1, xunit.runner.visualstudio 4.0.0, coverlet.collector 10.1.0) and dependencies to their latest compatible versions (PR #42, PR #43).
+
+### Fixed
+- Fixed launcher portable extraction path to dynamically derive application version, preventing downgrade extraction collisions.
+- Fixed About screen release badge to reflect current 1.2.0.0 release.
+
 ## [1.1.1.0] - 2026-10-04
 
 ### Fixed

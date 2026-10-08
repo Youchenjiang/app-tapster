@@ -764,7 +764,7 @@
                                             <TextBlock Text="Tapster Fluent" FontSize="20" FontWeight="Bold"
                                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
                                             <Border Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="12" Padding="8,2">
-                                                <TextBlock Text="v1.1.0 Release" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                <TextBlock Text="v1.2.0.0 Release" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="Windows 11 原生超輕量自動化助手 (Native Automation Utility)"

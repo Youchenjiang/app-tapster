@@ -11,7 +11,11 @@ namespace Tapster.Launcher;
 
 internal static class Program
 {
-    private const string AppVersion = "1.1.0";
+    private static readonly string AppVersion = typeof(Program).Assembly.GetName().Version switch
+    {
+        { } v when v.Major > 0 => $"{v.Major}.{v.Minor}.{v.Build}",
+        _ => "1.2.0"
+    };
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int MessageBoxW(IntPtr hWnd, string text, string caption, uint type);
