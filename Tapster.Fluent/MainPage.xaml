@@ -257,11 +257,9 @@
                                     CornerRadius="8" Padding="12">
                                 <StackPanel Spacing="10">
                                     <TextBlock Text="Visual Virtual Keyboard (Click keys to build combo)" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                                        <StackPanel x:Name="KeyboardContainer" Spacing="4" HorizontalAlignment="Left">
-                                            <!-- Structured Keyboard Rows generated in MainPage.xaml.cs -->
-                                        </StackPanel>
-                                    </ScrollViewer>
+                                    <StackPanel x:Name="KeyboardContainer" Spacing="4" HorizontalAlignment="Left">
+                                        <!-- Structured Keyboard Rows generated in MainPage.xaml.cs -->
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
