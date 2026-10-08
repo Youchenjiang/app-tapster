@@ -36,6 +36,7 @@
   - [x] Integrate `dotnet test` into `.github/workflows/ci.yml`
 - [x] **Market Convenience - [P3-8] & [P3-9]**: Global Hotkeys, Hold Mode, and Key Spammer (PR #36)
 - [x] **Market Convenience - [P3-10]**: Clipboard Paste Mode, Trailing Keys, Jitter & Auto-Restore (PR #38)
+- [x] **Hardware Safety Safeguards**: Panic Kill, Mouse Shake & Triple-Esc (feat/panic-kill-safety)
 
 ---
 

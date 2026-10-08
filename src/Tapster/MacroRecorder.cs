@@ -260,7 +260,8 @@ public class MacroRecorder
         double speedMultiplier,
         CancellationToken token,
         Action<int, int>? progressCallback = null,
-        Action<MacroAction>? actionExecutingCallback = null)
+        Action<MacroAction>? actionExecutingCallback = null,
+        Action? checkPanicCallback = null)
     {
         List<MacroAction> actionsSnapshot;
         lock (_actions)
@@ -279,30 +280,45 @@ public class MacroRecorder
             currentLoop++;
             for (int i = 0; i < actionsSnapshot.Count; i++)
             {
-                token.ThrowIfCancellationRequested();
-                if (Keyboard.IsEscPressed())
-                {
-                    throw new OperationCanceledException("Esc pressed during macro replay");
-                }
-
                 var action = actionsSnapshot[i];
                 progressCallback?.Invoke(currentLoop, i + 1);
 
-                int delay = (int)(action.DelayMs / Math.Max(0.1, speedMultiplier));
-                if (delay > 0)
-                {
-                    await Task.Delay(delay, token);
-                }
-
-                token.ThrowIfCancellationRequested();
-                if (Keyboard.IsEscPressed())
-                {
-                    throw new OperationCanceledException("Esc pressed during macro replay");
-                }
-
-                actionExecutingCallback?.Invoke(action);
-                ExecuteAction(action);
+                await ReplaySingleStepAsync(action, speedMultiplier, token, actionExecutingCallback, checkPanicCallback);
             }
+        }
+    }
+
+    private static async Task ReplaySingleStepAsync(
+        MacroAction action,
+        double speedMultiplier,
+        CancellationToken token,
+        Action<MacroAction>? actionExecutingCallback,
+        Action? checkPanicCallback)
+    {
+        CheckReplaySafety(token, checkPanicCallback);
+
+        int delay = (int)(action.DelayMs / Math.Max(0.1, speedMultiplier));
+        if (delay > 0)
+        {
+            await Task.Delay(delay, token);
+        }
+
+        CheckReplaySafety(token, checkPanicCallback);
+
+        actionExecutingCallback?.Invoke(action);
+        ExecuteAction(action);
+    }
+
+    private static void CheckReplaySafety(CancellationToken token, Action? checkPanicCallback)
+    {
+        token.ThrowIfCancellationRequested();
+        if (checkPanicCallback != null)
+        {
+            checkPanicCallback();
+        }
+        else if (Keyboard.IsEscPressed())
+        {
+            throw new OperationCanceledException("Esc pressed during macro replay");
         }
     }
 

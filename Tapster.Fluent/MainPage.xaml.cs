@@ -27,6 +27,7 @@ public sealed partial class MainPage : Page
     private bool _isRecordingMacro = false;
     private bool _isCapturingKey = false;
     private readonly TargetMarkerOverlay _targetMarkerOverlay = new();
+    private readonly PanicDetector _panicDetector = new();
 
     public MainPage()
     {
@@ -1000,6 +1001,7 @@ public sealed partial class MainPage : Page
         _runningTaskName = taskName;
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
+        _panicDetector.Reset();
 
         actionText.Text = "Stop";
         actionIcon.Glyph = "\uE71A";
@@ -1013,7 +1015,7 @@ public sealed partial class MainPage : Page
             for (int remaining = (int)delay; remaining > 0; remaining--)
             {
                 token.ThrowIfCancellationRequested();
-                CheckEmergencyEsc();
+                CheckPanicSafety();
                 statusText.Text = $"Starting in {remaining}s... Switch to target app!";
                 progressBar.Value = (delay - remaining) / delay * 100;
                 await Task.Delay(1000, token);
@@ -1038,7 +1040,10 @@ public sealed partial class MainPage : Page
         }
         catch (OperationCanceledException ex)
         {
-            StopTask(ex.Message.Contains("Esc") ? "Stopped via Esc key" : "Task canceled");
+            string msg = ex.Message.Contains("panic", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("Esc", StringComparison.OrdinalIgnoreCase)
+                ? ex.Message
+                : "Task canceled";
+            StopTask(msg);
         }
         catch (Exception ex)
         {
@@ -1083,7 +1088,7 @@ public sealed partial class MainPage : Page
         });
     }
 
-    private static async Task RunClipboardTyperAsync(string text, string trailingKey, CancellationToken token, Action<string, double> reportProgress)
+    private async Task RunClipboardTyperAsync(string text, string trailingKey, CancellationToken token, Action<string, double> reportProgress)
     {
         string? previousText = null;
         try
@@ -1108,13 +1113,13 @@ public sealed partial class MainPage : Page
             await Task.Run(() =>
             {
                 token.ThrowIfCancellationRequested();
-                CheckEmergencyEsc();
+                CheckPanicSafety();
                 reportProgress($"Pasting {text.Length} chars via clipboard...", 50);
 
                 Keyboard.Paste();
 
                 token.ThrowIfCancellationRequested();
-                CheckEmergencyEsc();
+                CheckPanicSafety();
 
                 ApplyTrailingKey(trailingKey, token);
                 reportProgress($"Pasted {text.Length} chars", 100);
@@ -1140,14 +1145,14 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private static async Task RunKeystrokeTyperAsync(string text, int intervalMs, bool jitter, string trailingKey, CancellationToken token, Action<string, double> reportProgress)
+    private async Task RunKeystrokeTyperAsync(string text, int intervalMs, bool jitter, string trailingKey, CancellationToken token, Action<string, double> reportProgress)
     {
         await Task.Run(() =>
         {
             for (int i = 0; i < text.Length; i++)
             {
                 token.ThrowIfCancellationRequested();
-                CheckEmergencyEsc();
+                CheckPanicSafety();
                 Keyboard.Type(text[i]);
 
                 int charIndex = i + 1;
@@ -1159,12 +1164,12 @@ public sealed partial class MainPage : Page
 
                 if (sleepMs > 0)
                 {
-                    Thread.Sleep(sleepMs);
+                    SleepWithPanicCheck(sleepMs, token);
                 }
             }
 
             token.ThrowIfCancellationRequested();
-            CheckEmergencyEsc();
+            CheckPanicSafety();
             ApplyTrailingKey(trailingKey, token);
         }, token);
     }
@@ -1197,7 +1202,7 @@ public sealed partial class MainPage : Page
         double durationSec = HoldDurationBox.Value;
         int durationMs = (int)(durationSec * 1000);
 
-        await Task.Run(async () =>
+        await Task.Run(() =>
         {
             try
             {
@@ -1207,7 +1212,7 @@ public sealed partial class MainPage : Page
 
                 while (!token.IsCancellationRequested && (durationMs <= 0 || elapsedMs < durationMs))
                 {
-                    CheckEmergencyEsc();
+                    CheckPanicSafety();
 
                     if (durationMs > 0)
                     {
@@ -1219,7 +1224,7 @@ public sealed partial class MainPage : Page
                         reportProgress($"Holding [{keys}] ({elapsedMs / 1000}s / Infinite)...", 100);
                     }
 
-                    await Task.Delay(checkIntervalMs, token);
+                    SleepWithPanicCheck(checkIntervalMs, token);
                     elapsedMs += checkIntervalMs;
                 }
             }
@@ -1268,7 +1273,7 @@ public sealed partial class MainPage : Page
             int count = 0;
             while (!token.IsCancellationRequested && (infinite || count < totalClicks))
             {
-                CheckEmergencyEsc();
+                CheckPanicSafety();
 
                 // If Hold-to-Click is enabled, automatically stop when the hotkey (F6) is released
                 if (isHoldMode && !KeySpammer.IsKeyDown(HOTKEY_VK))
@@ -1276,42 +1281,10 @@ public sealed partial class MainPage : Page
                     break;
                 }
 
-                if (isSpammer)
-                {
-                    KeySpammer.Spam(spamKey);
-                }
-                else
-                {
-                    if (targetX.HasValue && targetY.HasValue)
-                    {
-                        var (clickX, clickY) = JitterHelper.ApplyLocationJitter(targetX.Value, targetY.Value, locJitterPx);
-                        if (markerEnabled)
-                        {
-                            DispatcherQueue.TryEnqueue(() => _targetMarkerOverlay.ShowClickRipple(clickX, clickY));
-                        }
-                        Mouse.ClickAt(clickX, clickY, button);
-                    }
-                    else
-                    {
-                        var (curX, curY) = Mouse.GetPosition();
-                        if (markerEnabled)
-                        {
-                            DispatcherQueue.TryEnqueue(() => _targetMarkerOverlay.ShowClickRipple(curX, curY));
-                        }
-                        Mouse.Click(button);
-                    }
-                }
+                ExecuteSingleClickIteration(isSpammer, spamKey, targetX, targetY, locJitterPx, markerEnabled, button);
                 count++;
 
-                string actionName = isSpammer ? $"Spamming [{spamKey}]" : "Clicking";
-                if (!infinite)
-                {
-                    reportProgress($"{actionName} {count}/{totalClicks}...", (double)count / totalClicks * 100);
-                }
-                else
-                {
-                    reportProgress($"{actionName} count: {count} (Infinite)...", 100);
-                }
+                ReportClickProgress(isSpammer, spamKey, count, totalClicks, infinite, reportProgress);
 
                 int sleepMs = jitterEnabled && timeJitterPct > 0
                     ? JitterHelper.ApplyTimeJitter(intervalMs, timeJitterPct)
@@ -1319,22 +1292,65 @@ public sealed partial class MainPage : Page
 
                 if (sleepMs > 0)
                 {
-                    Thread.Sleep(sleepMs);
+                    SleepWithPanicCheck(sleepMs, token);
                 }
             }
         }, token);
     }
 
-    private static void PerformMouseClick(int? targetX, int? targetY, double locJitterPx, string button)
+    private void ExecuteSingleClickIteration(
+        bool isSpammer,
+        string spamKey,
+        int? targetX,
+        int? targetY,
+        double locJitterPx,
+        bool markerEnabled,
+        string button)
     {
+        if (isSpammer)
+        {
+            KeySpammer.Spam(spamKey);
+            return;
+        }
+
         if (targetX.HasValue && targetY.HasValue)
         {
             var (clickX, clickY) = JitterHelper.ApplyLocationJitter(targetX.Value, targetY.Value, locJitterPx);
+            if (markerEnabled)
+            {
+                DispatcherQueue.TryEnqueue(() => _targetMarkerOverlay.ShowClickRipple(clickX, clickY));
+            }
+            _panicDetector.SyncProgrammaticPosition(clickX, clickY);
             Mouse.ClickAt(clickX, clickY, button);
+            _panicDetector.SyncProgrammaticPosition(clickX, clickY);
         }
         else
         {
+            var (curX, curY) = Mouse.GetPosition();
+            if (markerEnabled)
+            {
+                DispatcherQueue.TryEnqueue(() => _targetMarkerOverlay.ShowClickRipple(curX, curY));
+            }
             Mouse.Click(button);
+        }
+    }
+
+    private static void ReportClickProgress(
+        bool isSpammer,
+        string spamKey,
+        int count,
+        int totalClicks,
+        bool infinite,
+        Action<string, double> reportProgress)
+    {
+        string actionName = isSpammer ? $"Spamming [{spamKey}]" : "Clicking";
+        if (!infinite)
+        {
+            reportProgress($"{actionName} {count}/{totalClicks}...", (double)count / totalClicks * 100);
+        }
+        else
+        {
+            reportProgress($"{actionName} count: {count} (Infinite)...", 100);
         }
     }
 
@@ -1381,8 +1397,14 @@ public sealed partial class MainPage : Page
                     {
                         _targetMarkerOverlay.ShowClickRipple(action.X, action.Y, thisClick);
                     });
+                    _panicDetector.SyncProgrammaticPosition(action.X, action.Y);
                 }
-            });
+                else if (action.Type is MacroActionType.MouseMove)
+                {
+                    _panicDetector.SyncProgrammaticPosition(action.X, action.Y);
+                }
+            },
+            checkPanicCallback: CheckPanicSafety);
         }
         finally
         {
@@ -1393,11 +1415,25 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private static void CheckEmergencyEsc()
+    private void CheckPanicSafety()
     {
-        if (Keyboard.IsEscPressed())
+        if (_panicDetector.CheckPanic(out var reason))
         {
-            throw new OperationCanceledException("Emergency stop triggered via Esc key");
+            throw new OperationCanceledException(reason ?? PanicDetector.EmergencyPanicMessage);
+        }
+    }
+
+    private void SleepWithPanicCheck(int totalMs, CancellationToken token)
+    {
+        const int stepMs = 20;
+        int elapsed = 0;
+        while (elapsed < totalMs)
+        {
+            token.ThrowIfCancellationRequested();
+            CheckPanicSafety();
+            int chunk = Math.Min(stepMs, totalMs - elapsed);
+            Thread.Sleep(chunk);
+            elapsed += chunk;
         }
     }
 
