@@ -191,18 +191,9 @@ public sealed partial class MainPage : Page
         MinimizeOnCloseToggle.IsOn = AppSettings.Current.MinimizeToTrayOnClose;
         if (MainWindow.Instance != null)
         {
-            AlwaysOnTopCheckBox.IsChecked = MainWindow.Instance.IsAlwaysOnTop;
             AlwaysOnTopToggle.IsOn = MainWindow.Instance.IsAlwaysOnTop;
             MainWindow.Instance.AlwaysOnTopChanged += OnMainWindowAlwaysOnTopChanged;
         }
-
-        AlwaysOnTopCheckBox.Checked += (_, _) => MainWindow.Instance?.SetAlwaysOnTop(true);
-        AlwaysOnTopCheckBox.Unchecked += (_, _) => MainWindow.Instance?.SetAlwaysOnTop(false);
-
-        NavView.PaneOpened += (_, _) => UpdatePaneFooterVisibility();
-        NavView.PaneClosed += (_, _) => UpdatePaneFooterVisibility();
-        NavView.DisplayModeChanged += (_, _) => UpdatePaneFooterVisibility();
-        UpdatePaneFooterVisibility();
     }
 
     private void GenerateVirtualKeyboard()
@@ -1709,19 +1700,10 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void UpdatePaneFooterVisibility()
-    {
-        if (PaneFooterPanel != null)
-        {
-            PaneFooterPanel.Visibility = NavView.IsPaneOpen ? Visibility.Visible : Visibility.Collapsed;
-        }
-    }
-
     private void OnMainWindowAlwaysOnTopChanged(bool isTop)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            AlwaysOnTopCheckBox.IsChecked = isTop;
             AlwaysOnTopToggle.IsOn = isTop;
         });
     }

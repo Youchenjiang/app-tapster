@@ -12,7 +12,10 @@
         <NavigationView x:Name="NavView"
                         IsSettingsVisible="True"
                         IsBackButtonVisible="Collapsed"
-                        PaneDisplayMode="Auto"
+                        PaneDisplayMode="Left"
+                        IsPaneToggleButtonVisible="True"
+                        AlwaysShowHeader="False"
+                        Header="{x:Null}"
                         OpenPaneLength="180"
                         CompactPaneLength="48"
                         SelectionChanged="NavView_SelectionChanged">
@@ -46,13 +49,6 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
-
-            <NavigationView.PaneFooter>
-                <StackPanel x:Name="PaneFooterPanel" Margin="12,4" Spacing="2">
-                    <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Always on top" FontSize="11" ToolTipService.ToolTip="Always on top (Ctrl+Alt+T to Wake)"/>
-                    <TextBlock x:Name="AlwaysOnTopHintText" Text="(Ctrl+Alt+T to Wake)" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="2,0,0,2"/>
-                </StackPanel>
-            </NavigationView.PaneFooter>
 
             <Grid Padding="20,12,20,16">
                 <!-- ══════════════════════════════════════════════════════════ -->
