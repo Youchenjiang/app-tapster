@@ -86,3 +86,4 @@
   - Replaced repetitive `"Holder"` and `"Macro"` tab literals with constant identifiers (SonarCloud S1192).
   - Suppressed false-positive unreachable code analysis (SonarCloud S2583) on XAML control state in virtual keyboard highlights.
 - **Numpad and Navigation Key Aliases in Core**: Added VK mappings in `Keyboard.cs` for numpad numeric keys (`num0`..`num9`), arithmetic operators (`num+`, `num-`, `num*`, `num/`, `num.`), `NumLock`, `ScrollLock`, `PrintScreen`, and `Pause` to power full-sized virtual keyboard configurations.
+- **Full 96% Laptop Keyboard Layout with Aligned Arrows and Numpad**: Upgraded virtual keyboard to a full 96% laptop layout. Row 5 `◄` right edge aligns with Row 4 `Shift` right edge; `▲` (Row 4) and `▼` (Row 5) right edges align with `Backspace` / `\` / `Enter`; `►` (Row 5) right edge aligns with `NumLk` / `7` / `4` / `1`; completed with top function navigation keys and full 4-column numpad.
