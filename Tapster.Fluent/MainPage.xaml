@@ -289,7 +289,7 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <StackPanel x:Name="KeyboardContainer" Spacing="4" HorizontalAlignment="Stretch">
+                                    <StackPanel x:Name="KeyboardContainer" Spacing="4" HorizontalAlignment="Center">
                                         <!-- Structured Keyboard Rows generated in MainPage.xaml.cs -->
                                     </StackPanel>
                                 </StackPanel>

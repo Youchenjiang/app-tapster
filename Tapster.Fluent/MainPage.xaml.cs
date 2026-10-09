@@ -224,6 +224,7 @@ public sealed partial class MainPage : Page
         page.KeyboardContainer.Width = Math.Max(804, availableWidth);
     }
 
+
     private void GenerateVirtualKeyboard()
     {
         KeyboardContainer.Children.Clear();
@@ -299,7 +300,7 @@ public sealed partial class MainPage : Page
         {
             RowSpacing = 4,
             ColumnSpacing = 4,
-            HorizontalAlignment = HorizontalAlignment.Right
+            HorizontalAlignment = HorizontalAlignment.Left
         };
         for (int r = 0; r < 6; r++)
         {
@@ -352,14 +353,14 @@ public sealed partial class MainPage : Page
         // ── Master Dual-Column Grid ──
         var masterGrid = new Grid
         {
-            HorizontalAlignment = HorizontalAlignment.Stretch
+            ColumnSpacing = 8,
+            HorizontalAlignment = HorizontalAlignment.Center
         };
         masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star), MinWidth = 12 });
         masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         Grid.SetColumn(mainKeyboardPanel, 0);
-        Grid.SetColumn(numpadGrid, 2);
+        Grid.SetColumn(numpadGrid, 1);
 
         masterGrid.Children.Add(mainKeyboardPanel);
         masterGrid.Children.Add(numpadGrid);
@@ -846,7 +847,8 @@ public sealed partial class MainPage : Page
             {
                 Orientation = Orientation.Horizontal,
                 Spacing = 5,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Width = 64
             };
             if (isRunning)
             {
@@ -880,7 +882,7 @@ public sealed partial class MainPage : Page
                 ],
                 BorderThickness = new Thickness(1),
                 VerticalAlignment = VerticalAlignment.Center,
-                MinWidth = 70
+                Width = 110
             };
             var keyPillText = new TextBlock
             {
@@ -890,6 +892,7 @@ public sealed partial class MainPage : Page
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
                 Foreground = string.IsNullOrWhiteSpace(stage.KeyCombo) ?
                     (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorTertiaryBrush"] :
                     (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
