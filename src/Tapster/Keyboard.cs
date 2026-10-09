@@ -278,7 +278,26 @@ public static partial class Keyboard
         ["?"] = 0xBF,
         ["f1"] = 0x70, ["f2"] = 0x71, ["f3"] = 0x72, ["f4"] = 0x73,
         ["f5"] = 0x74, ["f6"] = 0x75, ["f7"] = 0x76, ["f8"] = 0x77,
-        ["f9"] = 0x78, ["f10"] = 0x79, ["f11"] = 0x7A, ["f12"] = 0x7B
+        ["f9"] = 0x78, ["f10"] = 0x79, ["f11"] = 0x7A, ["f12"] = 0x7B,
+        ["numlock"] = 0x90, ["numlk"] = 0x90,
+        ["scrolllock"] = 0x91, ["scrlk"] = 0x91,
+        ["printscreen"] = 0x2C, ["prtsc"] = 0x2C, ["prtscr"] = 0x2C,
+        ["pause"] = 0x13,
+        ["numpad0"] = 0x60, ["num0"] = 0x60,
+        ["numpad1"] = 0x61, ["num1"] = 0x61,
+        ["numpad2"] = 0x62, ["num2"] = 0x62,
+        ["numpad3"] = 0x63, ["num3"] = 0x63,
+        ["numpad4"] = 0x64, ["num4"] = 0x64,
+        ["numpad5"] = 0x65, ["num5"] = 0x65,
+        ["numpad6"] = 0x66, ["num6"] = 0x66,
+        ["numpad7"] = 0x67, ["num7"] = 0x67,
+        ["numpad8"] = 0x68, ["num8"] = 0x68,
+        ["numpad9"] = 0x69, ["num9"] = 0x69,
+        ["multiply"] = 0x6A, ["num*"] = 0x6A,
+        ["add"] = 0x6B, ["num+"] = 0x6B,
+        ["subtract"] = 0x6D, ["num-"] = 0x6D,
+        ["decimal"] = 0x6E, ["num."] = 0x6E,
+        ["divide"] = 0x6F, ["num/"] = 0x6F
     };
 
     private static ushort MapNamedKey(string k) =>
