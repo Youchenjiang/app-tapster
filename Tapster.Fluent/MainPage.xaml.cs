@@ -28,6 +28,7 @@ public sealed partial class MainPage : Page
     private bool _isCapturingKey = false;
     private readonly TargetMarkerOverlay _targetMarkerOverlay = new();
     private readonly PanicDetector _panicDetector = new();
+    private readonly Dictionary<string, Button> _keyboardButtons = new(StringComparer.OrdinalIgnoreCase);
 
     public MainPage()
     {
@@ -207,10 +208,11 @@ public sealed partial class MainPage : Page
     private void GenerateVirtualKeyboard()
     {
         KeyboardContainer.Children.Clear();
+        _keyboardButtons.Clear();
 
         // ── Row 0: Function Keys ──
         var row0 = CreateKeyboardRow();
-        AddKeyBtn(row0, "esc", "Esc", width: 44, isAccent: true);
+        AddKeyBtn(row0, "esc", "Esc", width: 44);
         AddSpacer(row0, 16);
         AddKeyBtn(row0, "f1", "F1"); AddKeyBtn(row0, "f2", "F2"); AddKeyBtn(row0, "f3", "F3"); AddKeyBtn(row0, "f4", "F4");
         AddSpacer(row0, 12);
@@ -238,7 +240,7 @@ public sealed partial class MainPage : Page
         AddKeyBtn(row3, "capslock", "Caps Lock", width: 66);
         string[] r3Keys = { "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" };
         foreach (var k in r3Keys) AddKeyBtn(row3, k, k.ToUpper());
-        AddKeyBtn(row3, KeyEnter, "Enter", width: 80, isAccent: true);
+        AddKeyBtn(row3, KeyEnter, "Enter", width: 80);
         KeyboardContainer.Children.Add(row3);
 
         // ── Row 4: Shift Row ──
@@ -264,6 +266,8 @@ public sealed partial class MainPage : Page
         AddKeyBtn(row5, "down", "▼", width: 36);
         AddKeyBtn(row5, "right", "►", width: 36);
         KeyboardContainer.Children.Add(row5);
+
+        UpdateVirtualKeyboardHighlights();
     }
 
     private static StackPanel CreateKeyboardRow()
@@ -280,7 +284,7 @@ public sealed partial class MainPage : Page
         row.Children.Add(new Border { Width = width });
     }
 
-    private void AddKeyBtn(StackPanel row, string keyId, string label, double width = 36, bool isAccent = false)
+    private void AddKeyBtn(StackPanel row, string keyId, string label, double width = 36)
     {
         var btn = new Button
         {
@@ -291,23 +295,58 @@ public sealed partial class MainPage : Page
             FontSize = width > 50 ? 10 : 11,
             FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Code, Consolas"),
             CornerRadius = new CornerRadius(4),
-            Style = Application.Current.Resources[isAccent ? "AccentButtonStyle" : "DefaultButtonStyle"] as Style
+            Style = Application.Current.Resources["DefaultButtonStyle"] as Style
         };
 
         btn.Click += (s, e) =>
         {
             string current = HolderKeyBox.Text.Trim();
-            if (string.IsNullOrEmpty(current) || current == "w")
+            if (string.IsNullOrEmpty(current))
             {
                 HolderKeyBox.Text = keyId;
             }
-            else if (!current.Split('+').Contains(keyId))
+            else
             {
-                HolderKeyBox.Text = $"{current}+{keyId}";
+                var keys = current.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                  .ToList();
+                if (keys.Contains(keyId, StringComparer.OrdinalIgnoreCase))
+                {
+                    keys.RemoveAll(k => string.Equals(k, keyId, StringComparison.OrdinalIgnoreCase));
+                    HolderKeyBox.Text = string.Join("+", keys);
+                }
+                else
+                {
+                    keys.Add(keyId);
+                    HolderKeyBox.Text = string.Join("+", keys);
+                }
             }
         };
 
+        _keyboardButtons[keyId] = btn;
         row.Children.Add(btn);
+    }
+
+    private void UpdateVirtualKeyboardHighlights()
+    {
+        if (Application.Current.Resources["AccentButtonStyle"] is not Style accentStyle ||
+            Application.Current.Resources["DefaultButtonStyle"] is not Style defaultStyle)
+        {
+            return;
+        }
+
+        var activeKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (HolderKeyBox != null && !string.IsNullOrWhiteSpace(HolderKeyBox.Text))
+        {
+            foreach (var key in HolderKeyBox.Text.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                activeKeys.Add(key);
+            }
+        }
+
+        foreach (var (keyId, btn) in _keyboardButtons)
+        {
+            btn.Style = activeKeys.Contains(keyId) ? accentStyle : defaultStyle;
+        }
     }
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -1009,6 +1048,7 @@ public sealed partial class MainPage : Page
         bool hasKey = !string.IsNullOrWhiteSpace(HolderKeyBox?.Text);
         HolderActionBtn.IsEnabled = hasKey;
         if (ClearHolderKeyBtn != null) ClearHolderKeyBtn.IsEnabled = hasKey;
+        UpdateVirtualKeyboardHighlights();
     }
 
     private void UpdateClickerActionBtnState()
