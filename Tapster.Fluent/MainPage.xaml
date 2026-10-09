@@ -222,26 +222,29 @@
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                                     CornerRadius="8" Padding="12">
                                 <StackPanel Spacing="10">
-                                    <Grid>
-                                        <TextBlock Text="Target Key / Combo:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                            <Button x:Name="CaptureKeyBtn" Click="CaptureKeyBtn_Click" Style="{StaticResource SubtleButtonStyle}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <FontIcon x:Name="CaptureIcon" Glyph="&#xE7C8;" FontSize="12"/>
-                                                    <TextBlock x:Name="CaptureKeyText" Text="Capture Key"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button x:Name="ClearHolderKeyBtn" Click="ClearHolderKey_Click" Style="{StaticResource SubtleButtonStyle}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <FontIcon Glyph="&#xE894;" FontSize="12"/>
-                                                    <TextBlock Text="Clear"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
+                                    <TextBlock Text="Target Key / Combo:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
 
-                                    <TextBox x:Name="HolderKeyBox" Text="w" PlaceholderText="Target key combo (e.g. w, ctrl+shift+a)..."
-                                             FontFamily="Cascadia Code, Consolas" FontSize="14" Padding="10,6"/>
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="HolderKeyBox" Grid.Column="0" Text="w" PlaceholderText="Target key combo (e.g. w, ctrl+shift+a)..."
+                                                 FontFamily="Cascadia Code, Consolas" FontSize="14" Padding="10,6"/>
+                                        <Button x:Name="CaptureKeyBtn" Grid.Column="1" Click="CaptureKeyBtn_Click" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Stretch">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon x:Name="CaptureIcon" Glyph="&#xE7C8;" FontSize="12"/>
+                                                <TextBlock x:Name="CaptureKeyText" Text="Capture Key"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="ClearHolderKeyBtn" Grid.Column="2" Click="ClearHolderKey_Click" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Stretch">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE894;" FontSize="12"/>
+                                                <TextBlock Text="Clear"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
 
                                     <StackPanel Orientation="Horizontal" Spacing="12">
                                         <TextBlock Text="Hold Duration (seconds, 0 = infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
