@@ -189,6 +189,8 @@ public sealed partial class MainPage : Page
         UpdateAllActionBtnStates();
 
         GenerateVirtualKeyboard();
+        HolderScrollViewer.SizeChanged += (_, _) => UpdateKeyboardContainerWidth();
+        UpdateKeyboardContainerWidth();
 
         // Load Settings
         StartOnBootToggle.IsOn = AppSettings.Current.StartOnBoot;
@@ -201,93 +203,149 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private void UpdateKeyboardContainerWidth()
+    {
+        if (KeyboardContainer == null || HolderScrollViewer == null) return;
+        double availableWidth = HolderScrollViewer.ActualWidth - 36;
+        KeyboardContainer.Width = Math.Max(764, availableWidth);
+    }
+
     private void GenerateVirtualKeyboard()
     {
         KeyboardContainer.Children.Clear();
         _keyboardButtons.Clear();
 
-        // ── Row 0: Function Keys & Top Controls ──
+        // ── Main Keyboard Panel (Rows 0 to 5) ──
+        var mainKeyboardPanel = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            Spacing = 4,
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+
+        // Row 0: Function Keys
         var row0 = CreateKeyboardRow();
         AddKeyBtn(row0, "esc", "Esc", width: 44);
         AddSpacer(row0, 8);
         AddKeyBtn(row0, "f1", "F1"); AddKeyBtn(row0, "f2", "F2"); AddKeyBtn(row0, "f3", "F3"); AddKeyBtn(row0, "f4", "F4");
-        AddSpacer(row0, 6);
+        AddSpacer(row0, 10);
         AddKeyBtn(row0, "f5", "F5"); AddKeyBtn(row0, "f6", "F6"); AddKeyBtn(row0, "f7", "F7"); AddKeyBtn(row0, "f8", "F8");
-        AddSpacer(row0, 6);
+        AddSpacer(row0, 10);
         AddKeyBtn(row0, "f9", "F9"); AddKeyBtn(row0, "f10", "F10"); AddKeyBtn(row0, "f11", "F11"); AddKeyBtn(row0, "f12", "F12");
-        AddSpacer(row0, 8);
-        AddKeyBtn(row0, "printscreen", "PrtSc"); AddKeyBtn(row0, "scrolllock", "ScrLk"); AddKeyBtn(row0, "pause", "Pause");
-        AddKeyBtn(row0, "delete", "Del");
-        KeyboardContainer.Children.Add(row0);
+        AddSpacer(row0, 28);
+        mainKeyboardPanel.Children.Add(row0);
 
-        // ── Row 1: Number Row & Numpad Top ──
+        // Row 1: Number Row & Backspace
         var row1 = CreateKeyboardRow();
         string[] r1Keys = { "`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=" };
         foreach (var k in r1Keys) AddKeyBtn(row1, k, k);
         AddKeyBtn(row1, "backspace", "Backspace", width: 76);
-        AddSpacer(row1, 4);
-        AddKeyBtn(row1, "numlock", "NumLk");
-        AddKeyBtn(row1, "divide", "/");
-        AddKeyBtn(row1, "multiply", "*");
-        AddKeyBtn(row1, "subtract", "-");
-        KeyboardContainer.Children.Add(row1);
+        mainKeyboardPanel.Children.Add(row1);
 
-        // ── Row 2: QWERTY Row & Numpad 7 8 9 + ──
+        // Row 2: QWERTY Row & \
         var row2 = CreateKeyboardRow();
         AddKeyBtn(row2, KeyTab, "Tab", width: 54);
         string[] r2Keys = { "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]" };
         foreach (var k in r2Keys) AddKeyBtn(row2, k, k.ToUpper());
         AddKeyBtn(row2, "\\", "\\", width: 58);
-        AddSpacer(row2, 4);
-        AddKeyBtn(row2, "num7", "7");
-        AddKeyBtn(row2, "num8", "8");
-        AddKeyBtn(row2, "num9", "9");
-        AddKeyBtn(row2, "add", "+");
-        KeyboardContainer.Children.Add(row2);
+        mainKeyboardPanel.Children.Add(row2);
 
-        // ── Row 3: Home Row & Numpad 4 5 6 ──
+        // Row 3: Home Row & Enter
         var row3 = CreateKeyboardRow();
         AddKeyBtn(row3, "capslock", "Caps Lock", width: 66);
         string[] r3Keys = { "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" };
         foreach (var k in r3Keys) AddKeyBtn(row3, k, k.ToUpper());
         AddKeyBtn(row3, KeyEnter, "Enter", width: 86);
-        AddSpacer(row3, 4);
-        AddKeyBtn(row3, "num4", "4");
-        AddKeyBtn(row3, "num5", "5");
-        AddKeyBtn(row3, "num6", "6");
-        AddKeyBtn(row3, "insert", "Ins");
-        KeyboardContainer.Children.Add(row3);
+        mainKeyboardPanel.Children.Add(row3);
 
-        // ── Row 4: Shift Row, Up Arrow & Numpad 1 2 3 Enter ──
+        // Row 4: Shift Row & Up Arrow
         var row4 = CreateKeyboardRow();
         AddKeyBtn(row4, "shift", "Shift", width: 88);
         string[] r4Keys = { "z", "x", "c", "v", "b", "n", "m", ",", ".", "/" };
         foreach (var k in r4Keys) AddKeyBtn(row4, k, k.ToUpper());
-        AddKeyBtn(row4, "shift", "Shift", width: 92);
-        AddKeyBtn(row4, "up", "▲"); // Right side aligns exactly with Backspace / \ / Enter right edge
-        AddSpacer(row4, 4);
-        AddKeyBtn(row4, "num1", "1");
-        AddKeyBtn(row4, "num2", "2");
-        AddKeyBtn(row4, "num3", "3");
-        AddKeyBtn(row4, "enter", "Enter");
-        KeyboardContainer.Children.Add(row4);
+        AddKeyBtn(row4, "shift", "Shift", width: 64);
+        AddKeyBtn(row4, "up", "▲"); // Starts at 560, ends at 596px, aligning with Backspace / \ / Enter
+        mainKeyboardPanel.Children.Add(row4);
 
-        // ── Row 5: Bottom Row, Left/Down/Right Arrows & Numpad 0 . ──
+        // Row 5: Bottom Row (Ctrl, Win, Alt, Space, Alt, Win, Ctrl, Left Arrow, Down Arrow)
         var row5 = CreateKeyboardRow();
         AddKeyBtn(row5, "ctrl", "Ctrl", width: 48);
         AddKeyBtn(row5, "win", "Win", width: 44);
         AddKeyBtn(row5, "alt", "Alt", width: 44);
-        AddKeyBtn(row5, "space", "Space", width: 236);
-        AddKeyBtn(row5, "alt", "Alt", width: 44);
-        AddKeyBtn(row5, "win", "Win", width: 44);
-        AddKeyBtn(row5, "ctrl", "Ctrl", width: 48);
-        AddKeyBtn(row5, "left", "◄");  // Right edge aligns exactly with Shift right edge
-        AddKeyBtn(row5, "down", "▼");  // Right edge aligns exactly with Up arrow right edge
-        AddSpacer(row5, 4);
-        AddKeyBtn(row5, "right", "►"); // Right edge aligns exactly with NumLk/7/4/1 right edge
-        AddKeyBtn(row5, "num0", "0", width: 76);
-        AddKeyBtn(row5, "decimal", ".");
-        KeyboardContainer.Children.Add(row5);
+        AddKeyBtn(row5, "space", "Space", width: 242);
+        AddKeyBtn(row5, "alt", "Alt", width: 38);
+        AddKeyBtn(row5, "win", "Win", width: 38);
+        AddKeyBtn(row5, "ctrl", "Ctrl", width: 38);
+        AddKeyBtn(row5, "left", "◄"); // Starts at 520, ends at 556px, aligning with Shift
+        AddKeyBtn(row5, "down", "▼"); // Starts at 560, ends at 596px, aligning with ▲
+        mainKeyboardPanel.Children.Add(row5);
+
+        // ── Right Numpad Grid (Rows 0 to 5 x Columns 0 to 3) ──
+        var numpadGrid = new Grid
+        {
+            RowSpacing = 4,
+            ColumnSpacing = 4,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        for (int r = 0; r < 6; r++)
+        {
+            numpadGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(34) });
+        }
+        for (int c = 0; c < 4; c++)
+        {
+            numpadGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(36) });
+        }
+
+        // Row 0: Top control keys
+        AddGridKeyBtn(numpadGrid, 0, 0, "printscreen", "PrtSc");
+        AddGridKeyBtn(numpadGrid, 0, 1, "scrolllock", "ScrLk");
+        AddGridKeyBtn(numpadGrid, 0, 2, "pause", "Pause");
+        AddGridKeyBtn(numpadGrid, 0, 3, "delete", "Del");
+
+        // Row 1: Numpad operators
+        AddGridKeyBtn(numpadGrid, 1, 0, "numlock", "NumLk");
+        AddGridKeyBtn(numpadGrid, 1, 1, "divide", "/");
+        AddGridKeyBtn(numpadGrid, 1, 2, "multiply", "*");
+        AddGridKeyBtn(numpadGrid, 1, 3, "subtract", "-");
+
+        // Row 2: 7 8 9 + (+ spans Row 2 & 3: 72px)
+        AddGridKeyBtn(numpadGrid, 2, 0, "num7", "7");
+        AddGridKeyBtn(numpadGrid, 2, 1, "num8", "8");
+        AddGridKeyBtn(numpadGrid, 2, 2, "num9", "9");
+        AddGridKeyBtn(numpadGrid, 2, 3, "add", "+", height: 72, rowSpan: 2);
+
+        // Row 3: 4 5 6 (+ spans from row 2)
+        AddGridKeyBtn(numpadGrid, 3, 0, "num4", "4");
+        AddGridKeyBtn(numpadGrid, 3, 1, "num5", "5");
+        AddGridKeyBtn(numpadGrid, 3, 2, "num6", "6");
+
+        // Row 4: 1 2 3 Enter (Enter spans Row 4 & 5: 72px)
+        AddGridKeyBtn(numpadGrid, 4, 0, "num1", "1");
+        AddGridKeyBtn(numpadGrid, 4, 1, "num2", "2");
+        AddGridKeyBtn(numpadGrid, 4, 2, "num3", "3");
+        AddGridKeyBtn(numpadGrid, 4, 3, "enter", "Enter", height: 72, rowSpan: 2);
+
+        // Row 5: ► 0 . (Enter spans from row 4)
+        AddGridKeyBtn(numpadGrid, 5, 0, "right", "►");
+        AddGridKeyBtn(numpadGrid, 5, 1, "num0", "0");
+        AddGridKeyBtn(numpadGrid, 5, 2, "decimal", ".");
+
+        // ── Master Dual-Column Grid ──
+        var masterGrid = new Grid
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+        masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star), MinWidth = 12 });
+        masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        Grid.SetColumn(mainKeyboardPanel, 0);
+        Grid.SetColumn(numpadGrid, 2);
+
+        masterGrid.Children.Add(mainKeyboardPanel);
+        masterGrid.Children.Add(numpadGrid);
+
+        KeyboardContainer.Children.Add(masterGrid);
 
         UpdateVirtualKeyboardHighlights();
     }
@@ -297,7 +355,8 @@ public sealed partial class MainPage : Page
         return new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Spacing = 4
+            Spacing = 4,
+            HorizontalAlignment = HorizontalAlignment.Left
         };
     }
 
@@ -306,15 +365,15 @@ public sealed partial class MainPage : Page
         row.Children.Add(new Border { Width = width });
     }
 
-    private void AddKeyBtn(StackPanel row, string keyId, string label, double width = 36)
+    private Button CreateKeyBtn(string keyId, string label, double width = 36, double height = 34)
     {
         var btn = new Button
         {
             Content = label,
             Width = width,
-            Height = 34,
+            Height = height,
             Padding = new Thickness(2),
-            FontSize = width > 50 ? 10 : 11,
+            FontSize = width > 50 || height > 50 ? 10 : 11,
             FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Code, Consolas"),
             CornerRadius = new CornerRadius(4),
             Style = Application.Current.Resources["DefaultButtonStyle"] as Style
@@ -357,7 +416,25 @@ public sealed partial class MainPage : Page
             _keyboardButtons[keyId] = btnList;
         }
         btnList.Add(btn);
+        return btn;
+    }
+
+    private void AddKeyBtn(StackPanel row, string keyId, string label, double width = 36)
+    {
+        var btn = CreateKeyBtn(keyId, label, width, 34);
         row.Children.Add(btn);
+    }
+
+    private void AddGridKeyBtn(Grid grid, int row, int col, string keyId, string label, double width = 36, double height = 34, int rowSpan = 1)
+    {
+        var btn = CreateKeyBtn(keyId, label, width, height);
+        Grid.SetRow(btn, row);
+        Grid.SetColumn(btn, col);
+        if (rowSpan > 1)
+        {
+            Grid.SetRowSpan(btn, rowSpan);
+        }
+        grid.Children.Add(btn);
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Bug", "S2583:Conditionally executed code should be reachable", Justification = "HolderKeyBox is initialized by XAML InitializeComponent at runtime")]
