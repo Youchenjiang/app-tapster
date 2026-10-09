@@ -218,53 +218,44 @@
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                                     CornerRadius="8" Padding="12">
                                 <StackPanel Spacing="10">
-                                    <Grid ColumnSpacing="12">
+                                    <!-- Pipeline Steps Section -->
+                                    <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Holding Mode:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        <ComboBox x:Name="HolderModeCombo" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="180" SelectionChanged="HolderModeCombo_SelectionChanged">
-                                            <ComboBoxItem Content="Single Key Hold"/>
-                                            <ComboBoxItem Content="Multi-Stage Pipeline"/>
-                                        </ComboBox>
+                                        <TextBlock Text="Pipeline Steps:" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="AddStageBtn" Click="AddStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <FontIcon Glyph="&#xE710;" FontSize="11"/>
+                                                    <TextBlock Text="Add Step" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="DeleteStageBtn" Click="DeleteStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <FontIcon Glyph="&#xE74D;" FontSize="11"/>
+                                                    <TextBlock Text="Delete" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="MoveUpStageBtn" Click="MoveUpStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
+                                                <FontIcon Glyph="&#xE70E;" FontSize="11"/>
+                                            </Button>
+                                            <Button x:Name="MoveDownStageBtn" Click="MoveDownStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
+                                                <FontIcon Glyph="&#xE70D;" FontSize="11"/>
+                                            </Button>
+                                        </StackPanel>
                                     </Grid>
 
-                                    <!-- Multi-Stage Pipeline List Section (Visible in Multi-Stage Mode) -->
-                                    <StackPanel x:Name="HolderMultiStagePanel" Spacing="6" Visibility="Collapsed">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="Pipeline Stages (Select stage to edit or use keyboard below):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                                <Button x:Name="AddStageBtn" Click="AddStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
-                                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                                        <FontIcon Glyph="&#xE710;" FontSize="11"/>
-                                                        <TextBlock Text="Add Stage" FontSize="11"/>
-                                                    </StackPanel>
-                                                </Button>
-                                                <Button x:Name="DeleteStageBtn" Click="DeleteStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
-                                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                                        <FontIcon Glyph="&#xE74D;" FontSize="11"/>
-                                                        <TextBlock Text="Delete" FontSize="11"/>
-                                                    </StackPanel>
-                                                </Button>
-                                                <Button x:Name="MoveUpStageBtn" Click="MoveUpStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
-                                                    <FontIcon Glyph="&#xE70E;" FontSize="11"/>
-                                                </Button>
-                                                <Button x:Name="MoveDownStageBtn" Click="MoveDownStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
-                                                    <FontIcon Glyph="&#xE70D;" FontSize="11"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </Grid>
-                                        <ListView x:Name="HolderStageList" MaxHeight="130"
-                                                  FontFamily="Cascadia Code, Consolas" FontSize="11"
-                                                  SelectionMode="Single" SelectionChanged="HolderStageList_SelectionChanged"/>
-                                    </StackPanel>
+                                    <!-- Step List View -->
+                                    <ListView x:Name="HolderStageList" MaxHeight="110"
+                                              FontFamily="Cascadia Code, Consolas" FontSize="11"
+                                              SelectionMode="Single" SelectionChanged="HolderStageList_SelectionChanged"/>
 
-                                    <TextBlock x:Name="HolderKeyHeader" Text="Target Key / Combo:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    <MenuFlyoutSeparator Margin="0,2"/>
+
+                                    <!-- Step Key Combo Inspector -->
+                                    <TextBlock x:Name="HolderStepInspectorHeader" Text="Selected Step Key Combo (Click keyboard below):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
 
                                     <Grid ColumnSpacing="8">
                                         <Grid.ColumnDefinitions>
@@ -288,6 +279,7 @@
                                         </Button>
                                     </Grid>
 
+                                    <!-- Hold Mode & Optional Rest Pause -->
                                     <Grid ColumnSpacing="16" RowSpacing="8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
@@ -295,17 +287,22 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="Hold (seconds, 0=∞):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                        <NumberBox x:Name="HoldDurationBox" Grid.Column="1" Width="80" Value="5" Minimum="0" SmallChange="0.5"
-                                                   FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                        <ComboBox x:Name="HolderDurationTypeCombo" Grid.Column="0" SelectedIndex="0" Width="185" SelectionChanged="HolderDurationTypeCombo_SelectionChanged">
+                                            <ComboBoxItem Content="Hold until stopped"/>
+                                            <ComboBoxItem Content="Hold for duration (s):"/>
+                                        </ComboBox>
+                                        <NumberBox x:Name="HoldDurationBox" Grid.Column="1" Width="80" Value="5" Minimum="0.1" SmallChange="0.5"
+                                                   FontSize="12" SpinButtonPlacementMode="Compact" IsEnabled="False"/>
 
-                                        <TextBlock Grid.Column="2" Text="Rest (seconds):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                        <CheckBox x:Name="HolderRestCheck" Grid.Column="2" Content="Rest pause (s):" VerticalAlignment="Center" FontSize="12"
+                                                  Checked="HolderRestCheck_Changed" Unchecked="HolderRestCheck_Changed"/>
                                         <NumberBox x:Name="HolderRestBox" Grid.Column="3" Width="80" Value="0.5" Minimum="0" SmallChange="0.5"
-                                                   FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                                   FontSize="12" SpinButtonPlacementMode="Compact" IsEnabled="False"/>
                                     </Grid>
 
-                                    <StackPanel Orientation="Horizontal" Spacing="12">
-                                        <TextBlock Text="Repeat Loops (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <!-- Repeat Loops (for multi-step pipelines or repeated pulses) -->
+                                    <StackPanel x:Name="HolderRepeatPanel" Orientation="Horizontal" Spacing="12" Visibility="Collapsed">
+                                        <TextBlock Text="Repeat Pipeline Loops (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
                                         <NumberBox x:Name="HolderRepeatBox" Width="80" Value="1" Minimum="0" SmallChange="1"
                                                    FontSize="12" SpinButtonPlacementMode="Compact"/>
                                     </StackPanel>

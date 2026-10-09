@@ -206,10 +206,9 @@ public sealed partial class MainPage : Page
         HolderRestBox.ValueChanged += (_, _) => SyncSelectedHolderStage();
         MacroActionList.SelectionChanged += (_, _) => UpdateMacroItemActionBtns();
 
-        _holderStages.Add(new KeyHolderStage("w", 5.0, 0.5));
-        _holderStages.Add(new KeyHolderStage("shift+w", 3.0, 0.5));
-        _holderStages.Add(new KeyHolderStage("f", 1.0, 0.0));
+        _holderStages.Add(new KeyHolderStage("w", 0, 0));
         RefreshHolderStageList();
+        HolderStageList.SelectedIndex = 0;
 
         UpdateAllActionBtnStates();
 
@@ -684,18 +683,20 @@ public sealed partial class MainPage : Page
         UpdateHolderActionBtnState();
     }
 
-    private void HolderModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void HolderDurationTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (HolderMultiStagePanel == null || HolderKeyHeader == null) return;
-        bool isMulti = HolderModeCombo.SelectedIndex == 1;
-        HolderMultiStagePanel.Visibility = isMulti ? Visibility.Visible : Visibility.Collapsed;
-        HolderKeyHeader.Text = isMulti ? "Edit Selected Stage Key / Combo:" : "Target Key / Combo:";
+        if (HoldDurationBox == null) return;
+        bool isTimed = HolderDurationTypeCombo.SelectedIndex == 1;
+        HoldDurationBox.IsEnabled = isTimed;
+        SyncSelectedHolderStage();
+    }
 
-        if (isMulti && HolderStageList.SelectedIndex < 0 && _holderStages.Count > 0)
-        {
-            HolderStageList.SelectedIndex = 0;
-        }
-        UpdateHolderActionBtnState();
+    private void HolderRestCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (HolderRestBox == null) return;
+        bool hasRest = HolderRestCheck.IsChecked == true;
+        HolderRestBox.IsEnabled = hasRest;
+        SyncSelectedHolderStage();
     }
 
     private void HolderStageList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -708,11 +709,39 @@ public sealed partial class MainPage : Page
         {
             var stage = _holderStages[idx];
             _isUpdatingHolderStage = true;
+            if (HolderStepInspectorHeader != null)
+            {
+                HolderStepInspectorHeader.Text = $"Selected Step #{idx + 1} Key Combo (Click keyboard below):";
+            }
             HolderKeyBox.Text = stage.KeyCombo;
-            HoldDurationBox.Value = stage.HoldDurationSec;
-            HolderRestBox.Value = stage.RestDurationSec;
+
+            if (stage.HoldDurationSec > 0)
+            {
+                HolderDurationTypeCombo.SelectedIndex = 1;
+                HoldDurationBox.IsEnabled = true;
+                HoldDurationBox.Value = stage.HoldDurationSec;
+            }
+            else
+            {
+                HolderDurationTypeCombo.SelectedIndex = 0;
+                HoldDurationBox.IsEnabled = false;
+            }
+
+            if (stage.RestDurationSec > 0)
+            {
+                HolderRestCheck.IsChecked = true;
+                HolderRestBox.IsEnabled = true;
+                HolderRestBox.Value = stage.RestDurationSec;
+            }
+            else
+            {
+                HolderRestCheck.IsChecked = false;
+                HolderRestBox.IsEnabled = false;
+            }
+
             _isUpdatingHolderStage = false;
             UpdateHolderActionBtnState();
+            UpdateHolderRepeatPanelVisibility();
         }
     }
 
@@ -729,33 +758,44 @@ public sealed partial class MainPage : Page
             HolderStageList.SelectedIndex = prevIndex;
         }
         UpdateStageButtonsState();
+        UpdateHolderRepeatPanelVisibility();
     }
 
-    private static string FormatStageItemText(int stageNum, KeyHolderStage stage)
+    private static string FormatStageItemText(int stageNum, KeyHolderStage stage, bool isRunningNow = false)
     {
-        string holdStr = stage.HoldDurationSec == 0 ? "∞" : $"{stage.HoldDurationSec:F1}s";
-        return $"#{stageNum} [{stage.KeyCombo}] Hold: {holdStr}, Rest: {stage.RestDurationSec:F1}s";
+        string statusPrefix = isRunningNow ? "▶ " : "";
+        string holdStr = stage.HoldDurationSec <= 0 ? "Until stopped" : $"{stage.HoldDurationSec:F1}s";
+        string restStr = stage.RestDurationSec > 0 ? $", Rest: {stage.RestDurationSec:F1}s" : "";
+        return $"{statusPrefix}Step {stageNum}: [{stage.KeyCombo}] {holdStr}{restStr}";
     }
 
     private void UpdateStageButtonsState()
     {
         int idx = HolderStageList?.SelectedIndex ?? -1;
-        if (DeleteStageBtn != null) DeleteStageBtn.IsEnabled = idx >= 0 && _holderStages.Count > 0;
+        if (DeleteStageBtn != null) DeleteStageBtn.IsEnabled = idx >= 0 && _holderStages.Count > 1;
         if (MoveUpStageBtn != null) MoveUpStageBtn.IsEnabled = idx > 0;
         if (MoveDownStageBtn != null) MoveDownStageBtn.IsEnabled = idx >= 0 && idx < _holderStages.Count - 1;
+    }
+
+    private void UpdateHolderRepeatPanelVisibility()
+    {
+        if (HolderRepeatPanel == null) return;
+        bool show = _holderStages.Count > 1 || _holderStages.Any(s => s.HoldDurationSec > 0 && s.RestDurationSec > 0);
+        HolderRepeatPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void SyncSelectedHolderStage()
     {
         if (_isUpdatingHolderStage) return;
-        if (HolderModeCombo?.SelectedIndex != 1) return;
         int idx = HolderStageList?.SelectedIndex ?? -1;
         if (idx >= 0 && idx < _holderStages.Count)
         {
             var stage = _holderStages[idx];
             stage.KeyCombo = HolderKeyBox.Text.Trim();
-            stage.HoldDurationSec = double.IsNaN(HoldDurationBox.Value) || HoldDurationBox.Value < 0 ? 0 : HoldDurationBox.Value;
-            stage.RestDurationSec = double.IsNaN(HolderRestBox.Value) || HolderRestBox.Value < 0 ? 0 : HolderRestBox.Value;
+            bool isTimed = HolderDurationTypeCombo?.SelectedIndex == 1;
+            stage.HoldDurationSec = isTimed ? Math.Max(0.1, HoldDurationBox.Value) : 0;
+            bool hasRest = HolderRestCheck?.IsChecked == true;
+            stage.RestDurationSec = hasRest ? Math.Max(0, HolderRestBox.Value) : 0;
 
             int cur = HolderStageList!.SelectedIndex;
             _isUpdatingHolderStage = true;
@@ -763,40 +803,35 @@ public sealed partial class MainPage : Page
             HolderStageList.SelectedIndex = cur;
             _isUpdatingHolderStage = false;
             UpdateStageButtonsState();
+            UpdateHolderRepeatPanelVisibility();
         }
     }
 
     private void AddStageBtn_Click(object sender, RoutedEventArgs e)
     {
-        string key = string.IsNullOrWhiteSpace(HolderKeyBox.Text) ? "w" : HolderKeyBox.Text.Trim();
-        double hold = double.IsNaN(HoldDurationBox.Value) || HoldDurationBox.Value < 0 ? 5.0 : HoldDurationBox.Value;
-        double rest = double.IsNaN(HolderRestBox.Value) || HolderRestBox.Value < 0 ? 0.5 : HolderRestBox.Value;
-
-        var stage = new KeyHolderStage(key, hold, rest);
+        double hold = _holderStages.Count == 0 ? 0 : 3.0;
+        string key = "w";
+        var stage = new KeyHolderStage(key, hold, 0);
         _holderStages.Add(stage);
         RefreshHolderStageList();
         HolderStageList.SelectedIndex = _holderStages.Count - 1;
         UpdateHolderActionBtnState();
-        HolderStatusText.Text = $"Added stage #{_holderStages.Count}: [{stage.KeyCombo}]";
+        UpdateHolderRepeatPanelVisibility();
+        HolderStatusText.Text = $"Added Step #{_holderStages.Count}: [{stage.KeyCombo}]";
     }
 
     private void DeleteStageBtn_Click(object sender, RoutedEventArgs e)
     {
+        if (_holderStages.Count <= 1) return;
         int idx = HolderStageList.SelectedIndex;
         if (idx >= 0 && idx < _holderStages.Count)
         {
             _holderStages.RemoveAt(idx);
             RefreshHolderStageList();
-            if (_holderStages.Count > 0)
-            {
-                HolderStageList.SelectedIndex = Math.Clamp(idx, 0, _holderStages.Count - 1);
-            }
-            else
-            {
-                HolderStageList.SelectedIndex = -1;
-            }
+            HolderStageList.SelectedIndex = Math.Clamp(idx, 0, _holderStages.Count - 1);
             UpdateHolderActionBtnState();
-            HolderStatusText.Text = $"Deleted stage #{idx + 1}";
+            UpdateHolderRepeatPanelVisibility();
+            HolderStatusText.Text = $"Deleted step #{idx + 1}";
         }
     }
 
@@ -810,7 +845,7 @@ public sealed partial class MainPage : Page
             _holderStages.Insert(idx - 1, stage);
             RefreshHolderStageList();
             HolderStageList.SelectedIndex = idx - 1;
-            HolderStatusText.Text = $"Moved stage to #{idx}";
+            HolderStatusText.Text = $"Moved step to #{idx}";
         }
     }
 
@@ -824,7 +859,30 @@ public sealed partial class MainPage : Page
             _holderStages.Insert(idx + 1, stage);
             RefreshHolderStageList();
             HolderStageList.SelectedIndex = idx + 1;
-            HolderStatusText.Text = $"Moved stage to #{idx + 2}";
+            HolderStatusText.Text = $"Moved step to #{idx + 2}";
+        }
+    }
+
+    private void HighlightRunningStage(int activeIndex)
+    {
+        for (int idx = 0; idx < _holderStages.Count; idx++)
+        {
+            if (idx < HolderStageList.Items.Count)
+            {
+                HolderStageList.Items[idx] = FormatStageItemText(idx + 1, _holderStages[idx], isRunningNow: (idx == activeIndex));
+            }
+        }
+        HolderStageList.SelectedIndex = activeIndex;
+    }
+
+    private void ClearRunningStageHighlight()
+    {
+        for (int idx = 0; idx < _holderStages.Count; idx++)
+        {
+            if (idx < HolderStageList.Items.Count)
+            {
+                HolderStageList.Items[idx] = FormatStageItemText(idx + 1, _holderStages[idx], isRunningNow: false);
+            }
         }
     }
 
@@ -1322,14 +1380,11 @@ public sealed partial class MainPage : Page
         DispatcherQueue.TryEnqueue(() =>
         {
             NavView.SelectedItem = NavView.MenuItems[1];
-            bool isMulti = HolderModeCombo?.SelectedIndex == 1;
-            bool hasTarget = isMulti
-                ? _holderStages.Count > 0 && _holderStages.Any(s => !string.IsNullOrWhiteSpace(s.KeyCombo))
-                : !string.IsNullOrWhiteSpace(HolderKeyBox.Text);
+            bool hasTarget = _holderStages.Count > 0 && _holderStages.Any(s => !string.IsNullOrWhiteSpace(s.KeyCombo));
 
             if (!_isRunning && !hasTarget)
             {
-                HolderStatusText.Text = isMulti ? "Please add at least one stage to hold" : "Please enter a key to hold";
+                HolderStatusText.Text = "Please enter a key to hold";
                 UpdateAllActionBtnStates();
                 return;
             }
@@ -1417,11 +1472,7 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        bool isMulti = HolderModeCombo?.SelectedIndex == 1;
-        bool hasTarget = isMulti
-            ? _holderStages.Count > 0 && _holderStages.Any(s => !string.IsNullOrWhiteSpace(s.KeyCombo))
-            : !string.IsNullOrWhiteSpace(HolderKeyBox?.Text);
-
+        bool hasTarget = _holderStages.Count > 0 && _holderStages.Any(s => !string.IsNullOrWhiteSpace(s.KeyCombo));
         HolderActionBtn.IsEnabled = hasTarget;
         if (ClearHolderKeyBtn != null) ClearHolderKeyBtn.IsEnabled = !string.IsNullOrWhiteSpace(HolderKeyBox?.Text);
         UpdateVirtualKeyboardHighlights();
@@ -1799,27 +1850,10 @@ public sealed partial class MainPage : Page
 
     private async Task RunKeyHolderAsync(CancellationToken token, Action<string, double> reportProgress)
     {
-        bool isMulti = HolderModeCombo.SelectedIndex == 1;
-        List<KeyHolderStage> stagesToRun;
-
-        if (isMulti)
+        var stagesToRun = _holderStages.Where(s => !string.IsNullOrWhiteSpace(s.KeyCombo)).Select(s => s.Clone()).ToList();
+        if (stagesToRun.Count == 0)
         {
-            stagesToRun = _holderStages.Where(s => !string.IsNullOrWhiteSpace(s.KeyCombo)).Select(s => s.Clone()).ToList();
-            if (stagesToRun.Count == 0)
-            {
-                throw new InvalidOperationException("No valid stages in pipeline!");
-            }
-        }
-        else
-        {
-            string singleKey = HolderKeyBox.Text.Trim();
-            if (string.IsNullOrEmpty(singleKey))
-            {
-                throw new InvalidOperationException("No key specified!");
-            }
-            double singleHold = double.IsNaN(HoldDurationBox.Value) || HoldDurationBox.Value < 0 ? 0 : HoldDurationBox.Value;
-            double singleRest = double.IsNaN(HolderRestBox.Value) || HolderRestBox.Value < 0 ? 0 : HolderRestBox.Value;
-            stagesToRun = new List<KeyHolderStage> { new KeyHolderStage(singleKey, singleHold, singleRest) };
+            throw new InvalidOperationException("No valid steps in pipeline!");
         }
 
         int repeatLoops = (int)HolderRepeatBox.Value;
@@ -1827,69 +1861,79 @@ public sealed partial class MainPage : Page
 
         await Task.Run(() =>
         {
-            int currentLoop = 0;
-            while (!token.IsCancellationRequested && (repeatLoops == 0 || currentLoop < repeatLoops))
+            try
             {
-                currentLoop++;
-                string loopPrefix = repeatLoops == 1 ? "" : (repeatLoops == 0 ? $"[Loop {currentLoop}/∞] " : $"[Loop {currentLoop}/{repeatLoops}] ");
-
-                for (int i = 0; i < stagesToRun.Count; i++)
+                int currentLoop = 0;
+                while (!token.IsCancellationRequested && (repeatLoops == 0 || currentLoop < repeatLoops))
                 {
-                    token.ThrowIfCancellationRequested();
-                    CheckPanicSafety();
+                    currentLoop++;
+                    string loopPrefix = repeatLoops == 1 ? "" : (repeatLoops == 0 ? $"[Loop {currentLoop}/∞] " : $"[Loop {currentLoop}/{repeatLoops}] ");
 
-                    var stage = stagesToRun[i];
-                    string stagePrefix = stagesToRun.Count > 1 ? $"{loopPrefix}Stage {i + 1}/{stagesToRun.Count}: " : loopPrefix;
-                    int durationMs = (int)(stage.HoldDurationSec * 1000);
-
-                    // Hold phase
-                    try
+                    for (int i = 0; i < stagesToRun.Count; i++)
                     {
-                        Keyboard.Press(stage.KeyCombo);
-                        int elapsedMs = 0;
-                        int checkIntervalMs = 50;
+                        token.ThrowIfCancellationRequested();
+                        CheckPanicSafety();
 
-                        while (!token.IsCancellationRequested && (durationMs <= 0 || elapsedMs < durationMs))
+                        int activeIdx = i;
+                        DispatcherQueue.TryEnqueue(() => HighlightRunningStage(activeIdx));
+
+                        var stage = stagesToRun[i];
+                        string stepPrefix = stagesToRun.Count > 1 ? $"{loopPrefix}Step {i + 1}/{stagesToRun.Count}: " : loopPrefix;
+                        int durationMs = (int)(stage.HoldDurationSec * 1000);
+
+                        // Hold phase
+                        try
                         {
-                            CheckPanicSafety();
+                            Keyboard.Press(stage.KeyCombo);
+                            int elapsedMs = 0;
+                            int checkIntervalMs = 50;
 
-                            if (durationMs > 0)
+                            while (!token.IsCancellationRequested && (durationMs <= 0 || elapsedMs < durationMs))
                             {
-                                double pct = (double)elapsedMs / durationMs * 100;
-                                reportProgress($"{stagePrefix}Holding [{stage.KeyCombo}] ({(elapsedMs / 1000.0):F1}s / {stage.HoldDurationSec:F1}s)...", pct);
-                            }
-                            else
-                            {
-                                reportProgress($"{stagePrefix}Holding [{stage.KeyCombo}] ({(elapsedMs / 1000.0):F1}s / ∞)...", 100);
-                            }
+                                CheckPanicSafety();
 
-                            SleepWithPanicCheck(checkIntervalMs, token);
-                            elapsedMs += checkIntervalMs;
+                                if (durationMs > 0)
+                                {
+                                    double pct = (double)elapsedMs / durationMs * 100;
+                                    reportProgress($"{stepPrefix}Holding [{stage.KeyCombo}] ({(elapsedMs / 1000.0):F1}s / {stage.HoldDurationSec:F1}s)...", pct);
+                                }
+                                else
+                                {
+                                    reportProgress($"{stepPrefix}Holding [{stage.KeyCombo}] continuously (Press Stop or F10 to release)...", 100);
+                                }
+
+                                SleepWithPanicCheck(checkIntervalMs, token);
+                                elapsedMs += checkIntervalMs;
+                            }
                         }
-                    }
-                    finally
-                    {
-                        Keyboard.Release(stage.KeyCombo);
-                        Keyboard.ReleaseAllModifiers();
-                    }
-
-                    // Rest phase between stages or pulses
-                    if (stage.RestDurationSec > 0 && !token.IsCancellationRequested)
-                    {
-                        int restMs = (int)(stage.RestDurationSec * 1000);
-                        int restElapsedMs = 0;
-                        int checkIntervalMs = 50;
-
-                        while (!token.IsCancellationRequested && restElapsedMs < restMs)
+                        finally
                         {
-                            CheckPanicSafety();
-                            double pct = (double)restElapsedMs / restMs * 100;
-                            reportProgress($"{stagePrefix}Resting ({(restElapsedMs / 1000.0):F1}s / {stage.RestDurationSec:F1}s)...", pct);
-                            SleepWithPanicCheck(checkIntervalMs, token);
-                            restElapsedMs += checkIntervalMs;
+                            Keyboard.Release(stage.KeyCombo);
+                            Keyboard.ReleaseAllModifiers();
+                        }
+
+                        // Rest phase between steps (if configured)
+                        if (stage.RestDurationSec > 0 && !token.IsCancellationRequested)
+                        {
+                            int restMs = (int)(stage.RestDurationSec * 1000);
+                            int restElapsedMs = 0;
+                            int checkIntervalMs = 50;
+
+                            while (!token.IsCancellationRequested && restElapsedMs < restMs)
+                            {
+                                CheckPanicSafety();
+                                double pct = (double)restElapsedMs / restMs * 100;
+                                reportProgress($"{stepPrefix}Resting ({(restElapsedMs / 1000.0):F1}s / {stage.RestDurationSec:F1}s)...", pct);
+                                SleepWithPanicCheck(checkIntervalMs, token);
+                                restElapsedMs += checkIntervalMs;
+                            }
                         }
                     }
                 }
+            }
+            finally
+            {
+                DispatcherQueue.TryEnqueue(ClearRunningStageHighlight);
             }
         }, token);
     }
