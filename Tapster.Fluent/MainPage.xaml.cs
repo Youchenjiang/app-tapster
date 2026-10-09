@@ -206,61 +206,87 @@ public sealed partial class MainPage : Page
         KeyboardContainer.Children.Clear();
         _keyboardButtons.Clear();
 
-        // ── Row 0: Function Keys ──
+        // ── Row 0: Function Keys & Top Controls ──
         var row0 = CreateKeyboardRow();
         AddKeyBtn(row0, "esc", "Esc", width: 44);
-        AddSpacer(row0, 16);
+        AddSpacer(row0, 8);
         AddKeyBtn(row0, "f1", "F1"); AddKeyBtn(row0, "f2", "F2"); AddKeyBtn(row0, "f3", "F3"); AddKeyBtn(row0, "f4", "F4");
-        AddSpacer(row0, 12);
+        AddSpacer(row0, 6);
         AddKeyBtn(row0, "f5", "F5"); AddKeyBtn(row0, "f6", "F6"); AddKeyBtn(row0, "f7", "F7"); AddKeyBtn(row0, "f8", "F8");
-        AddSpacer(row0, 12);
+        AddSpacer(row0, 6);
         AddKeyBtn(row0, "f9", "F9"); AddKeyBtn(row0, "f10", "F10"); AddKeyBtn(row0, "f11", "F11"); AddKeyBtn(row0, "f12", "F12");
+        AddSpacer(row0, 8);
+        AddKeyBtn(row0, "printscreen", "PrtSc"); AddKeyBtn(row0, "scrolllock", "ScrLk"); AddKeyBtn(row0, "pause", "Pause");
+        AddKeyBtn(row0, "delete", "Del");
         KeyboardContainer.Children.Add(row0);
 
-        // ── Row 1: Number Row ──
+        // ── Row 1: Number Row & Numpad Top ──
         var row1 = CreateKeyboardRow();
         string[] r1Keys = { "`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=" };
         foreach (var k in r1Keys) AddKeyBtn(row1, k, k);
         AddKeyBtn(row1, "backspace", "Backspace", width: 76);
+        AddSpacer(row1, 4);
+        AddKeyBtn(row1, "numlock", "NumLk");
+        AddKeyBtn(row1, "divide", "/");
+        AddKeyBtn(row1, "multiply", "*");
+        AddKeyBtn(row1, "subtract", "-");
         KeyboardContainer.Children.Add(row1);
 
-        // ── Row 2: QWERTY Row ──
+        // ── Row 2: QWERTY Row & Numpad 7 8 9 + ──
         var row2 = CreateKeyboardRow();
         AddKeyBtn(row2, KeyTab, "Tab", width: 54);
-        string[] r2Keys = { "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\" };
+        string[] r2Keys = { "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]" };
         foreach (var k in r2Keys) AddKeyBtn(row2, k, k.ToUpper());
+        AddKeyBtn(row2, "\\", "\\", width: 58);
+        AddSpacer(row2, 4);
+        AddKeyBtn(row2, "num7", "7");
+        AddKeyBtn(row2, "num8", "8");
+        AddKeyBtn(row2, "num9", "9");
+        AddKeyBtn(row2, "add", "+");
         KeyboardContainer.Children.Add(row2);
 
-        // ── Row 3: Home Row ──
+        // ── Row 3: Home Row & Numpad 4 5 6 ──
         var row3 = CreateKeyboardRow();
         AddKeyBtn(row3, "capslock", "Caps Lock", width: 66);
         string[] r3Keys = { "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" };
         foreach (var k in r3Keys) AddKeyBtn(row3, k, k.ToUpper());
-        AddKeyBtn(row3, KeyEnter, "Enter", width: 80);
+        AddKeyBtn(row3, KeyEnter, "Enter", width: 86);
+        AddSpacer(row3, 4);
+        AddKeyBtn(row3, "num4", "4");
+        AddKeyBtn(row3, "num5", "5");
+        AddKeyBtn(row3, "num6", "6");
+        AddKeyBtn(row3, "insert", "Ins");
         KeyboardContainer.Children.Add(row3);
 
-        // ── Row 4: Shift Row ──
+        // ── Row 4: Shift Row, Up Arrow & Numpad 1 2 3 Enter ──
         var row4 = CreateKeyboardRow();
         AddKeyBtn(row4, "shift", "Shift", width: 88);
         string[] r4Keys = { "z", "x", "c", "v", "b", "n", "m", ",", ".", "/" };
         foreach (var k in r4Keys) AddKeyBtn(row4, k, k.ToUpper());
         AddKeyBtn(row4, "shift", "Shift", width: 92);
+        AddKeyBtn(row4, "up", "▲"); // Right side aligns exactly with Backspace / \ / Enter right edge
+        AddSpacer(row4, 4);
+        AddKeyBtn(row4, "num1", "1");
+        AddKeyBtn(row4, "num2", "2");
+        AddKeyBtn(row4, "num3", "3");
+        AddKeyBtn(row4, "enter", "Enter");
         KeyboardContainer.Children.Add(row4);
 
-        // ── Row 5: Control / Space / Navigation Row ──
+        // ── Row 5: Bottom Row, Left/Down/Right Arrows & Numpad 0 . ──
         var row5 = CreateKeyboardRow();
         AddKeyBtn(row5, "ctrl", "Ctrl", width: 48);
         AddKeyBtn(row5, "win", "Win", width: 44);
         AddKeyBtn(row5, "alt", "Alt", width: 44);
-        AddKeyBtn(row5, "space", "Space", width: 240);
+        AddKeyBtn(row5, "space", "Space", width: 236);
         AddKeyBtn(row5, "alt", "Alt", width: 44);
         AddKeyBtn(row5, "win", "Win", width: 44);
         AddKeyBtn(row5, "ctrl", "Ctrl", width: 48);
-        AddSpacer(row5, 12);
-        AddKeyBtn(row5, "left", "◄", width: 36);
-        AddKeyBtn(row5, "up", "▲", width: 36);
-        AddKeyBtn(row5, "down", "▼", width: 36);
-        AddKeyBtn(row5, "right", "►", width: 36);
+        AddKeyBtn(row5, "left", "◄");  // Right edge aligns exactly with Shift right edge
+        AddKeyBtn(row5, "down", "▼");  // Right edge aligns exactly with Up arrow right edge
+        AddSpacer(row5, 4);
+        AddKeyBtn(row5, "right", "►"); // Right edge aligns exactly with NumLk/7/4/1 right edge
+        AddKeyBtn(row5, "num0", "0", width: 76);
+        AddKeyBtn(row5, "decimal", ".");
         KeyboardContainer.Children.Add(row5);
 
         UpdateVirtualKeyboardHighlights();
