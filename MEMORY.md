@@ -85,5 +85,4 @@
   - Extracted pre-flight validation and countdown loop from `RunTaskAsync` to helper methods, reducing cognitive complexity below SonarCloud S3776 threshold.
   - Replaced repetitive `"Holder"` and `"Macro"` tab literals with constant identifiers (SonarCloud S1192).
   - Suppressed false-positive unreachable code analysis (SonarCloud S2583) on XAML control state in virtual keyboard highlights.
-
-
+- **Numpad and Navigation Key Aliases in Core**: Added VK mappings in `Keyboard.cs` for numpad numeric keys (`num0`..`num9`), arithmetic operators (`num+`, `num-`, `num*`, `num/`, `num.`), `NumLock`, `ScrollLock`, `PrintScreen`, and `Pause` to power full-sized virtual keyboard configurations.
