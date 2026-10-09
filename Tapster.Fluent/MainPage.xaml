@@ -226,12 +226,6 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Pipeline Steps:" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                            <Button x:Name="AddStageBtn" Click="AddStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <FontIcon Glyph="&#xE710;" FontSize="11"/>
-                                                    <TextBlock Text="Add Step" FontSize="11"/>
-                                                </StackPanel>
-                                            </Button>
                                             <Button x:Name="DeleteStageBtn" Click="DeleteStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <FontIcon Glyph="&#xE74D;" FontSize="11"/>
@@ -254,8 +248,29 @@
 
                                     <MenuFlyoutSeparator Margin="0,2"/>
 
-                                    <!-- Step Key Combo Inspector -->
-                                    <TextBlock x:Name="HolderStepInspectorHeader" Text="Selected Step Key Combo (Click keyboard below):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <!-- Step Key Combo Inspector & Actions -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="HolderStepInspectorHeader" Text="Step Configurator (Click keyboard below to assign keys):"
+                                                   FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="UpdateStageBtn" Click="UpdateStageBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="8,4">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <FontIcon Glyph="&#xE74E;" FontSize="11"/>
+                                                    <TextBlock x:Name="UpdateStageBtnText" Text="Update Step #1" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="AddStageBtn" Click="AddStageBtn_Click" Style="{StaticResource AccentButtonStyle}" Padding="8,4">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <FontIcon Glyph="&#xE710;" FontSize="11"/>
+                                                    <TextBlock Text="Add as New Step" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
 
                                     <Grid ColumnSpacing="8">
                                         <Grid.ColumnDefinitions>

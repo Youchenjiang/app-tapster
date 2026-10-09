@@ -711,7 +711,15 @@ public sealed partial class MainPage : Page
             _isUpdatingHolderStage = true;
             if (HolderStepInspectorHeader != null)
             {
-                HolderStepInspectorHeader.Text = $"Selected Step #{idx + 1} Key Combo (Click keyboard below):";
+                HolderStepInspectorHeader.Text = $"Selected Step #{idx + 1} (Modify below, then click Update or Add as New):";
+            }
+            if (UpdateStageBtnText != null)
+            {
+                UpdateStageBtnText.Text = $"Update Step #{idx + 1}";
+            }
+            if (UpdateStageBtn != null)
+            {
+                UpdateStageBtn.IsEnabled = true;
             }
             HolderKeyBox.Text = stage.KeyCombo;
 
@@ -775,6 +783,7 @@ public sealed partial class MainPage : Page
         if (DeleteStageBtn != null) DeleteStageBtn.IsEnabled = idx >= 0 && _holderStages.Count > 1;
         if (MoveUpStageBtn != null) MoveUpStageBtn.IsEnabled = idx > 0;
         if (MoveDownStageBtn != null) MoveDownStageBtn.IsEnabled = idx >= 0 && idx < _holderStages.Count - 1;
+        if (UpdateStageBtn != null) UpdateStageBtn.IsEnabled = idx >= 0 && idx < _holderStages.Count;
     }
 
     private void UpdateHolderRepeatPanelVisibility()
@@ -790,11 +799,45 @@ public sealed partial class MainPage : Page
         int idx = HolderStageList?.SelectedIndex ?? -1;
         if (idx >= 0 && idx < _holderStages.Count)
         {
+            // If there's only 1 step, auto-sync immediately for seamless single-key hold
+            if (_holderStages.Count == 1)
+            {
+                var stage = _holderStages[idx];
+                stage.KeyCombo = HolderKeyBox.Text.Trim();
+                bool isTimed = HolderDurationTypeCombo?.SelectedIndex == 1;
+                stage.HoldDurationSec = isTimed ? Math.Max(0.1, HoldDurationBox.Value) : 0;
+                bool hasRest = HolderRestCheck?.IsChecked == true;
+                stage.RestDurationSec = hasRest ? Math.Max(0, HolderRestBox.Value) : 0;
+
+                int cur = HolderStageList!.SelectedIndex;
+                _isUpdatingHolderStage = true;
+                HolderStageList.Items[idx] = FormatStageItemText(idx + 1, stage);
+                HolderStageList.SelectedIndex = cur;
+                _isUpdatingHolderStage = false;
+                UpdateStageButtonsState();
+                UpdateHolderRepeatPanelVisibility();
+            }
+            else
+            {
+                // Multi-step pipeline: keep existing steps safe from accidental overwrites
+                if (UpdateStageBtnText != null)
+                {
+                    UpdateStageBtnText.Text = $"Update Step #{idx + 1}";
+                }
+            }
+        }
+    }
+
+    private void UpdateStageBtn_Click(object sender, RoutedEventArgs e)
+    {
+        int idx = HolderStageList?.SelectedIndex ?? -1;
+        if (idx >= 0 && idx < _holderStages.Count)
+        {
             var stage = _holderStages[idx];
-            stage.KeyCombo = HolderKeyBox.Text.Trim();
-            bool isTimed = HolderDurationTypeCombo?.SelectedIndex == 1;
+            stage.KeyCombo = string.IsNullOrWhiteSpace(HolderKeyBox.Text) ? "w" : HolderKeyBox.Text.Trim();
+            bool isTimed = HolderDurationTypeCombo.SelectedIndex == 1;
             stage.HoldDurationSec = isTimed ? Math.Max(0.1, HoldDurationBox.Value) : 0;
-            bool hasRest = HolderRestCheck?.IsChecked == true;
+            bool hasRest = HolderRestCheck.IsChecked == true;
             stage.RestDurationSec = hasRest ? Math.Max(0, HolderRestBox.Value) : 0;
 
             int cur = HolderStageList!.SelectedIndex;
@@ -804,14 +847,19 @@ public sealed partial class MainPage : Page
             _isUpdatingHolderStage = false;
             UpdateStageButtonsState();
             UpdateHolderRepeatPanelVisibility();
+            HolderStatusText.Text = $"Updated Step #{idx + 1}: [{stage.KeyCombo}]";
         }
     }
 
     private void AddStageBtn_Click(object sender, RoutedEventArgs e)
     {
-        double hold = _holderStages.Count == 0 ? 0 : 3.0;
-        string key = "w";
-        var stage = new KeyHolderStage(key, hold, 0);
+        string key = string.IsNullOrWhiteSpace(HolderKeyBox.Text) ? "w" : HolderKeyBox.Text.Trim();
+        bool isTimed = HolderDurationTypeCombo.SelectedIndex == 1;
+        double hold = isTimed ? Math.Max(0.1, HoldDurationBox.Value) : 0;
+        bool hasRest = HolderRestCheck.IsChecked == true;
+        double rest = hasRest ? Math.Max(0, HolderRestBox.Value) : 0;
+
+        var stage = new KeyHolderStage(key, hold, rest);
         _holderStages.Add(stage);
         RefreshHolderStageList();
         HolderStageList.SelectedIndex = _holderStages.Count - 1;
