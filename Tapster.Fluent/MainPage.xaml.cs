@@ -14,6 +14,7 @@ public sealed partial class MainPage : Page
     private const string KeyEnter = "enter";
     private const string KeyTab = "tab";
     private const string KeyNone = "none";
+    private const string KeyPrintScreen = "printscreen";
     private const string TyperModeClipboard = "clipboard";
     private const string TyperModeKeystroke = "keystroke";
     private const string TabClicker = "Clicker";
@@ -297,7 +298,7 @@ public sealed partial class MainPage : Page
         }
 
         // Row 0: Top control & navigation keys
-        AddGridKeyBtn(numpadGrid, 0, 0, "printscreen", "PrtSc");
+        AddGridKeyBtn(numpadGrid, 0, 0, KeyPrintScreen, "PrtSc");
         AddGridKeyBtn(numpadGrid, 0, 1, "scrolllock", "ScrLk");
         AddGridKeyBtn(numpadGrid, 0, 2, "pause", "Pause");
         AddGridKeyBtn(numpadGrid, 0, 3, "insert", "Ins");
@@ -456,9 +457,9 @@ public sealed partial class MainPage : Page
         ["pgup"] = new(StringComparer.OrdinalIgnoreCase) { "pageup" },
         ["pagedown"] = new(StringComparer.OrdinalIgnoreCase) { "pgdn" },
         ["pgdn"] = new(StringComparer.OrdinalIgnoreCase) { "pagedown" },
-        ["printscreen"] = new(StringComparer.OrdinalIgnoreCase) { "prtsc", "prtscr" },
-        ["prtsc"] = new(StringComparer.OrdinalIgnoreCase) { "printscreen", "prtscr" },
-        ["prtscr"] = new(StringComparer.OrdinalIgnoreCase) { "printscreen", "prtsc" },
+        [KeyPrintScreen] = new(StringComparer.OrdinalIgnoreCase) { "prtsc", "prtscr" },
+        ["prtsc"] = new(StringComparer.OrdinalIgnoreCase) { KeyPrintScreen, "prtscr" },
+        ["prtscr"] = new(StringComparer.OrdinalIgnoreCase) { KeyPrintScreen, "prtsc" },
         ["scrolllock"] = new(StringComparer.OrdinalIgnoreCase) { "scrlk" },
         ["scrlk"] = new(StringComparer.OrdinalIgnoreCase) { "scrolllock" },
         ["numlock"] = new(StringComparer.OrdinalIgnoreCase) { "numlk" },
@@ -486,6 +487,37 @@ public sealed partial class MainPage : Page
             || (KeyAliases.TryGetValue(b, out var bAliases) && bAliases.Contains(a));
     }
 
+    private static HashSet<string> GetActiveKeysWithAliases(string rawText)
+    {
+        if (string.IsNullOrWhiteSpace(rawText))
+        {
+            return [];
+        }
+
+        var tokens = Keyboard.SplitCombo(rawText);
+        var activeKeys = new HashSet<string>(tokens, StringComparer.OrdinalIgnoreCase);
+        foreach (var token in tokens)
+        {
+            if (KeyAliases.TryGetValue(token, out var aliases))
+            {
+                activeKeys.UnionWith(aliases);
+            }
+        }
+
+        return activeKeys;
+    }
+
+    private void ResetVirtualKeyboardButtons(Style defaultStyle)
+    {
+        foreach (var list in _keyboardButtons.Values)
+        {
+            foreach (var b in list)
+            {
+                b.Style = defaultStyle;
+            }
+        }
+    }
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Bug", "S2583:Conditionally executed code should be reachable", Justification = "HolderKeyBox is initialized by XAML InitializeComponent at runtime")]
     private void UpdateVirtualKeyboardHighlights()
     {
@@ -495,33 +527,12 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        string rawText = HolderKeyBox?.Text ?? string.Empty;
-        var activeTokens = !string.IsNullOrWhiteSpace(rawText)
-            ? Keyboard.SplitCombo(rawText)
-            : [];
-
-        if (activeTokens.Length == 0)
+        string rawText = HolderKeyBox != null ? HolderKeyBox.Text : string.Empty;
+        var activeKeys = GetActiveKeysWithAliases(rawText);
+        if (activeKeys.Count == 0)
         {
-            foreach (var list in _keyboardButtons.Values)
-            {
-                foreach (var b in list)
-                {
-                    b.Style = defaultStyle;
-                }
-            }
+            ResetVirtualKeyboardButtons(defaultStyle);
             return;
-        }
-
-        var activeKeys = new HashSet<string>(activeTokens, StringComparer.OrdinalIgnoreCase);
-        foreach (var token in activeTokens)
-        {
-            if (KeyAliases.TryGetValue(token, out var aliases))
-            {
-                foreach (var alias in aliases)
-                {
-                    activeKeys.Add(alias);
-                }
-            }
         }
 
         foreach (var (keyId, list) in _keyboardButtons)
