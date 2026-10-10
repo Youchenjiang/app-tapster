@@ -77,3 +77,11 @@
 - **Key Holder Inline Action Buttons Layout**: Replaced the separate top-right header layout with an inline Grid containing `HolderKeyBox`, `CaptureKeyBtn`, and `ClearHolderKeyBtn`. This prevents the action buttons from being pushed out of view when the virtual keyboard extends the panel's horizontal scroll width.
 - **Dynamic Virtual Keyboard Highlights**: Removed hardcoded static `AccentButtonStyle` from `Esc` and `Enter`. Registered all virtual keyboard buttons in `_keyboardButtons` and dynamically synchronize `AccentButtonStyle` vs `DefaultButtonStyle` to match the exact keys present in `HolderKeyBox.Text`. Clicking a key now toggles it in the combo string, immediately updating the visual selection state.
 - **Navigation Pane Spacing Stabilization**: Locked `NavigationView` to `PaneDisplayMode="Left"` with `AlwaysShowHeader="False"` and `Header="{x:Null}"`, removing dynamic template header padding calculations when opening and closing the hamburger pane. Cleaned up redundant `PaneFooter` elements now that Always on Top is cleanly integrated into Settings.
+- **Fluent UI Code Quality & Review Fixes (PR #46)**:
+  - Guarded `UpdateVirtualKeyboardHighlights` against empty collection analysis (SonarCloud S4158) with an early return resetting buttons when key count is 0.
+  - Stored virtual keyboard buttons as `Dictionary<string, List<Button>>` to support multi-button modifier highlights (both Shift/Ctrl/Alt keys).
+  - Treated default `"w"` in `HolderKeyBox` as replaceable on initial virtual key clicks to prevent unintended combo appending.
+  - Locked input clearing and macro step editing during active tasks by invoking `UpdateAllActionBtnStates()` immediately after setting `_isRunning = true`.
+  - Extracted pre-flight validation and countdown loop from `RunTaskAsync` to helper methods, reducing cognitive complexity below SonarCloud S3776 threshold.
+  - Replaced repetitive `"Holder"` and `"Macro"` tab literals with constant identifiers (SonarCloud S1192).
+
