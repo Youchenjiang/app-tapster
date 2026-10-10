@@ -100,4 +100,6 @@
 - **SonarCloud Maintainability & Cognitive Complexity Reduction (PR #47)**:
   - Extracted `GetActiveKeysWithAliases` and `ResetVirtualKeyboardButtons` helpers from `UpdateVirtualKeyboardHighlights`, reducing method cognitive complexity from 17 down to 9 (below 15 limit).
   - Defined `KeyPrintScreen` constant replacing repeated string literal `"printscreen"` (SonarCloud S1192).
+- **Full VK and Extended Key Mapping Test Coverage (PR #47)**:
+  - Added unit test coverage in `KeyboardTests.cs` across all numpad digits (`0x60`..`0x69`), arithmetic operators, lock/control keys, and navigation keys, verifying exact VK codes and extended key flags in `ParseKeys`, expanding test suite to 249 passing tests.
 
