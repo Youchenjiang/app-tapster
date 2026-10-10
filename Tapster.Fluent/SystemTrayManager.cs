@@ -114,13 +114,13 @@ public sealed class SystemTrayManager : IDisposable
 
         try
         {
-            NativeMethods.AppendMenuW(hMenu, NativeMethods.MF_STRING, (UIntPtr)CMD_SHOW_HIDE, "顯示 / 隱藏 Tapster");
+            NativeMethods.AppendMenuW(hMenu, NativeMethods.MF_STRING, (UIntPtr)CMD_SHOW_HIDE, LocalizationManager.Get("Tray_ShowHide"));
             
             uint topFlags = NativeMethods.MF_STRING | (_getAlwaysOnTop() ? NativeMethods.MF_CHECKED : NativeMethods.MF_UNCHECKED);
-            NativeMethods.AppendMenuW(hMenu, topFlags, (UIntPtr)CMD_ALWAYS_ON_TOP, "永遠置頂 (Always on Top)");
+            NativeMethods.AppendMenuW(hMenu, topFlags, (UIntPtr)CMD_ALWAYS_ON_TOP, LocalizationManager.Get("Tray_AlwaysOnTop"));
 
             NativeMethods.AppendMenuW(hMenu, NativeMethods.MF_SEPARATOR, UIntPtr.Zero, string.Empty);
-            NativeMethods.AppendMenuW(hMenu, NativeMethods.MF_STRING, (UIntPtr)CMD_EXIT, "結束 Tapster (Exit)");
+            NativeMethods.AppendMenuW(hMenu, NativeMethods.MF_STRING, (UIntPtr)CMD_EXIT, LocalizationManager.Get("Tray_Exit"));
 
             NativeMethods.GetCursorPos(out NativeMethods.POINT pt);
             NativeMethods.SetForegroundWindow(_hWnd);
