@@ -223,7 +223,8 @@ public sealed partial class MainPage : Page
         int selectedIndex = 0;
         for (int i = 0; i < LocalizationManager.SupportedLanguages.Count; i++)
         {
-            var (code, name) = LocalizationManager.SupportedLanguages[i];
+            var (code, _) = LocalizationManager.SupportedLanguages[i];
+            var name = LocalizationManager.GetLanguageDisplayName(code);
             LanguageCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
             if (string.Equals(code, AppSettings.Current.Language, StringComparison.OrdinalIgnoreCase))
             {
@@ -372,6 +373,8 @@ public sealed partial class MainPage : Page
         if (SettingsTopTitleText != null) SettingsTopTitleText.Text = LocalizationManager.Get("Settings_AlwaysOnTopTitle");
         if (SettingsTopDescText != null) SettingsTopDescText.Text = LocalizationManager.Get("Settings_AlwaysOnTopDesc");
 
+        UpdateLanguageComboItems();
+
         // Settings Hotkeys
         if (SettingsHkTitleText != null) SettingsHkTitleText.Text = LocalizationManager.Get("Settings_HotkeysTitle");
         if (SettingsHkDescText != null) SettingsHkDescText.Text = LocalizationManager.Get("Settings_HotkeysDesc");
@@ -384,6 +387,18 @@ public sealed partial class MainPage : Page
         if (HkPanicEscapeLabel != null) HkPanicEscapeLabel.Text = LocalizationManager.Get("Settings_HkPanicEscape");
         if (SettingsAboutNavTitleText != null) SettingsAboutNavTitleText.Text = LocalizationManager.Get("Settings_AboutNavTitle");
         if (SettingsAboutNavBtn != null) SettingsAboutNavBtn.Content = LocalizationManager.Get("Settings_AboutNavBtn");
+    }
+
+    private void UpdateLanguageComboItems()
+    {
+        if (LanguageCombo == null) return;
+        foreach (var obj in LanguageCombo.Items)
+        {
+            if (obj is ComboBoxItem item && item.Tag is string code)
+            {
+                item.Content = LocalizationManager.GetLanguageDisplayName(code);
+            }
+        }
     }
 
     private void ApplyAboutLocalization()

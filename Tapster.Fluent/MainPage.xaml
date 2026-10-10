@@ -641,7 +641,7 @@
                                         <TextBlock x:Name="SettingsLangDescText" Text="選擇 Tapster 介面顯示語言，支援即時套用"
                                                    FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    <ComboBox x:Name="LanguageCombo" Grid.Column="1" Width="200" VerticalAlignment="Center"
+                                    <ComboBox x:Name="LanguageCombo" Grid.Column="1" MinWidth="180" HorizontalAlignment="Right" VerticalAlignment="Center"
                                               SelectionChanged="LanguageCombo_SelectionChanged"/>
                                 </Grid>
                             </Border>

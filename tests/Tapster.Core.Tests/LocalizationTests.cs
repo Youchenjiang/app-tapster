@@ -135,4 +135,25 @@ public class LocalizationTests
             }
         }
     }
+
+    [Fact]
+    public void SupportedLanguages_And_Auto_AreNotMixed()
+    {
+        foreach (var (code, displayName) in LocalizationManager.SupportedLanguages)
+        {
+            Assert.False(displayName.Contains('/'), $"Supported language '{code}' contains mixed slash label '{displayName}'");
+        }
+
+        LocalizationManager.SetLanguage(LocalizationManager.LangZhTw);
+        Assert.Equal("跟隨系統", LocalizationManager.GetLanguageDisplayName(LocalizationManager.LangAuto));
+
+        LocalizationManager.SetLanguage(LocalizationManager.LangEnUs);
+        Assert.Equal("System Default", LocalizationManager.GetLanguageDisplayName(LocalizationManager.LangAuto));
+
+        LocalizationManager.SetLanguage(LocalizationManager.LangJaJp);
+        Assert.Equal("システムに従う", LocalizationManager.GetLanguageDisplayName(LocalizationManager.LangAuto));
+
+        LocalizationManager.SetLanguage(LocalizationManager.LangZhCn);
+        Assert.Equal("跟随系统", LocalizationManager.GetLanguageDisplayName(LocalizationManager.LangAuto));
+    }
 }

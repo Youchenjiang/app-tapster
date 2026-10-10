@@ -16,12 +16,25 @@ public static class LocalizationManager
 
     public static readonly IReadOnlyList<(string Code, string DisplayName)> SupportedLanguages = new[]
     {
-        (LangAuto, "跟隨系統 / System Default"),
+        (LangAuto, "跟隨系統"),
         (LangZhTw, "繁體中文"),
         (LangEnUs, "English"),
         (LangJaJp, "日本語"),
         (LangZhCn, "简体中文"),
     };
+
+    public static string GetLanguageDisplayName(string code)
+    {
+        return code switch
+        {
+            LangAuto => Get("Settings_LangAuto"),
+            LangZhTw => "繁體中文",
+            LangEnUs => "English",
+            LangJaJp => "日本語",
+            LangZhCn => "简体中文",
+            _ => code,
+        };
+    }
 
     private static string _currentLanguage = LangAuto;
     private static string _effectiveLanguage = LangEnUs;
@@ -346,6 +359,7 @@ public static class LocalizationManager
         add("Settings_Desc", "自訂 Tapster 系統常駐、開機自動啟動與視窗行為", "Preferences, global hotkeys, system tray integration, and appearance", "環境設定、グローバルホットキー、タスクトレイ設定および外観", "首选项、全局热键、系统托盘与外观设置");
         add("Settings_LangTitle", "介面語言", "Interface Language", "表示言語", "界面语言");
         add("Settings_LangDesc", "選擇 Tapster 介面顯示語言，支援即時套用", "Choose the display language for Tapster with instant UI updates", "Tapsterのインターフェース表示言語を変更します（即時反映）", "选择 Tapster 界面显示语言，支持即时生效");
+        add("Settings_LangAuto", "跟隨系統", "System Default", "システムに従う", "跟随系统");
         add("Settings_BootTitle", "開機自動啟動", "Start on Windows Boot", "Windows 起動時に自動実行", "开机自启动");
         add("Settings_BootDesc", "於 Windows 登入時自動在背景啟動 Tapster 並常駐於系統匣", "Automatically launch Tapster in the background when logging into Windows", "Windows ログイン時にバックグラウンドで自動起動します", "登录 Windows 时在后台自动启动 Tapster 并常驻于系统托盘");
         add("Settings_StartMinimizedTitle", "啟動時最小化至系統匣", "Start Minimized to Tray", "起動時にトレイへ最小化", "启动时最小化至托盘");
