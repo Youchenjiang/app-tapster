@@ -97,4 +97,7 @@
   - Implemented reverse VK mapping in `Keyboard.GetKeyName(int vk)` for all numpad digits (`0x60`..`0x69` -> `num0`..`num9`), arithmetic operators (`0x6A`..`0x6F`), control locks (`0x90`, `0x91`), `PrtSc` (`0x2C`), `Pause` (`0x13`), and navigation keys (`0x2D`, `0x24`, `0x23`, `0x21`, `0x22`), preventing raw `vk_` codes in key capture.
   - Distinguished Numpad Enter (`numpadenter` / `numenter`) from Standard Enter (`enter`) by dispatching `KEYEVENTF_EXTENDEDKEY (0x0001)` on SendInput for extended keystrokes.
   - Expanded right panel into a 5-column grid integrating all navigation keys (`Ins`, `Del`, `Home`, `End`, `PgUp`, `PgDn`) alongside the full numpad, and added alias expansion in `UpdateVirtualKeyboardHighlights` for seamless highlight synchronization.
+- **SonarCloud Maintainability & Cognitive Complexity Reduction (PR #47)**:
+  - Extracted `GetActiveKeysWithAliases` and `ResetVirtualKeyboardButtons` helpers from `UpdateVirtualKeyboardHighlights`, reducing method cognitive complexity from 17 down to 9 (below 15 limit).
+  - Defined `KeyPrintScreen` constant replacing repeated string literal `"printscreen"` (SonarCloud S1192).
 
