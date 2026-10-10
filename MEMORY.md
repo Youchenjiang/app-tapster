@@ -91,4 +91,5 @@
 - **SonarCloud Clean Code Refactoring for Keyboard Builders (PR #47)**:
   - Made `UpdateKeyboardContainerWidth(MainPage page)` static to eliminate instance access warning S2325.
   - Split `AddGridKeyBtn` (formerly 8 parameters) into standard `AddGridKeyBtn` (5 parameters) and `AddSpannedGridKeyBtn` (6 parameters) to comply with SonarCloud S107 maximum parameter limit (<= 7 parameters).
+- **Comprehensive Numpad & Navigation Key Test Coverage**: Added unit tests in `KeyboardTests.cs` verifying `Keyboard.Tap` resolution for numpad digits (`num0`..`num9`, `numpad0`..`numpad9`), arithmetic operators (`+`, `-`, `*`, `/`, `.`), and control lock keys (`numlock`, `scrolllock`, `printscreen`, `pause`, `prtsc`, `scrlk`, `del`, `ins`, `pgup`, `pgdn`), bringing test suite to 160 passing tests.
 
