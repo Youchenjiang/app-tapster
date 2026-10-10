@@ -102,4 +102,8 @@
   - Defined `KeyPrintScreen` constant replacing repeated string literal `"printscreen"` (SonarCloud S1192).
 - **Full VK and Extended Key Mapping Test Coverage (PR #47)**:
   - Added unit test coverage in `KeyboardTests.cs` across all numpad digits (`0x60`..`0x69`), arithmetic operators, lock/control keys, and navigation keys, verifying exact VK codes and extended key flags in `ParseKeys`, expanding test suite to 249 passing tests.
-
+- **Key Holder Timeline & Clean Code Refactoring (PR #48)**:
+  - Removed unused local variable `fmt1` (SonarCloud S1481).
+  - Defined `AccentFillBrush` constant replacing repeated string literal `"AccentFillColorDefaultBrush"` (SonarCloud S1192).
+  - Extracted nested ternary operations into standalone helper statements for card backgrounds and loop prefixes (SonarCloud S3358).
+  - Reduced cognitive complexity in `CaptureKeyBtn_Click` (18 -> 4), `RenderHolderStepCards` (64 -> 3), `RunTaskAsync` (16 -> 8), and `RunKeyHolderAsync` (43 -> 7) below the maximum allowed threshold of 15 (SonarCloud S3776).
