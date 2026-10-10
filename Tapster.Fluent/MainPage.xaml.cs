@@ -16,6 +16,7 @@ public sealed partial class MainPage : Page
     private const string KeyTab = "tab";
     private const string KeyNone = "none";
     private const string KeyPrintScreen = "printscreen";
+    private const string AccentFillBrush = "AccentFillColorDefaultBrush";
     private const string TyperModeClipboard = "clipboard";
     private const string TyperModeKeystroke = "keystroke";
     private const string TabClicker = "Clicker";
@@ -52,11 +53,6 @@ public sealed partial class MainPage : Page
         NavView.SelectedItem = NavView.MenuItems[0];
 
         // Fix IEEE 754 floating-point precision display
-        var fmt1 = new Windows.Globalization.NumberFormatting.DecimalFormatter
-        {
-            IntegerDigits = 1,
-            FractionDigits = 1
-        };
         var fmt2 = new Windows.Globalization.NumberFormatting.DecimalFormatter
         {
             IntegerDigits = 1,
@@ -723,6 +719,34 @@ public sealed partial class MainPage : Page
         RenderHolderStepCards();
     }
 
+    private void ApplyCapturedKey(string k)
+    {
+        if (_activeStageIndex >= 0 && _activeStageIndex < _holderStages.Count)
+        {
+            _holderStages[_activeStageIndex].KeyCombo = k;
+            RenderHolderStepCards();
+            UpdateVirtualKeyboardHighlights();
+            UpdateHolderActionBtnState();
+        }
+        _isCapturingKey = false;
+        CaptureIcon.Glyph = "\uE7C8";
+        CaptureKeyText.Text = "Capture Physical Key";
+        HolderStatusText.Text = $"Captured key: {k} for Step #{_activeStageIndex + 1}";
+    }
+
+    private static int PollForPressedVirtualKey()
+    {
+        for (int vk = 0x08; vk <= 0xFE; vk++)
+        {
+            short state = NativeMethods.GetAsyncKeyState(vk);
+            if ((state & 0x8000) != 0 || state < 0)
+            {
+                return vk;
+            }
+        }
+        return 0;
+    }
+
     private async void CaptureKeyBtn_Click(object sender, RoutedEventArgs e)
     {
         if (_isCapturingKey)
@@ -746,28 +770,12 @@ public sealed partial class MainPage : Page
             while (_isCapturingKey)
             {
                 await Task.Delay(15);
-                for (int vk = 0x08; vk <= 0xFE; vk++)
+                int vk = PollForPressedVirtualKey();
+                if (vk != 0)
                 {
-                    short state = NativeMethods.GetAsyncKeyState(vk);
-                    if ((state & 0x8000) != 0 || state < 0)
-                    {
-                        string k = Keyboard.GetKeyName(vk);
-                        DispatcherQueue.TryEnqueue(() =>
-                        {
-                            if (_activeStageIndex >= 0 && _activeStageIndex < _holderStages.Count)
-                            {
-                                _holderStages[_activeStageIndex].KeyCombo = k;
-                                RenderHolderStepCards();
-                                UpdateVirtualKeyboardHighlights();
-                                UpdateHolderActionBtnState();
-                            }
-                            _isCapturingKey = false;
-                            CaptureIcon.Glyph = "\uE7C8";
-                            CaptureKeyText.Text = "Capture Physical Key";
-                            HolderStatusText.Text = $"Captured key: {k} for Step #{_activeStageIndex + 1}";
-                        });
-                        return;
-                    }
+                    string k = Keyboard.GetKeyName(vk);
+                    DispatcherQueue.TryEnqueue(() => ApplyCapturedKey(k));
+                    return;
                 }
             }
         });
@@ -783,307 +791,336 @@ public sealed partial class MainPage : Page
             _activeStageIndex = Math.Max(0, _holderStages.Count - 1);
         }
 
-        if (ActiveStepTargetHint != null)
-        {
-            if (_holderStages.Count > 0 && _activeStageIndex >= 0 && _activeStageIndex < _holderStages.Count)
-            {
-                string combo = _holderStages[_activeStageIndex].KeyCombo;
-                string comboDisplay = string.IsNullOrWhiteSpace(combo) ? "No keys set" : combo;
-                ActiveStepTargetHint.Text = $"(Editing Step #{_activeStageIndex + 1}: [{comboDisplay}])";
-            }
-            else
-            {
-                ActiveStepTargetHint.Text = "";
-            }
-        }
+        UpdateActiveStepHint();
 
         for (int i = 0; i < _holderStages.Count; i++)
         {
-            int stepIndex = i;
-            var stage = _holderStages[i];
-            bool isActive = (stepIndex == _activeStageIndex);
-            bool isRunning = (stepIndex == _runningStageIndex);
-
-            var cardBorder = new Border
-            {
-                CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(10, 6, 10, 6),
-                Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
-                    isRunning ? "AccentFillColorTertiaryBrush" :
-                    isActive ? "CardBackgroundFillColorSecondaryBrush" :
-                    "CardBackgroundFillColorDefaultBrush"
-                ],
-                BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
-                    isRunning || isActive ? "AccentFillColorDefaultBrush" : "CardStrokeColorDefaultBrush"
-                ],
-                BorderThickness = new Thickness(isActive || isRunning ? 2 : 1)
-            };
-
-            cardBorder.PointerPressed += (_, _) =>
-            {
-                if (_activeStageIndex != stepIndex)
-                {
-                    _activeStageIndex = stepIndex;
-                    RenderHolderStepCards();
-                    UpdateVirtualKeyboardHighlights();
-                    UpdateHolderActionBtnState();
-                }
-            };
-
-            var grid = new Grid
-            {
-                ColumnSpacing = 10,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            // Col 0: Step Badge
-            var stepBadgePanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Spacing = 5,
-                VerticalAlignment = VerticalAlignment.Center,
-                Width = 64
-            };
-            if (isRunning)
-            {
-                stepBadgePanel.Children.Add(new FontIcon
-                {
-                    Glyph = "\uE768",
-                    FontSize = 11,
-                    Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AccentFillColorDefaultBrush"]
-                });
-            }
-            stepBadgePanel.Children.Add(new TextBlock
-            {
-                Text = $"Step #{stepIndex + 1}",
-                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                FontSize = 12,
-                VerticalAlignment = VerticalAlignment.Center,
-                Foreground = isRunning ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AccentFillColorDefaultBrush"] :
-                             (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
-            });
-            Grid.SetColumn(stepBadgePanel, 0);
-            grid.Children.Add(stepBadgePanel);
-
-            // Col 1: Key Pill
-            var keyPillBorder = new Border
-            {
-                CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(8, 3, 8, 3),
-                Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["LayerFillColorDefaultBrush"],
-                BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
-                    isActive ? "AccentFillColorDefaultBrush" : "CardStrokeColorDefaultBrush"
-                ],
-                BorderThickness = new Thickness(1),
-                VerticalAlignment = VerticalAlignment.Center,
-                Width = 110
-            };
-            var keyPillText = new TextBlock
-            {
-                Text = string.IsNullOrWhiteSpace(stage.KeyCombo) ? "(Tap keys below)" : stage.KeyCombo,
-                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Code, Consolas"),
-                FontSize = 11,
-                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-                Foreground = string.IsNullOrWhiteSpace(stage.KeyCombo) ?
-                    (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorTertiaryBrush"] :
-                    (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
-            };
-            keyPillBorder.Child = keyPillText;
-            Grid.SetColumn(keyPillBorder, 1);
-            grid.Children.Add(keyPillBorder);
-
-            // Col 2: Duration Mode & Duration NumberBox
-            var durationPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Spacing = 6,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            var modeCombo = new ComboBox
-            {
-                FontSize = 11,
-                Padding = new Thickness(6, 2, 6, 2),
-                Width = 140
-            };
-            modeCombo.Items.Add(new ComboBoxItem { Content = "Hold until stopped", FontSize = 11 });
-            modeCombo.Items.Add(new ComboBoxItem { Content = "Hold for (s):", FontSize = 11 });
-            modeCombo.SelectedIndex = stage.HoldDurationSec > 0 ? 1 : 0;
-
-            var holdBox = new NumberBox
-            {
-                Value = stage.HoldDurationSec > 0 ? stage.HoldDurationSec : 3.0,
-                Minimum = 0.1,
-                SmallChange = 0.5,
-                FontSize = 11,
-                Width = 72,
-                SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
-                Visibility = stage.HoldDurationSec > 0 ? Visibility.Visible : Visibility.Collapsed,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            modeCombo.SelectionChanged += (_, _) =>
-            {
-                if (modeCombo.SelectedIndex == 1)
-                {
-                    stage.HoldDurationSec = Math.Max(0.1, holdBox.Value);
-                    holdBox.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    stage.HoldDurationSec = 0;
-                    holdBox.Visibility = Visibility.Collapsed;
-                }
-                UpdateHolderRepeatPanelVisibility();
-                UpdateHolderActionBtnState();
-            };
-
-            holdBox.ValueChanged += (_, _) =>
-            {
-                if (modeCombo.SelectedIndex == 1 && !double.IsNaN(holdBox.Value))
-                {
-                    stage.HoldDurationSec = Math.Max(0.1, holdBox.Value);
-                }
-            };
-
-            durationPanel.Children.Add(modeCombo);
-            durationPanel.Children.Add(holdBox);
-            Grid.SetColumn(durationPanel, 2);
-            grid.Children.Add(durationPanel);
-
-            // Col 3: Rest Check & Rest NumberBox
-            var restPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Spacing = 4,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            var restCheck = new CheckBox
-            {
-                Content = "Rest (s):",
-                FontSize = 11,
-                IsChecked = stage.RestDurationSec > 0,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            var restBox = new NumberBox
-            {
-                Value = stage.RestDurationSec > 0 ? stage.RestDurationSec : 0.5,
-                Minimum = 0,
-                SmallChange = 0.5,
-                FontSize = 11,
-                Width = 66,
-                SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
-                Visibility = stage.RestDurationSec > 0 ? Visibility.Visible : Visibility.Collapsed,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            restCheck.Checked += (_, _) =>
-            {
-                stage.RestDurationSec = Math.Max(0.1, double.IsNaN(restBox.Value) ? 0.5 : restBox.Value);
-                restBox.Visibility = Visibility.Visible;
-                UpdateHolderRepeatPanelVisibility();
-            };
-            restCheck.Unchecked += (_, _) =>
-            {
-                stage.RestDurationSec = 0;
-                restBox.Visibility = Visibility.Collapsed;
-                UpdateHolderRepeatPanelVisibility();
-            };
-            restBox.ValueChanged += (_, _) =>
-            {
-                if (restCheck.IsChecked == true && !double.IsNaN(restBox.Value))
-                {
-                    stage.RestDurationSec = Math.Max(0, restBox.Value);
-                }
-            };
-
-            restPanel.Children.Add(restCheck);
-            restPanel.Children.Add(restBox);
-            Grid.SetColumn(restPanel, 3);
-            grid.Children.Add(restPanel);
-
-            // Col 5: Reorder & Delete Buttons
-            var actionsPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Spacing = 2,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            var upBtn = new Button
-            {
-                Content = new FontIcon { Glyph = "\uE70E", FontSize = 10 },
-                Style = Application.Current.Resources["SubtleButtonStyle"] as Style,
-                Padding = new Thickness(5, 3, 5, 3),
-                IsEnabled = (stepIndex > 0)
-            };
-            ToolTipService.SetToolTip(upBtn, "Move step up");
-            upBtn.Click += (_, _) =>
-            {
-                var s = _holderStages[stepIndex];
-                _holderStages.RemoveAt(stepIndex);
-                _holderStages.Insert(stepIndex - 1, s);
-                _activeStageIndex = stepIndex - 1;
-                RenderHolderStepCards();
-                UpdateVirtualKeyboardHighlights();
-            };
-
-            var downBtn = new Button
-            {
-                Content = new FontIcon { Glyph = "\uE70D", FontSize = 10 },
-                Style = Application.Current.Resources["SubtleButtonStyle"] as Style,
-                Padding = new Thickness(5, 3, 5, 3),
-                IsEnabled = (stepIndex < _holderStages.Count - 1)
-            };
-            ToolTipService.SetToolTip(downBtn, "Move step down");
-            downBtn.Click += (_, _) =>
-            {
-                var s = _holderStages[stepIndex];
-                _holderStages.RemoveAt(stepIndex);
-                _holderStages.Insert(stepIndex + 1, s);
-                _activeStageIndex = stepIndex + 1;
-                RenderHolderStepCards();
-                UpdateVirtualKeyboardHighlights();
-            };
-
-            var delBtn = new Button
-            {
-                Content = new FontIcon { Glyph = "\uE711", FontSize = 10 },
-                Style = Application.Current.Resources["SubtleButtonStyle"] as Style,
-                Padding = new Thickness(5, 3, 5, 3),
-                IsEnabled = (_holderStages.Count > 1)
-            };
-            ToolTipService.SetToolTip(delBtn, "Delete step");
-            delBtn.Click += (_, _) =>
-            {
-                if (_holderStages.Count <= 1) return;
-                _holderStages.RemoveAt(stepIndex);
-                _activeStageIndex = Math.Clamp(_activeStageIndex, 0, _holderStages.Count - 1);
-                RenderHolderStepCards();
-                UpdateVirtualKeyboardHighlights();
-                UpdateHolderActionBtnState();
-                UpdateHolderRepeatPanelVisibility();
-            };
-
-            actionsPanel.Children.Add(upBtn);
-            actionsPanel.Children.Add(downBtn);
-            actionsPanel.Children.Add(delBtn);
-            Grid.SetColumn(actionsPanel, 5);
-            grid.Children.Add(actionsPanel);
-
-            cardBorder.Child = grid;
+            var cardBorder = CreateHolderStepCard(i);
             HolderStepsContainer.Children.Add(cardBorder);
         }
 
         UpdateHolderRepeatPanelVisibility();
+    }
+
+    private void UpdateActiveStepHint()
+    {
+        if (ActiveStepTargetHint == null) return;
+
+        if (_holderStages.Count > 0 && _activeStageIndex >= 0 && _activeStageIndex < _holderStages.Count)
+        {
+            string combo = _holderStages[_activeStageIndex].KeyCombo;
+            string comboDisplay = string.IsNullOrWhiteSpace(combo) ? "No keys set" : combo;
+            ActiveStepTargetHint.Text = $"(Editing Step #{_activeStageIndex + 1}: [{comboDisplay}])";
+        }
+        else
+        {
+            ActiveStepTargetHint.Text = "";
+        }
+    }
+
+    private Border CreateHolderStepCard(int stepIndex)
+    {
+        var stage = _holderStages[stepIndex];
+        bool isActive = (stepIndex == _activeStageIndex);
+        bool isRunning = (stepIndex == _runningStageIndex);
+
+        string cardBackgroundKey = isRunning ? "AccentFillColorTertiaryBrush"
+            : isActive ? "CardBackgroundFillColorSecondaryBrush"
+            : "CardBackgroundFillColorDefaultBrush";
+        var cardBorder = new Border
+        {
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(10, 6, 10, 6),
+            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[cardBackgroundKey],
+            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
+                isRunning || isActive ? AccentFillBrush : "CardStrokeColorDefaultBrush"
+            ],
+            BorderThickness = new Thickness(isActive || isRunning ? 2 : 1)
+        };
+
+        cardBorder.PointerPressed += (_, _) =>
+        {
+            if (_activeStageIndex != stepIndex)
+            {
+                _activeStageIndex = stepIndex;
+                RenderHolderStepCards();
+                UpdateVirtualKeyboardHighlights();
+                UpdateHolderActionBtnState();
+            }
+        };
+
+        var grid = CreateStepCardGrid();
+        grid.Children.Add(CreateStepBadgePanel(stepIndex, isRunning));
+        grid.Children.Add(CreateKeyPillBorder(stage, isActive));
+        grid.Children.Add(CreateDurationPanel(stage));
+        grid.Children.Add(CreateRestPanel(stage));
+        grid.Children.Add(CreateActionsPanel(stepIndex));
+
+        cardBorder.Child = grid;
+        return cardBorder;
+    }
+
+    private static Grid CreateStepCardGrid()
+    {
+        var grid = new Grid
+        {
+            ColumnSpacing = 10,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        return grid;
+    }
+
+    private static StackPanel CreateStepBadgePanel(int stepIndex, bool isRunning)
+    {
+        var stepBadgePanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 5,
+            VerticalAlignment = VerticalAlignment.Center,
+            Width = 64
+        };
+        if (isRunning)
+        {
+            stepBadgePanel.Children.Add(new FontIcon
+            {
+                Glyph = "\uE768",
+                FontSize = 11,
+                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[AccentFillBrush]
+            });
+        }
+        stepBadgePanel.Children.Add(new TextBlock
+        {
+            Text = $"Step #{stepIndex + 1}",
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = isRunning ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[AccentFillBrush] :
+                         (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
+        });
+        Grid.SetColumn(stepBadgePanel, 0);
+        return stepBadgePanel;
+    }
+
+    private static Border CreateKeyPillBorder(KeyHolderStage stage, bool isActive)
+    {
+        var keyPillBorder = new Border
+        {
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(8, 3, 8, 3),
+            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["LayerFillColorDefaultBrush"],
+            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
+                isActive ? AccentFillBrush : "CardStrokeColorDefaultBrush"
+            ],
+            BorderThickness = new Thickness(1),
+            VerticalAlignment = VerticalAlignment.Center,
+            Width = 110
+        };
+        var keyPillText = new TextBlock
+        {
+            Text = string.IsNullOrWhiteSpace(stage.KeyCombo) ? "(Tap keys below)" : stage.KeyCombo,
+            FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Code, Consolas"),
+            FontSize = 11,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Foreground = string.IsNullOrWhiteSpace(stage.KeyCombo) ?
+                (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorTertiaryBrush"] :
+                (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
+        };
+        keyPillBorder.Child = keyPillText;
+        Grid.SetColumn(keyPillBorder, 1);
+        return keyPillBorder;
+    }
+
+    private StackPanel CreateDurationPanel(KeyHolderStage stage)
+    {
+        var durationPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 6,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var modeCombo = new ComboBox
+        {
+            FontSize = 11,
+            Padding = new Thickness(6, 2, 6, 2),
+            Width = 140
+        };
+        modeCombo.Items.Add(new ComboBoxItem { Content = "Hold until stopped", FontSize = 11 });
+        modeCombo.Items.Add(new ComboBoxItem { Content = "Hold for (s):", FontSize = 11 });
+        modeCombo.SelectedIndex = stage.HoldDurationSec > 0 ? 1 : 0;
+
+        var holdBox = new NumberBox
+        {
+            Value = stage.HoldDurationSec > 0 ? stage.HoldDurationSec : 3.0,
+            Minimum = 0.1,
+            SmallChange = 0.5,
+            FontSize = 11,
+            Width = 72,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+            Visibility = stage.HoldDurationSec > 0 ? Visibility.Visible : Visibility.Collapsed,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        modeCombo.SelectionChanged += (_, _) =>
+        {
+            if (modeCombo.SelectedIndex == 1)
+            {
+                stage.HoldDurationSec = Math.Max(0.1, holdBox.Value);
+                holdBox.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                stage.HoldDurationSec = 0;
+                holdBox.Visibility = Visibility.Collapsed;
+            }
+            UpdateHolderRepeatPanelVisibility();
+            UpdateHolderActionBtnState();
+        };
+
+        holdBox.ValueChanged += (_, _) =>
+        {
+            if (modeCombo.SelectedIndex == 1 && !double.IsNaN(holdBox.Value))
+            {
+                stage.HoldDurationSec = Math.Max(0.1, holdBox.Value);
+            }
+        };
+
+        durationPanel.Children.Add(modeCombo);
+        durationPanel.Children.Add(holdBox);
+        Grid.SetColumn(durationPanel, 2);
+        return durationPanel;
+    }
+
+    private StackPanel CreateRestPanel(KeyHolderStage stage)
+    {
+        var restPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 4,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var restCheck = new CheckBox
+        {
+            Content = "Rest (s):",
+            FontSize = 11,
+            IsChecked = stage.RestDurationSec > 0,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var restBox = new NumberBox
+        {
+            Value = stage.RestDurationSec > 0 ? stage.RestDurationSec : 0.5,
+            Minimum = 0,
+            SmallChange = 0.5,
+            FontSize = 11,
+            Width = 66,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+            Visibility = stage.RestDurationSec > 0 ? Visibility.Visible : Visibility.Collapsed,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        restCheck.Checked += (_, _) =>
+        {
+            stage.RestDurationSec = Math.Max(0.1, double.IsNaN(restBox.Value) ? 0.5 : restBox.Value);
+            restBox.Visibility = Visibility.Visible;
+            UpdateHolderRepeatPanelVisibility();
+        };
+        restCheck.Unchecked += (_, _) =>
+        {
+            stage.RestDurationSec = 0;
+            restBox.Visibility = Visibility.Collapsed;
+            UpdateHolderRepeatPanelVisibility();
+        };
+        restBox.ValueChanged += (_, _) =>
+        {
+            if (restCheck.IsChecked == true && !double.IsNaN(restBox.Value))
+            {
+                stage.RestDurationSec = Math.Max(0, restBox.Value);
+            }
+        };
+
+        restPanel.Children.Add(restCheck);
+        restPanel.Children.Add(restBox);
+        Grid.SetColumn(restPanel, 3);
+        return restPanel;
+    }
+
+    private StackPanel CreateActionsPanel(int stepIndex)
+    {
+        var actionsPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 2,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        var upBtn = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE70E", FontSize = 10 },
+            Style = Application.Current.Resources["SubtleButtonStyle"] as Style,
+            Padding = new Thickness(5, 3, 5, 3),
+            IsEnabled = (stepIndex > 0)
+        };
+        ToolTipService.SetToolTip(upBtn, "Move step up");
+        upBtn.Click += (_, _) =>
+        {
+            var s = _holderStages[stepIndex];
+            _holderStages.RemoveAt(stepIndex);
+            _holderStages.Insert(stepIndex - 1, s);
+            _activeStageIndex = stepIndex - 1;
+            RenderHolderStepCards();
+            UpdateVirtualKeyboardHighlights();
+        };
+
+        var downBtn = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE70D", FontSize = 10 },
+            Style = Application.Current.Resources["SubtleButtonStyle"] as Style,
+            Padding = new Thickness(5, 3, 5, 3),
+            IsEnabled = (stepIndex < _holderStages.Count - 1)
+        };
+        ToolTipService.SetToolTip(downBtn, "Move step down");
+        downBtn.Click += (_, _) =>
+        {
+            var s = _holderStages[stepIndex];
+            _holderStages.RemoveAt(stepIndex);
+            _holderStages.Insert(stepIndex + 1, s);
+            _activeStageIndex = stepIndex + 1;
+            RenderHolderStepCards();
+            UpdateVirtualKeyboardHighlights();
+        };
+
+        var delBtn = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE711", FontSize = 10 },
+            Style = Application.Current.Resources["SubtleButtonStyle"] as Style,
+            Padding = new Thickness(5, 3, 5, 3),
+            IsEnabled = (_holderStages.Count > 1)
+        };
+        ToolTipService.SetToolTip(delBtn, "Delete step");
+        delBtn.Click += (_, _) =>
+        {
+            if (_holderStages.Count <= 1) return;
+            _holderStages.RemoveAt(stepIndex);
+            _activeStageIndex = Math.Clamp(_activeStageIndex, 0, _holderStages.Count - 1);
+            RenderHolderStepCards();
+            UpdateVirtualKeyboardHighlights();
+            UpdateHolderActionBtnState();
+            UpdateHolderRepeatPanelVisibility();
+        };
+
+        actionsPanel.Children.Add(upBtn);
+        actionsPanel.Children.Add(downBtn);
+        actionsPanel.Children.Add(delBtn);
+        Grid.SetColumn(actionsPanel, 5);
+        return actionsPanel;
     }
 
     private async void PickCoordBtn_Click(object sender, RoutedEventArgs e)
@@ -1819,13 +1856,6 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        if (taskName == TabClicker && ClickTargetTypeCombo.SelectedIndex == 1 && string.IsNullOrWhiteSpace(SpamKeyBox.Text))
-        {
-            statusText.Text = "Please enter a key to spam";
-            UpdateAllActionBtnStates();
-            return;
-        }
-
         _isRunning = true;
         _runningTaskName = taskName;
         UpdateAllActionBtnStates();
@@ -1864,15 +1894,20 @@ public sealed partial class MainPage : Page
         }
         catch (OperationCanceledException ex)
         {
-            string msg = ex.Message.Contains("panic", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("Esc", StringComparison.OrdinalIgnoreCase)
-                ? ex.Message
-                : "Task canceled";
-            StopTask(msg);
+            StopTask(GetTaskCanceledMessage(ex));
         }
         catch (Exception ex)
         {
             StopTask($"Error: {ex.Message}");
         }
+    }
+
+    private static string GetTaskCanceledMessage(OperationCanceledException ex)
+    {
+        return ex.Message.Contains("panic", StringComparison.OrdinalIgnoreCase) ||
+               ex.Message.Contains("Esc", StringComparison.OrdinalIgnoreCase)
+            ? ex.Message
+            : "Task canceled";
     }
 
     private async Task RunAutoTyperAsync(CancellationToken token, Action<string, double> reportProgress)
@@ -2023,8 +2058,7 @@ public sealed partial class MainPage : Page
             throw new InvalidOperationException("No valid steps in pipeline!");
         }
 
-        int repeatLoops = (int)HolderRepeatBox.Value;
-        if (repeatLoops < 0) repeatLoops = 0;
+        int repeatLoops = Math.Max(0, (int)HolderRepeatBox.Value);
 
         await Task.Run(() =>
         {
@@ -2034,68 +2068,8 @@ public sealed partial class MainPage : Page
                 while (!token.IsCancellationRequested && (repeatLoops == 0 || currentLoop < repeatLoops))
                 {
                     currentLoop++;
-                    string loopPrefix = repeatLoops == 1 ? "" : (repeatLoops == 0 ? $"[Loop {currentLoop}/∞] " : $"[Loop {currentLoop}/{repeatLoops}] ");
-
-                    for (int i = 0; i < stagesToRun.Count; i++)
-                    {
-                        token.ThrowIfCancellationRequested();
-                        CheckPanicSafety();
-
-                        int activeIdx = i;
-                        DispatcherQueue.TryEnqueue(() => HighlightRunningStage(activeIdx));
-
-                        var stage = stagesToRun[i];
-                        string stepPrefix = stagesToRun.Count > 1 ? $"{loopPrefix}Step {i + 1}/{stagesToRun.Count}: " : loopPrefix;
-                        int durationMs = (int)(stage.HoldDurationSec * 1000);
-
-                        // Hold phase
-                        try
-                        {
-                            Keyboard.Press(stage.KeyCombo);
-                            int elapsedMs = 0;
-                            int checkIntervalMs = 50;
-
-                            while (!token.IsCancellationRequested && (durationMs <= 0 || elapsedMs < durationMs))
-                            {
-                                CheckPanicSafety();
-
-                                if (durationMs > 0)
-                                {
-                                    double pct = (double)elapsedMs / durationMs * 100;
-                                    reportProgress($"{stepPrefix}Holding [{stage.KeyCombo}] ({(elapsedMs / 1000.0):F1}s / {stage.HoldDurationSec:F1}s)...", pct);
-                                }
-                                else
-                                {
-                                    reportProgress($"{stepPrefix}Holding [{stage.KeyCombo}] continuously (Press Stop or F10 to release)...", 100);
-                                }
-
-                                SleepWithPanicCheck(checkIntervalMs, token);
-                                elapsedMs += checkIntervalMs;
-                            }
-                        }
-                        finally
-                        {
-                            Keyboard.Release(stage.KeyCombo);
-                            Keyboard.ReleaseAllModifiers();
-                        }
-
-                        // Rest phase between steps (if configured)
-                        if (stage.RestDurationSec > 0 && !token.IsCancellationRequested)
-                        {
-                            int restMs = (int)(stage.RestDurationSec * 1000);
-                            int restElapsedMs = 0;
-                            int checkIntervalMs = 50;
-
-                            while (!token.IsCancellationRequested && restElapsedMs < restMs)
-                            {
-                                CheckPanicSafety();
-                                double pct = (double)restElapsedMs / restMs * 100;
-                                reportProgress($"{stepPrefix}Resting ({(restElapsedMs / 1000.0):F1}s / {stage.RestDurationSec:F1}s)...", pct);
-                                SleepWithPanicCheck(checkIntervalMs, token);
-                                restElapsedMs += checkIntervalMs;
-                            }
-                        }
-                    }
+                    string loopPrefix = FormatHolderLoopPrefix(currentLoop, repeatLoops);
+                    ExecuteHolderStagesPipeline(stagesToRun, loopPrefix, token, reportProgress);
                 }
             }
             finally
@@ -2103,6 +2077,98 @@ public sealed partial class MainPage : Page
                 DispatcherQueue.TryEnqueue(ClearRunningStageHighlight);
             }
         }, token);
+    }
+
+    private static string FormatHolderLoopPrefix(int currentLoop, int repeatLoops)
+    {
+        if (repeatLoops == 1) return "";
+        if (repeatLoops == 0) return $"[Loop {currentLoop}/∞] ";
+        return $"[Loop {currentLoop}/{repeatLoops}] ";
+    }
+
+    private void ExecuteHolderStagesPipeline(
+        List<KeyHolderStage> stagesToRun,
+        string loopPrefix,
+        CancellationToken token,
+        Action<string, double> reportProgress)
+    {
+        for (int i = 0; i < stagesToRun.Count; i++)
+        {
+            token.ThrowIfCancellationRequested();
+            CheckPanicSafety();
+
+            int activeIdx = i;
+            DispatcherQueue.TryEnqueue(() => HighlightRunningStage(activeIdx));
+
+            var stage = stagesToRun[i];
+            string stepPrefix = stagesToRun.Count > 1 ? $"{loopPrefix}Step {i + 1}/{stagesToRun.Count}: " : loopPrefix;
+
+            ExecuteHolderStageHoldPhase(stage, stepPrefix, token, reportProgress);
+            ExecuteHolderStageRestPhase(stage, stepPrefix, token, reportProgress);
+        }
+    }
+
+    private void ExecuteHolderStageHoldPhase(
+        KeyHolderStage stage,
+        string stepPrefix,
+        CancellationToken token,
+        Action<string, double> reportProgress)
+    {
+        int durationMs = (int)(stage.HoldDurationSec * 1000);
+        try
+        {
+            Keyboard.Press(stage.KeyCombo);
+            int elapsedMs = 0;
+            const int checkIntervalMs = 50;
+
+            while (!token.IsCancellationRequested && (durationMs <= 0 || elapsedMs < durationMs))
+            {
+                CheckPanicSafety();
+
+                if (durationMs > 0)
+                {
+                    double pct = (double)elapsedMs / durationMs * 100;
+                    reportProgress($"{stepPrefix}Holding [{stage.KeyCombo}] ({(elapsedMs / 1000.0):F1}s / {stage.HoldDurationSec:F1}s)...", pct);
+                }
+                else
+                {
+                    reportProgress($"{stepPrefix}Holding [{stage.KeyCombo}] continuously (Press Stop or F10 to release)...", 100);
+                }
+
+                SleepWithPanicCheck(checkIntervalMs, token);
+                elapsedMs += checkIntervalMs;
+            }
+        }
+        finally
+        {
+            Keyboard.Release(stage.KeyCombo);
+            Keyboard.ReleaseAllModifiers();
+        }
+    }
+
+    private void ExecuteHolderStageRestPhase(
+        KeyHolderStage stage,
+        string stepPrefix,
+        CancellationToken token,
+        Action<string, double> reportProgress)
+    {
+        if (stage.RestDurationSec <= 0 || token.IsCancellationRequested)
+        {
+            return;
+        }
+
+        int restMs = (int)(stage.RestDurationSec * 1000);
+        int restElapsedMs = 0;
+        const int checkIntervalMs = 50;
+
+        while (!token.IsCancellationRequested && restElapsedMs < restMs)
+        {
+            CheckPanicSafety();
+            double pct = (double)restElapsedMs / restMs * 100;
+            reportProgress($"{stepPrefix}Resting ({(restElapsedMs / 1000.0):F1}s / {stage.RestDurationSec:F1}s)...", pct);
+            SleepWithPanicCheck(checkIntervalMs, token);
+            restElapsedMs += checkIntervalMs;
+        }
     }
 
     private async Task RunAutoClickerAsync(CancellationToken token, Action<string, double> reportProgress)
