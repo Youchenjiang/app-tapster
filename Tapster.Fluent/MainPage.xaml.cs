@@ -203,6 +203,7 @@ public sealed partial class MainPage : Page
         UpdateKeyboardContainerWidth(this);
 
         // Load Settings
+        InitializeLanguageSelection();
         StartOnBootToggle.IsOn = AppSettings.Current.StartOnBoot;
         StartMinimizedToggle.IsOn = AppSettings.Current.StartMinimizedToTray;
         MinimizeOnCloseToggle.IsOn = AppSettings.Current.MinimizeToTrayOnClose;
@@ -211,6 +212,189 @@ public sealed partial class MainPage : Page
             AlwaysOnTopToggle.IsOn = MainWindow.Instance.IsAlwaysOnTop;
             MainWindow.Instance.AlwaysOnTopChanged += OnMainWindowAlwaysOnTopChanged;
         }
+
+        LocalizationManager.LanguageChanged += ApplyLocalization;
+        ApplyLocalization();
+    }
+
+    private void InitializeLanguageSelection()
+    {
+        LanguageCombo.Items.Clear();
+        int selectedIndex = 0;
+        for (int i = 0; i < LocalizationManager.SupportedLanguages.Count; i++)
+        {
+            var (code, name) = LocalizationManager.SupportedLanguages[i];
+            LanguageCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
+            if (string.Equals(code, AppSettings.Current.Language, StringComparison.OrdinalIgnoreCase))
+            {
+                selectedIndex = i;
+            }
+        }
+        LanguageCombo.SelectedIndex = selectedIndex;
+    }
+
+    private void LanguageCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string code)
+        {
+            AppSettings.Current.Language = code;
+            AppSettings.Current.Save();
+            LocalizationManager.SetLanguage(code);
+        }
+    }
+
+    private void ApplyLocalization()
+    {
+        // Navigation View Items
+        if (NavItemTyper != null) NavItemTyper.Content = LocalizationManager.Get("Nav_Typer");
+        if (NavItemHolder != null) NavItemHolder.Content = LocalizationManager.Get("Nav_Holder");
+        if (NavItemClicker != null) NavItemClicker.Content = LocalizationManager.Get("Nav_Clicker");
+        if (NavItemMacro != null) NavItemMacro.Content = LocalizationManager.Get("Nav_Macro");
+        if (NavItemAbout != null) NavItemAbout.Content = LocalizationManager.Get("Nav_About");
+        if (NavView?.SettingsItem is NavigationViewItem settingsNav) settingsNav.Content = LocalizationManager.Get("Nav_Settings");
+
+        // Typer Panel
+        if (TyperHeaderTitle != null) TyperHeaderTitle.Text = LocalizationManager.Get("Typer_Title");
+        if (TyperHeaderDesc != null) TyperHeaderDesc.Text = LocalizationManager.Get("Typer_Desc");
+        if (TyperTargetTextLabel != null) TyperTargetTextLabel.Text = LocalizationManager.Get("Typer_TargetText");
+        if (PasteTextBtnLabel != null) PasteTextBtnLabel.Text = LocalizationManager.Get("Typer_PasteBtn");
+        if (ClearTextBtnLabel != null) ClearTextBtnLabel.Text = LocalizationManager.Get("Typer_ClearBtn");
+        if (TypeTextBox != null) TypeTextBox.PlaceholderText = LocalizationManager.Get("Typer_TextPlaceholder");
+        if (TyperModeLabel != null) TyperModeLabel.Text = LocalizationManager.Get("Typer_ModeLabel");
+        if (TypeModeKeystrokeItem != null) TypeModeKeystrokeItem.Content = LocalizationManager.Get("Typer_ModeKeystroke");
+        if (TypeModeClipboardItem != null) TypeModeClipboardItem.Content = LocalizationManager.Get("Typer_ModeClipboard");
+        if (TypeModeHint != null) TypeModeHint.Text = LocalizationManager.Get("Typer_ClipboardHint");
+        if (TyperTrailingKeyLabel != null) TyperTrailingKeyLabel.Text = LocalizationManager.Get("Typer_TrailingKeyLabel");
+        if (TypeTrailingNoneItem != null) TypeTrailingNoneItem.Content = LocalizationManager.Get("Typer_TrailingNone");
+        if (TypeTrailingEnterItem != null) TypeTrailingEnterItem.Content = LocalizationManager.Get("Typer_TrailingEnter");
+        if (TypeTrailingTabItem != null) TypeTrailingTabItem.Content = LocalizationManager.Get("Typer_TrailingTab");
+        if (TypeIntervalLabel != null) TypeIntervalLabel.Text = LocalizationManager.Get("Typer_IntervalLabel");
+        if (TypeJitterCheck != null) TypeJitterCheck.Content = LocalizationManager.Get("Typer_JitterCheck");
+        if (TyperHistoryHeader != null) TyperHistoryHeader.Text = LocalizationManager.Get("Typer_HistoryTitle");
+        if (TyperDelayLabel != null) TyperDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+
+        // Key Holder Panel
+        if (HolderHeaderTitle != null) HolderHeaderTitle.Text = LocalizationManager.Get("KeyHolder_Title");
+        if (HolderHeaderDesc != null) HolderHeaderDesc.Text = LocalizationManager.Get("KeyHolder_Desc");
+        if (HolderPipelineTitle != null) HolderPipelineTitle.Text = LocalizationManager.Get("KeyHolder_PipelineTitle");
+        if (HolderPipelineHint != null) HolderPipelineHint.Text = LocalizationManager.Get("KeyHolder_PipelineHint");
+        if (HolderRepeatLabel != null) HolderRepeatLabel.Text = LocalizationManager.Get("KeyHolder_RepeatTitle");
+        if (AddStepBtnText != null) AddStepBtnText.Text = LocalizationManager.Get("KeyHolder_AddStepBtn");
+        if (HolderVkTitle != null) HolderVkTitle.Text = LocalizationManager.Get("KeyHolder_VkTitle");
+        if (CaptureKeyText != null) CaptureKeyText.Text = _isCapturingKey ? LocalizationManager.Get("KeyHolder_CaptureListening") : LocalizationManager.Get("KeyHolder_CaptureBtn");
+        if (ClearActiveStepKeysBtnText != null) ClearActiveStepKeysBtnText.Text = LocalizationManager.Get("KeyHolder_ClearKeysBtn");
+        if (HolderDelayLabel != null) HolderDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+
+        // Clicker Panel
+        if (ClickerHeaderTitle != null) ClickerHeaderTitle.Text = LocalizationManager.Get("Clicker_Title");
+        if (ClickerHeaderDesc != null) ClickerHeaderDesc.Text = LocalizationManager.Get("Clicker_Desc");
+        if (ClickerTargetTypeLabel != null) ClickerTargetTypeLabel.Text = LocalizationManager.Get("Clicker_TargetTypeLabel");
+        if (ClickTargetMouseItem != null) ClickTargetMouseItem.Content = LocalizationManager.Get("Clicker_TargetMouse");
+        if (ClickTargetKeyboardItem != null) ClickTargetKeyboardItem.Content = LocalizationManager.Get("Clicker_TargetKeyboard");
+        if (ClickerTriggerModeLabel != null) ClickerTriggerModeLabel.Text = LocalizationManager.Get("Clicker_TriggerModeLabel");
+        if (ClickTriggerToggleItem != null) ClickTriggerToggleItem.Content = LocalizationManager.Get("Clicker_TriggerToggle");
+        if (ClickTriggerHoldItem != null) ClickTriggerHoldItem.Content = LocalizationManager.Get("Clicker_TriggerHold");
+        if (HoldModeHint != null) HoldModeHint.Text = LocalizationManager.Get("Clicker_HoldModeHint");
+        if (MouseButtonLabel != null) MouseButtonLabel.Text = LocalizationManager.Get("Clicker_MouseButtonLabel");
+        if (MouseLeftItem != null) MouseLeftItem.Content = LocalizationManager.Get("Clicker_MouseLeft");
+        if (MouseRightItem != null) MouseRightItem.Content = LocalizationManager.Get("Clicker_MouseRight");
+        if (MouseMiddleItem != null) MouseMiddleItem.Content = LocalizationManager.Get("Clicker_MouseMiddle");
+        if (SpamKeyLabel != null) SpamKeyLabel.Text = LocalizationManager.Get("Clicker_SpamKeyLabel");
+        if (SpamKeyBox != null) SpamKeyBox.PlaceholderText = LocalizationManager.Get("Clicker_SpamKeyPlaceholder");
+        if (ClickerIntervalLabel != null) ClickerIntervalLabel.Text = LocalizationManager.Get("Clicker_IntervalLabel");
+        if (ClickerCountLabel != null) ClickerCountLabel.Text = LocalizationManager.Get("Clicker_CountLabel");
+        if (ClickCoordsLabel != null) ClickCoordsLabel.Text = LocalizationManager.Get("Clicker_TargetCoordsLabel");
+        if (PickCoordText != null) PickCoordText.Text = LocalizationManager.Get("Clicker_PickCoordBtn");
+        if (ClearCoordsBtnText != null) ClearCoordsBtnText.Text = LocalizationManager.Get("Clicker_ClearCoordBtn");
+        if (ShowTargetMarkerCheck != null) ShowTargetMarkerCheck.Content = LocalizationManager.Get("Clicker_ShowMarkerCheck");
+        if (TimeJitterLabel != null) TimeJitterLabel.Text = LocalizationManager.Get("Clicker_TimeJitterLabel");
+        if (TimeJitterCheck != null) TimeJitterCheck.Content = LocalizationManager.Get("Clicker_TimeJitterCheck");
+        if (LocationJitterLabel != null) LocationJitterLabel.Text = LocalizationManager.Get("Clicker_LocationJitterLabel");
+        if (LocationJitterHintText != null) LocationJitterHintText.Text = LocalizationManager.Get("Clicker_LocationJitterHint");
+        if (ClickerDelayLabel != null) ClickerDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+
+        // Macro Panel
+        if (MacroHeaderTitle != null) MacroHeaderTitle.Text = LocalizationManager.Get("Macro_Title");
+        if (MacroHeaderDesc != null) MacroHeaderDesc.Text = LocalizationManager.Get("Macro_Desc");
+        if (RecordMacroText != null) RecordMacroText.Text = _isRecordingMacro ? LocalizationManager.Get("Macro_StopRecordBtn") : LocalizationManager.Get("Macro_RecordBtn");
+        if (ClearMacroBtnText != null) ClearMacroBtnText.Text = LocalizationManager.Get("Macro_ClearBtn");
+        if (MacroRepeatLabel != null) MacroRepeatLabel.Text = LocalizationManager.Get("Macro_RepeatLabel");
+        if (MacroSpeedLabel != null) MacroSpeedLabel.Text = LocalizationManager.Get("Macro_SpeedLabel");
+        if (MacroActionsHeader != null) MacroActionsHeader.Text = LocalizationManager.Get("Macro_RecordedActionsTitle");
+        if (EditActionBtnText != null) EditActionBtnText.Text = LocalizationManager.Get("Macro_EditStepBtn");
+        if (DeleteActionBtnText != null) DeleteActionBtnText.Text = LocalizationManager.Get("Macro_DeleteStepBtn");
+        if (MacroDelayLabel != null) MacroDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+
+        // Settings Panel
+        if (SettingsTitleText != null) SettingsTitleText.Text = LocalizationManager.Get("Settings_Title");
+        if (SettingsDescText != null) SettingsDescText.Text = LocalizationManager.Get("Settings_Desc");
+        if (SettingsLangTitleText != null) SettingsLangTitleText.Text = LocalizationManager.Get("Settings_LangTitle");
+        if (SettingsLangDescText != null) SettingsLangDescText.Text = LocalizationManager.Get("Settings_LangDesc");
+        if (SettingsBootTitleText != null) SettingsBootTitleText.Text = LocalizationManager.Get("Settings_BootTitle");
+        if (SettingsBootDescText != null) SettingsBootDescText.Text = LocalizationManager.Get("Settings_BootDesc");
+        if (SettingsStartMinTitleText != null) SettingsStartMinTitleText.Text = LocalizationManager.Get("Settings_StartMinimizedTitle");
+        if (SettingsStartMinDescText != null) SettingsStartMinDescText.Text = LocalizationManager.Get("Settings_StartMinimizedDesc");
+        if (SettingsCloseToTrayTitleText != null) SettingsCloseToTrayTitleText.Text = LocalizationManager.Get("Settings_CloseToTrayTitle");
+        if (SettingsCloseToTrayDescText != null) SettingsCloseToTrayDescText.Text = LocalizationManager.Get("Settings_CloseToTrayDesc");
+        if (SettingsTopTitleText != null) SettingsTopTitleText.Text = LocalizationManager.Get("Settings_AlwaysOnTopTitle");
+        if (SettingsTopDescText != null) SettingsTopDescText.Text = LocalizationManager.Get("Settings_AlwaysOnTopDesc");
+
+        // Settings Hotkeys
+        if (SettingsHkTitleText != null) SettingsHkTitleText.Text = LocalizationManager.Get("Settings_HotkeysTitle");
+        if (SettingsHkDescText != null) SettingsHkDescText.Text = LocalizationManager.Get("Settings_HotkeysDesc");
+        if (HkWakeLabel != null) HkWakeLabel.Text = LocalizationManager.Get("Settings_HkWake");
+        if (HkClickerLabel != null) HkClickerLabel.Text = LocalizationManager.Get("Settings_HkClicker");
+        if (HkHolderLabel != null) HkHolderLabel.Text = LocalizationManager.Get("Settings_HkHolder");
+        if (HkTyperLabel != null) HkTyperLabel.Text = LocalizationManager.Get("Settings_HkTyper");
+        if (HkMacroLabel != null) HkMacroLabel.Text = LocalizationManager.Get("Settings_HkMacro");
+        if (HkPanicKillLabel != null) HkPanicKillLabel.Text = LocalizationManager.Get("Settings_HkPanicKill");
+        if (HkPanicEscapeLabel != null) HkPanicEscapeLabel.Text = LocalizationManager.Get("Settings_HkPanicEscape");
+        if (SettingsAboutNavTitleText != null) SettingsAboutNavTitleText.Text = LocalizationManager.Get("Settings_AboutNavTitle");
+        if (SettingsAboutNavBtn != null) SettingsAboutNavBtn.Content = LocalizationManager.Get("Settings_AboutNavBtn");
+
+        // About Panel
+        if (AboutTitleText != null) AboutTitleText.Text = LocalizationManager.Get("About_Title");
+        if (AboutDescText != null) AboutDescText.Text = LocalizationManager.Get("About_Desc");
+        if (AboutHeroSubText != null) AboutHeroSubText.Text = LocalizationManager.Get("About_HeroSub");
+        if (AboutHeroSub2Text != null) AboutHeroSub2Text.Text = LocalizationManager.Get("About_HeroSub2");
+        if (AboutSpecsTitleText != null) AboutSpecsTitleText.Text = LocalizationManager.Get("About_SpecsTitle");
+        if (AboutSpecsUiLabel != null) AboutSpecsUiLabel.Text = LocalizationManager.Get("About_SpecsUiLabel");
+        if (AboutSpecsCoreLabel != null) AboutSpecsCoreLabel.Text = LocalizationManager.Get("About_SpecsCoreLabel");
+        if (AboutSpecsCoreValueText != null) AboutSpecsCoreValueText.Text = LocalizationManager.Get("About_SpecsCoreValue");
+        if (AboutSpecsPublishLabel != null) AboutSpecsPublishLabel.Text = LocalizationManager.Get("About_SpecsPublishLabel");
+        if (AboutSpecsPublishValueText != null) AboutSpecsPublishValueText.Text = LocalizationManager.Get("About_SpecsPublishValue");
+        if (AboutSpecsLicenseLabel != null) AboutSpecsLicenseLabel.Text = LocalizationManager.Get("About_SpecsLicenseLabel");
+        if (AboutSpecsLicenseValueText != null) AboutSpecsLicenseValueText.Text = LocalizationManager.Get("About_SpecsLicenseValue");
+        if (AboutPrivacyTitleText != null) AboutPrivacyTitleText.Text = LocalizationManager.Get("About_PrivacyTitle");
+        if (AboutPrivacyDescText != null) AboutPrivacyDescText.Text = LocalizationManager.Get("About_PrivacyDesc");
+        if (AboutOpenFolderBtn != null) AboutOpenFolderBtn.Content = LocalizationManager.Get("About_OpenFolderBtn");
+
+        if (!_isRunning)
+        {
+            if (TyperActionText != null) TyperActionText.Text = LocalizationManager.Get("Typer_ActionStart");
+            if (HolderActionText != null) HolderActionText.Text = LocalizationManager.Get("KeyHolder_ActionStart");
+            if (ClickerActionText != null) ClickerActionText.Text = LocalizationManager.Get("Clicker_ActionStart");
+            if (MacroActionText != null) MacroActionText.Text = LocalizationManager.Get("Macro_ActionReplay");
+
+            string readyText = LocalizationManager.Get("Common_Ready");
+            if (TyperStatusText != null && IsDefaultStatusText(TyperStatusText.Text)) TyperStatusText.Text = readyText;
+            if (HolderStatusText != null && IsDefaultStatusText(HolderStatusText.Text)) HolderStatusText.Text = readyText;
+            if (ClickerStatusText != null && IsDefaultStatusText(ClickerStatusText.Text)) ClickerStatusText.Text = readyText;
+            if (MacroStatusText != null && IsDefaultStatusText(MacroStatusText.Text)) MacroStatusText.Text = readyText;
+        }
+
+        UpdateAllActionBtnStates();
+        RenderHolderStepCards();
+        if (_macroRecorder?.Actions?.Count > 0)
+        {
+            RefreshMacroActionList();
+        }
+    }
+
+    private static bool IsDefaultStatusText(string? current)
+    {
+        return string.IsNullOrWhiteSpace(current) ||
+               current == "Ready" || current == "就緒" || current == "就绪" || current == "待機中";
     }
 
     private static void UpdateKeyboardContainerWidth(MainPage page)
@@ -665,7 +849,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception ex)
         {
-            TyperStatusText.Text = $"Paste error: {ex.Message}";
+            TyperStatusText.Text = string.Format(LocalizationManager.Get("Typer_PasteError"), ex.Message);
         }
     }
 
@@ -683,7 +867,7 @@ public sealed partial class MainPage : Page
             RenderHolderStepCards();
             UpdateVirtualKeyboardHighlights();
             UpdateHolderActionBtnState();
-            HolderStatusText.Text = $"Cleared keys for Step #{_activeStageIndex + 1}";
+            HolderStatusText.Text = string.Format(LocalizationManager.Get("KeyHolder_KeysClearedForStep"), _activeStageIndex + 1);
         }
     }
 
@@ -714,9 +898,10 @@ public sealed partial class MainPage : Page
         UpdateVirtualKeyboardHighlights();
         UpdateHolderActionBtnState();
         UpdateHolderRepeatPanelVisibility();
-        HolderStatusText.Text = string.IsNullOrWhiteSpace(comboToCopy)
-            ? $"Added Step #{_holderStages.Count}. Click keys on virtual keyboard below to configure."
-            : $"Added Step #{_holderStages.Count} with copied combo [{comboToCopy}].";
+        string comboDisplay = string.IsNullOrWhiteSpace(comboToCopy)
+            ? LocalizationManager.Get("KeyHolder_NoKeysSet")
+            : comboToCopy;
+        HolderStatusText.Text = string.Format(LocalizationManager.Get("KeyHolder_EditingStep"), _holderStages.Count, comboDisplay);
     }
 
     private void UpdateHolderRepeatPanelVisibility()
@@ -749,8 +934,8 @@ public sealed partial class MainPage : Page
         }
         _isCapturingKey = false;
         CaptureIcon.Glyph = "\uE7C8";
-        CaptureKeyText.Text = "Capture Physical Key";
-        HolderStatusText.Text = $"Captured key: {k} for Step #{_activeStageIndex + 1}";
+        CaptureKeyText.Text = LocalizationManager.Get("KeyHolder_CaptureBtn");
+        HolderStatusText.Text = string.Format(LocalizationManager.Get("KeyHolder_CaptureSuccess"), k, _activeStageIndex + 1);
     }
 
     private static int PollForPressedVirtualKey()
@@ -772,15 +957,15 @@ public sealed partial class MainPage : Page
         {
             _isCapturingKey = false;
             CaptureIcon.Glyph = "\uE7C8";
-            CaptureKeyText.Text = "Capture Physical Key";
-            HolderStatusText.Text = "Key capture canceled";
+            CaptureKeyText.Text = LocalizationManager.Get("KeyHolder_CaptureBtn");
+            HolderStatusText.Text = LocalizationManager.Get("KeyHolder_CaptureCanceled");
             return;
         }
 
         _isCapturingKey = true;
         CaptureIcon.Glyph = "\uE71A";
-        CaptureKeyText.Text = "Listening...";
-        HolderStatusText.Text = "Press any key on your keyboard...";
+        CaptureKeyText.Text = LocalizationManager.Get("KeyHolder_CaptureListening");
+        HolderStatusText.Text = LocalizationManager.Get("KeyHolder_CaptureHint");
 
         await Task.Run(async () =>
         {
@@ -828,8 +1013,8 @@ public sealed partial class MainPage : Page
         if (_holderStages.Count > 0 && _activeStageIndex >= 0 && _activeStageIndex < _holderStages.Count)
         {
             string combo = _holderStages[_activeStageIndex].KeyCombo;
-            string comboDisplay = string.IsNullOrWhiteSpace(combo) ? "No keys set" : combo;
-            ActiveStepTargetHint.Text = $"(Editing Step #{_activeStageIndex + 1}: [{comboDisplay}])";
+            string comboDisplay = string.IsNullOrWhiteSpace(combo) ? LocalizationManager.Get("KeyHolder_NoKeysSet") : combo;
+            ActiveStepTargetHint.Text = string.Format(LocalizationManager.Get("KeyHolder_EditingStep"), _activeStageIndex + 1, comboDisplay);
         }
         else
         {
@@ -933,7 +1118,7 @@ public sealed partial class MainPage : Page
         }
         stepBadgePanel.Children.Add(new TextBlock
         {
-            Text = $"Step #{stepIndex + 1}",
+            Text = string.Format(LocalizationManager.Get("KeyHolder_Step"), stepIndex + 1),
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center,
@@ -960,7 +1145,7 @@ public sealed partial class MainPage : Page
         };
         var keyPillText = new TextBlock
         {
-            Text = string.IsNullOrWhiteSpace(stage.KeyCombo) ? "(Tap keys below)" : stage.KeyCombo,
+            Text = string.IsNullOrWhiteSpace(stage.KeyCombo) ? LocalizationManager.Get("KeyHolder_TapKeysBelow") : stage.KeyCombo,
             FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Code, Consolas"),
             FontSize = 11,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
@@ -990,8 +1175,8 @@ public sealed partial class MainPage : Page
             Padding = new Thickness(6, 2, 6, 2),
             Width = 140
         };
-        modeCombo.Items.Add(new ComboBoxItem { Content = "Hold until stopped", FontSize = 11 });
-        modeCombo.Items.Add(new ComboBoxItem { Content = "Hold for (s):", FontSize = 11 });
+        modeCombo.Items.Add(new ComboBoxItem { Content = LocalizationManager.Get("KeyHolder_HoldUntilStopped"), FontSize = 11 });
+        modeCombo.Items.Add(new ComboBoxItem { Content = LocalizationManager.Get("KeyHolder_HoldForSeconds"), FontSize = 11 });
         modeCombo.SelectedIndex = stage.HoldDurationSec > 0 ? 1 : 0;
 
         var holdBox = new NumberBox
@@ -1048,7 +1233,7 @@ public sealed partial class MainPage : Page
         };
         var restCheck = new CheckBox
         {
-            Content = "Rest (s):",
+            Content = LocalizationManager.Get("KeyHolder_RestSeconds"),
             FontSize = 11,
             IsChecked = stage.RestDurationSec > 0,
             VerticalAlignment = VerticalAlignment.Center
@@ -1107,7 +1292,7 @@ public sealed partial class MainPage : Page
             Padding = new Thickness(5, 3, 5, 3),
             IsEnabled = (stepIndex > 0)
         };
-        ToolTipService.SetToolTip(upBtn, "Move step up");
+        ToolTipService.SetToolTip(upBtn, LocalizationManager.Get("KeyHolder_MoveUp"));
         upBtn.Click += (_, _) =>
         {
             var s = _holderStages[stepIndex];
@@ -1125,7 +1310,7 @@ public sealed partial class MainPage : Page
             Padding = new Thickness(5, 3, 5, 3),
             IsEnabled = (stepIndex < _holderStages.Count - 1)
         };
-        ToolTipService.SetToolTip(downBtn, "Move step down");
+        ToolTipService.SetToolTip(downBtn, LocalizationManager.Get("KeyHolder_MoveDown"));
         downBtn.Click += (_, _) =>
         {
             var s = _holderStages[stepIndex];
@@ -1143,7 +1328,7 @@ public sealed partial class MainPage : Page
             Padding = new Thickness(5, 3, 5, 3),
             IsEnabled = (_holderStages.Count > 1)
         };
-        ToolTipService.SetToolTip(delBtn, "Delete step");
+        ToolTipService.SetToolTip(delBtn, LocalizationManager.Get("KeyHolder_DeleteStep"));
         delBtn.Click += (_, _) =>
         {
             if (_holderStages.Count <= 1) return;
@@ -1168,15 +1353,14 @@ public sealed partial class MainPage : Page
 
     private async void PickCoordBtn_Click(object sender, RoutedEventArgs e)
     {
-        PickCoordText.Text = "Hover & Press Space (Esc=Cancel)...";
-        ClickerStatusText.Text = "Move cursor to target. Press Space/Enter or click to lock (Esc to cancel)...";
+        ClickerStatusText.Text = LocalizationManager.Get("Clicker_PickingCoordsStatus");
 
         var (picked, canceled, x, y) = await Task.Run(PollTargetCoordinatesAsync, CancellationToken.None);
 
-        PickCoordText.Text = "Pick Location";
+        PickCoordText.Text = LocalizationManager.Get("Clicker_PickCoordBtn");
         if (canceled || !picked)
         {
-            ClickerStatusText.Text = "Coordinate picking canceled";
+            ClickerStatusText.Text = LocalizationManager.Get("Clicker_PickCoordsCanceled");
             return;
         }
 
@@ -1184,7 +1368,7 @@ public sealed partial class MainPage : Page
         ClickYBox.Value = y;
         ShowTargetMarkerCheck.IsChecked = true;
         OnTargetMarkerSettingsChanged();
-        ClickerStatusText.Text = $"Locked target coordinates: ({x}, {y})";
+        ClickerStatusText.Text = string.Format(LocalizationManager.Get("Clicker_PickCoordsLocked"), x, y);
     }
 
     private void ClearCoordsBtn_Click(object sender, RoutedEventArgs e)
@@ -1193,7 +1377,7 @@ public sealed partial class MainPage : Page
         ClickYBox.Value = double.NaN;
         OnTargetMarkerSettingsChanged();
         UpdateClearCoordsBtnState();
-        ClickerStatusText.Text = "Coordinates cleared (clicking at current cursor location)";
+        ClickerStatusText.Text = LocalizationManager.Get("Clicker_CoordsCleared");
     }
 
     private static async Task<(bool Picked, bool Canceled, int X, int Y)> PollTargetCoordinatesAsync()
@@ -1248,8 +1432,8 @@ public sealed partial class MainPage : Page
         _macroRecorder.StopRecording();
         _targetMarkerOverlay.ClearAndHide();
         RecordIcon.Glyph = "\uE7C8";
-        RecordMacroText.Text = "Start Recording";
-        MacroStatusText.Text = $"Macro recorded: {_macroRecorder.Actions.Count} actions";
+        RecordMacroText.Text = LocalizationManager.Get("Macro_RecordBtn");
+        MacroStatusText.Text = string.Format(LocalizationManager.Get("Macro_ActionsCount"), _macroRecorder.Actions.Count);
         RefreshMacroActionList();
         UpdateMacroActionBtnState();
     }
@@ -1266,7 +1450,7 @@ public sealed partial class MainPage : Page
             {
                 DispatcherQueue.TryEnqueue(() =>
                 {
-                    MacroStatusText.Text = $"Recording macro... {count} actions captured (Click Stop to finish)";
+                    MacroStatusText.Text = string.Format(LocalizationManager.Get("Macro_RecordingCountStatus"), count);
                 });
             },
             true,
@@ -1293,8 +1477,8 @@ public sealed partial class MainPage : Page
                 });
             });
         RecordIcon.Glyph = "\uE71A";
-        RecordMacroText.Text = "Stop Recording";
-        MacroStatusText.Text = "Recording macro... Click or type anywhere to record actions!";
+        RecordMacroText.Text = LocalizationManager.Get("Macro_StopRecordBtn");
+        MacroStatusText.Text = LocalizationManager.Get("Macro_RecordingStatus");
     }
 
     private void ClearMacroBtn_Click(object sender, RoutedEventArgs e)
@@ -1305,11 +1489,11 @@ public sealed partial class MainPage : Page
             _macroRecorder.StopRecording();
         }
         RecordIcon.Glyph = "\uE7C8";
-        RecordMacroText.Text = "Start Recording";
+        RecordMacroText.Text = LocalizationManager.Get("Macro_RecordBtn");
         _macroRecorder.Clear();
         MacroActionList.Items.Clear();
         _targetMarkerOverlay.ClearAndHide();
-        MacroStatusText.Text = "Macro cleared";
+        MacroStatusText.Text = LocalizationManager.Get("Macro_ClearedStatus");
         UpdateMacroActionBtnState();
     }
 
@@ -1327,13 +1511,13 @@ public sealed partial class MainPage : Page
 
     private static string FormatMacroActionDetail(MacroAction act) => act.Type switch
     {
-        MacroActionType.ClickLeft => $"🖱️ Left Click at ({act.X}, {act.Y})",
-        MacroActionType.ClickRight => $"🖱️ Right Click at ({act.X}, {act.Y})",
-        MacroActionType.ClickMiddle => $"🖱️ Middle Click at ({act.X}, {act.Y})",
-        MacroActionType.MouseMove => $"↗️ Move Cursor to ({act.X}, {act.Y})",
-        MacroActionType.KeyPress => $"⌨️ Key Down [{act.Data}]",
-        MacroActionType.KeyRelease => $"⌨️ Key Up [{act.Data}]",
-        _ => $"🔤 Type [{act.Data}]"
+        MacroActionType.ClickLeft => string.Format(LocalizationManager.Get("Macro_DetailClickLeft"), act.X, act.Y),
+        MacroActionType.ClickRight => string.Format(LocalizationManager.Get("Macro_DetailClickRight"), act.X, act.Y),
+        MacroActionType.ClickMiddle => string.Format(LocalizationManager.Get("Macro_DetailClickMiddle"), act.X, act.Y),
+        MacroActionType.MouseMove => string.Format(LocalizationManager.Get("Macro_DetailMouseMove"), act.X, act.Y),
+        MacroActionType.KeyPress => string.Format(LocalizationManager.Get("Macro_DetailKeyDown"), act.Data),
+        MacroActionType.KeyRelease => string.Format(LocalizationManager.Get("Macro_DetailKeyUp"), act.Data),
+        _ => string.Format(LocalizationManager.Get("Macro_DetailTypeText"), act.Data)
     };
 
     private void DeleteActionBtn_Click(object sender, RoutedEventArgs e)
@@ -1344,11 +1528,11 @@ public sealed partial class MainPage : Page
             _targetMarkerOverlay.ClearAndHide();
             RefreshMacroActionList();
             UpdateMacroActionBtnState();
-            MacroStatusText.Text = $"Deleted step #{index + 1}";
+            MacroStatusText.Text = string.Format(LocalizationManager.Get("Macro_StepDeleted"), index + 1);
         }
         else
         {
-            MacroStatusText.Text = "Please select a step to delete first.";
+            MacroStatusText.Text = LocalizationManager.Get("Macro_SelectStepToDelete");
         }
     }
 
@@ -1361,7 +1545,7 @@ public sealed partial class MainPage : Page
         }
         else
         {
-            MacroStatusText.Text = "Please select a step to edit first.";
+            MacroStatusText.Text = LocalizationManager.Get("Macro_SelectStepToEdit");
         }
     }
 
@@ -1382,17 +1566,17 @@ public sealed partial class MainPage : Page
 
         var typeCombo = new ComboBox
         {
-            Header = "Action Type:",
+            Header = LocalizationManager.Get("Macro_ActionTypeHeader"),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             ItemsSource = new[]
             {
-                "Left Click",
-                "Right Click",
-                "Middle Click",
-                "Move Cursor",
-                "Key Down",
-                "Key Up",
-                "Type Text"
+                LocalizationManager.Get("Macro_ActionTypeLeftClick"),
+                LocalizationManager.Get("Macro_ActionTypeRightClick"),
+                LocalizationManager.Get("Macro_ActionTypeMiddleClick"),
+                LocalizationManager.Get("Macro_ActionTypeMouseMove"),
+                LocalizationManager.Get("Macro_ActionTypeKeyDown"),
+                LocalizationManager.Get("Macro_ActionTypeKeyUp"),
+                LocalizationManager.Get("Macro_ActionTypeTypeText")
             },
             SelectedIndex = act.Type switch
             {
@@ -1408,7 +1592,7 @@ public sealed partial class MainPage : Page
 
         var delayBox = new NumberBox
         {
-            Header = "Delay Before Action (ms):",
+            Header = LocalizationManager.Get("Macro_DelayHeader"),
             Value = act.DelayMs,
             Minimum = 0,
             Maximum = 60000,
@@ -1416,8 +1600,8 @@ public sealed partial class MainPage : Page
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
 
-        var xBox = new NumberBox { Header = "X Coordinate:", Value = act.X, Minimum = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact };
-        var yBox = new NumberBox { Header = "Y Coordinate:", Value = act.Y, Minimum = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact };
+        var xBox = new NumberBox { Header = LocalizationManager.Get("Macro_XCoordHeader"), Value = act.X, Minimum = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact };
+        var yBox = new NumberBox { Header = LocalizationManager.Get("Macro_YCoordHeader"), Value = act.Y, Minimum = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact };
 
         var coordPanel = new Grid { ColumnSpacing = 12 };
         coordPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -1429,7 +1613,7 @@ public sealed partial class MainPage : Page
 
         var dataBox = new TextBox
         {
-            Header = "Key Name / Text Data:",
+            Header = LocalizationManager.Get("Macro_DataHeader"),
             Text = act.Data ?? string.Empty,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
@@ -1453,9 +1637,9 @@ public sealed partial class MainPage : Page
 
         var dialog = new ContentDialog
         {
-            Title = $"Edit Step #{index + 1}",
-            PrimaryButtonText = "Save",
-            CloseButtonText = "Cancel",
+            Title = string.Format(LocalizationManager.Get("Macro_DialogTitle"), index + 1),
+            PrimaryButtonText = LocalizationManager.Get("Common_Save"),
+            CloseButtonText = LocalizationManager.Get("Common_Cancel"),
             DefaultButton = ContentDialogButton.Primary,
             Content = contentPanel,
             XamlRoot = Content.XamlRoot
@@ -1487,7 +1671,7 @@ public sealed partial class MainPage : Page
             if (_macroRecorder.UpdateAction(index, updated))
             {
                 RefreshMacroActionList();
-                MacroStatusText.Text = $"Updated step #{index + 1}";
+                MacroStatusText.Text = string.Format(LocalizationManager.Get("Macro_StepUpdated"), index + 1);
             }
         }
     }
@@ -1619,7 +1803,7 @@ public sealed partial class MainPage : Page
 
             if (!_isRunning && !hasTarget)
             {
-                HolderStatusText.Text = "Please enter a key to hold";
+                HolderStatusText.Text = LocalizationManager.Get("KeyHolder_PreflightNoKey");
                 UpdateAllActionBtnStates();
                 return;
             }
@@ -1634,7 +1818,7 @@ public sealed partial class MainPage : Page
             NavView.SelectedItem = NavView.MenuItems[0];
             if (!_isRunning && string.IsNullOrWhiteSpace(TypeTextBox.Text))
             {
-                TyperStatusText.Text = "Please enter text to type";
+                TyperStatusText.Text = LocalizationManager.Get("Typer_ValidationEmpty");
                 UpdateAllActionBtnStates();
                 return;
             }
@@ -1649,7 +1833,7 @@ public sealed partial class MainPage : Page
             NavView.SelectedItem = NavView.MenuItems[3];
             if (!_isRunning && _macroRecorder.Actions.Count == 0)
             {
-                MacroStatusText.Text = "No recorded macro actions to replay! Please record first.";
+                MacroStatusText.Text = LocalizationManager.Get("Macro_ValidationNoActions");
                 UpdateAllActionBtnStates();
                 return;
             }
@@ -1663,7 +1847,7 @@ public sealed partial class MainPage : Page
         {
             if (_isRunning)
             {
-                StopTask("Emergency stop triggered via F10 panic key");
+                StopTask(LocalizationManager.Get("Common_EmergencyStop"));
             }
         });
     }
@@ -1786,7 +1970,6 @@ public sealed partial class MainPage : Page
             TyperActionBtn,
             TyperActionIcon,
             TyperActionText,
-            "Start Typer (F8)",
             RunAutoTyperAsync);
     }
 
@@ -1800,7 +1983,6 @@ public sealed partial class MainPage : Page
             HolderActionBtn,
             HolderActionIcon,
             HolderActionText,
-            "Start Holder (F7)",
             RunKeyHolderAsync);
     }
 
@@ -1814,7 +1996,6 @@ public sealed partial class MainPage : Page
             ClickerActionBtn,
             ClickerActionIcon,
             ClickerActionText,
-            "Start Clicker (F6)",
             RunAutoClickerAsync);
     }
 
@@ -1828,7 +2009,6 @@ public sealed partial class MainPage : Page
             MacroActionBtn,
             MacroActionIcon,
             MacroActionText,
-            "Replay Macro (F9)",
             RunMacroReplayAsync);
     }
 
@@ -1836,28 +2016,28 @@ public sealed partial class MainPage : Page
     {
         if (taskName == TabTyper && string.IsNullOrWhiteSpace(TypeTextBox.Text))
         {
-            statusText.Text = "Please enter text to type";
+            statusText.Text = LocalizationManager.Get("Typer_ValidationEmpty");
             UpdateAllActionBtnStates();
             return false;
         }
 
         if (taskName == TabHolder && !_holderStages.Any(s => !string.IsNullOrWhiteSpace(s.KeyCombo)))
         {
-            statusText.Text = "Please configure a key combo for the sequence";
+            statusText.Text = LocalizationManager.Get("KeyHolder_ValidationNoKeys");
             UpdateAllActionBtnStates();
             return false;
         }
 
         if (taskName == TabMacro && _macroRecorder.Actions.Count == 0)
         {
-            statusText.Text = "No recorded macro actions to replay! Please record first.";
+            statusText.Text = LocalizationManager.Get("Macro_ValidationNoActions");
             UpdateAllActionBtnStates();
             return false;
         }
 
         if (taskName == TabClicker && ClickTargetTypeCombo.SelectedIndex == 1 && string.IsNullOrWhiteSpace(SpamKeyBox.Text))
         {
-            statusText.Text = "Please enter a key to spam";
+            statusText.Text = LocalizationManager.Get("Clicker_ValidationSpamKey");
             UpdateAllActionBtnStates();
             return false;
         }
@@ -1871,7 +2051,7 @@ public sealed partial class MainPage : Page
         {
             token.ThrowIfCancellationRequested();
             CheckPanicSafety();
-            statusText.Text = $"Starting in {remaining}s... Switch to target app!";
+            statusText.Text = string.Format(LocalizationManager.Get("Common_StartingIn"), remaining);
             progressBar.Value = (delay - remaining) / delay * 100;
             await Task.Delay(1000, token);
         }
@@ -1885,12 +2065,13 @@ public sealed partial class MainPage : Page
         Button actionBtn,
         FontIcon actionIcon,
         TextBlock actionText,
-        string defaultActionTitle,
         Func<CancellationToken, Action<string, double>, Task> taskFunc)
     {
         if (_isRunning)
         {
-            StopTask(_runningTaskName == taskName ? "Stopped by user" : $"Switched task from {_runningTaskName}");
+            StopTask(_runningTaskName == taskName
+                ? LocalizationManager.Get("Common_StoppedByUser")
+                : string.Format(LocalizationManager.Get("Common_SwitchedTask"), _runningTaskName));
             return;
         }
 
@@ -1907,7 +2088,7 @@ public sealed partial class MainPage : Page
         var token = _cts.Token;
         _panicDetector.Reset();
 
-        actionText.Text = "Stop";
+        actionText.Text = LocalizationManager.Get("Common_Stop");
         actionIcon.Glyph = "\uE71A";
         actionBtn.IsEnabled = true;
 
@@ -1919,7 +2100,7 @@ public sealed partial class MainPage : Page
             await RunCountdownAsync(delay, statusText, progressBar, token);
 
             progressBar.Value = 100;
-            statusText.Text = "Running...";
+            statusText.Text = LocalizationManager.Get("Common_Running");
 
             // Progress callback for live updates
             Action<string, double> reportProgress = (msg, pct) =>
@@ -1933,7 +2114,7 @@ public sealed partial class MainPage : Page
 
             await taskFunc(token, reportProgress);
 
-            StopTask("Finished successfully");
+            StopTask(LocalizationManager.Get("Common_Finished"));
         }
         catch (OperationCanceledException ex)
         {
@@ -1941,7 +2122,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception ex)
         {
-            StopTask($"Error: {ex.Message}");
+            StopTask(string.Format(LocalizationManager.Get("Common_Error"), ex.Message));
         }
     }
 
@@ -1950,7 +2131,7 @@ public sealed partial class MainPage : Page
         return ex.Message.Contains("panic", StringComparison.OrdinalIgnoreCase) ||
                ex.Message.Contains("Esc", StringComparison.OrdinalIgnoreCase)
             ? ex.Message
-            : "Task canceled";
+            : LocalizationManager.Get("Common_TaskCanceled");
     }
 
     private async Task RunAutoTyperAsync(CancellationToken token, Action<string, double> reportProgress)
@@ -2016,7 +2197,7 @@ public sealed partial class MainPage : Page
             {
                 token.ThrowIfCancellationRequested();
                 CheckPanicSafety();
-                reportProgress($"Pasting {text.Length} chars via clipboard...", 50);
+                reportProgress(string.Format(LocalizationManager.Get("Typer_PastingClipboard"), text.Length), 50);
 
                 Keyboard.Paste();
 
@@ -2024,7 +2205,7 @@ public sealed partial class MainPage : Page
                 CheckPanicSafety();
 
                 ApplyTrailingKey(trailingKey, token);
-                reportProgress($"Pasted {text.Length} chars", 100);
+                reportProgress(string.Format(LocalizationManager.Get("Typer_PastedClipboard"), text.Length), 100);
             }, token);
         }
         finally
@@ -2058,7 +2239,7 @@ public sealed partial class MainPage : Page
                 Keyboard.Type(text[i]);
 
                 int charIndex = i + 1;
-                reportProgress($"Typing character {charIndex}/{text.Length}...", (double)charIndex / text.Length * 100);
+                reportProgress(string.Format(LocalizationManager.Get("Typer_TypingChar"), charIndex, text.Length), (double)charIndex / text.Length * 100);
 
                 int sleepMs = jitter && intervalMs > 0
                     ? JitterHelper.ApplyTimeJitter(intervalMs, 15, minIntervalMs: 1)
@@ -2133,8 +2314,8 @@ public sealed partial class MainPage : Page
     private static string FormatHolderLoopPrefix(int currentLoop, int repeatLoops)
     {
         if (repeatLoops == 1) return "";
-        if (repeatLoops == 0) return $"[Loop {currentLoop}/∞] ";
-        return $"[Loop {currentLoop}/{repeatLoops}] ";
+        if (repeatLoops == 0) return string.Format(LocalizationManager.Get("KeyHolder_LoopInfinitePrefix"), currentLoop);
+        return string.Format(LocalizationManager.Get("KeyHolder_LoopPrefix"), currentLoop, repeatLoops);
     }
 
     private void ExecuteHolderStagesPipeline(
@@ -2152,7 +2333,9 @@ public sealed partial class MainPage : Page
             var (originalIdx, stage) = stagesToRun[i];
             DispatcherQueue.TryEnqueue(() => HighlightRunningStage(originalIdx));
 
-            string stepPrefix = stagesToRun.Count > 1 ? $"{loopPrefix}Step {i + 1}/{stagesToRun.Count}: " : loopPrefix;
+            string stepPrefix = stagesToRun.Count > 1
+                ? $"{loopPrefix}{string.Format(LocalizationManager.Get("KeyHolder_StepPrefix"), i + 1, stagesToRun.Count)}"
+                : loopPrefix;
             bool isLastStepOfRun = isFinalLoop && (i == stagesToRun.Count - 1);
 
             ExecuteHolderStageHoldPhase(stage, stepPrefix, token, reportProgress);
@@ -2184,11 +2367,11 @@ public sealed partial class MainPage : Page
                 if (durationMs > 0)
                 {
                     double pct = (double)elapsedMs / durationMs * 100;
-                    reportProgress($"{stepPrefix}Holding [{stage.KeyCombo}] ({(elapsedMs / 1000.0):F1}s / {stage.HoldDurationSec:F1}s)...", pct);
+                    reportProgress(string.Format(LocalizationManager.Get("KeyHolder_HoldingDuration"), stepPrefix, stage.KeyCombo, elapsedMs / 1000.0, stage.HoldDurationSec), pct);
                 }
                 else
                 {
-                    reportProgress($"{stepPrefix}Holding [{stage.KeyCombo}] continuously (Press Stop or F10 to release)...", 100);
+                    reportProgress(string.Format(LocalizationManager.Get("KeyHolder_HoldingContinuously"), stepPrefix, stage.KeyCombo), 100);
                 }
 
                 SleepWithPanicCheck(checkIntervalMs, token);
@@ -2221,7 +2404,7 @@ public sealed partial class MainPage : Page
         {
             CheckPanicSafety();
             double pct = (double)restElapsedMs / restMs * 100;
-            reportProgress($"{stepPrefix}Resting ({(restElapsedMs / 1000.0):F1}s / {stage.RestDurationSec:F1}s)...", pct);
+            reportProgress(string.Format(LocalizationManager.Get("KeyHolder_RestingDuration"), stepPrefix, restElapsedMs / 1000.0, stage.RestDurationSec), pct);
             SleepWithPanicCheck(checkIntervalMs, token);
             restElapsedMs += checkIntervalMs;
         }
@@ -2334,14 +2517,27 @@ public sealed partial class MainPage : Page
         bool infinite,
         Action<string, double> reportProgress)
     {
-        string actionName = isSpammer ? $"Spamming [{spamKey}]" : "Clicking";
-        if (!infinite)
+        if (isSpammer)
         {
-            reportProgress($"{actionName} {count}/{totalClicks}...", (double)count / totalClicks * 100);
+            if (!infinite)
+            {
+                reportProgress(string.Format(LocalizationManager.Get("Clicker_SpammingKey"), spamKey, count, totalClicks), (double)count / totalClicks * 100);
+            }
+            else
+            {
+                reportProgress(string.Format(LocalizationManager.Get("Clicker_SpammingKeyInfinite"), spamKey, count), 100);
+            }
         }
         else
         {
-            reportProgress($"{actionName} count: {count} (Infinite)...", 100);
+            if (!infinite)
+            {
+                reportProgress(string.Format(LocalizationManager.Get("Clicker_ClickingCount"), count, totalClicks), (double)count / totalClicks * 100);
+            }
+            else
+            {
+                reportProgress(string.Format(LocalizationManager.Get("Clicker_ClickingInfinite"), count), 100);
+            }
         }
     }
 
@@ -2377,7 +2573,7 @@ public sealed partial class MainPage : Page
                     currentClickInLoop = 0;
                 }
                 double pct = (double)step / _macroRecorder.Actions.Count * 100;
-                reportProgress($"Replaying Macro: Loop {loop}, Action {step}/{_macroRecorder.Actions.Count}", pct);
+                reportProgress(string.Format(LocalizationManager.Get("Macro_ReplayingProgress"), loop, step, _macroRecorder.Actions.Count), pct);
             }, action =>
             {
                 if (action.Type is MacroActionType.ClickLeft or MacroActionType.ClickRight or MacroActionType.ClickMiddle)
@@ -2440,22 +2636,22 @@ public sealed partial class MainPage : Page
         UpdateTargetMarkerOverlay();
 
         // Reset Typer UI
-        TyperActionText.Text = "Start Typer (F8)";
+        TyperActionText.Text = LocalizationManager.Get("Typer_ActionStart");
         TyperActionIcon.Glyph = "\uE768";
         TyperProgressBar.Value = 0;
 
         // Reset Holder UI
-        HolderActionText.Text = "Start Holder (F7)";
+        HolderActionText.Text = LocalizationManager.Get("KeyHolder_ActionStart");
         HolderActionIcon.Glyph = "\uE768";
         HolderProgressBar.Value = 0;
 
         // Reset Clicker UI
-        ClickerActionText.Text = "Start Clicker (F6)";
+        ClickerActionText.Text = LocalizationManager.Get("Clicker_ActionStart");
         ClickerActionIcon.Glyph = "\uE768";
         ClickerProgressBar.Value = 0;
 
         // Reset Macro UI
-        MacroActionText.Text = "Replay Macro (F9)";
+        MacroActionText.Text = LocalizationManager.Get("Macro_ActionReplay");
         MacroActionIcon.Glyph = "\uE768";
         MacroProgressBar.Value = 0;
 

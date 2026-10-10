@@ -21,6 +21,7 @@ public class AppSettings
 
     public bool StartMinimizedToTray { get; set; } = false;
     public bool MinimizeToTrayOnClose { get; set; } = true;
+    public string Language { get; set; } = "auto";
     public double DelaySeconds { get; set; } = 3;
 
     public string HotkeyClicker { get; set; } = "F6";
