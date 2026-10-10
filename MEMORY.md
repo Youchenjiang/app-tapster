@@ -92,4 +92,9 @@
   - Made `UpdateKeyboardContainerWidth(MainPage page)` static to eliminate instance access warning S2325.
   - Split `AddGridKeyBtn` (formerly 8 parameters) into standard `AddGridKeyBtn` (5 parameters) and `AddSpannedGridKeyBtn` (6 parameters) to comply with SonarCloud S107 maximum parameter limit (<= 7 parameters).
 - **Comprehensive Numpad & Navigation Key Test Coverage**: Added unit tests in `KeyboardTests.cs` verifying `Keyboard.Tap` resolution for numpad digits (`num0`..`num9`, `numpad0`..`numpad9`), arithmetic operators (`+`, `-`, `*`, `/`, `.`), and control lock keys (`numlock`, `scrolllock`, `printscreen`, `pause`, `prtsc`, `scrlk`, `del`, `ins`, `pgup`, `pgdn`), bringing test suite to 160 passing tests.
+- **Numpad Combo Tokenization, Reverse VK Mapping & Dedicated Navigation Keys (PR #47)**:
+  - Fixed combo split collision where `num+` was split on `+` into `"num"` sending `'n'`; normalized with source-generated regex `(?i)\b(numpad|num)\+` -> `"add"` and protected literal `+` keys (`+`, `ctrl++`).
+  - Implemented reverse VK mapping in `Keyboard.GetKeyName(int vk)` for all numpad digits (`0x60`..`0x69` -> `num0`..`num9`), arithmetic operators (`0x6A`..`0x6F`), control locks (`0x90`, `0x91`), `PrtSc` (`0x2C`), `Pause` (`0x13`), and navigation keys (`0x2D`, `0x24`, `0x23`, `0x21`, `0x22`), preventing raw `vk_` codes in key capture.
+  - Distinguished Numpad Enter (`numpadenter` / `numenter`) from Standard Enter (`enter`) by dispatching `KEYEVENTF_EXTENDEDKEY (0x0001)` on SendInput for extended keystrokes.
+  - Expanded right panel into a 5-column grid integrating all navigation keys (`Ins`, `Del`, `Home`, `End`, `PgUp`, `PgDn`) alongside the full numpad, and added alias expansion in `UpdateVirtualKeyboardHighlights` for seamless highlight synchronization.
 
