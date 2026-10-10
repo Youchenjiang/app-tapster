@@ -20,7 +20,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   staging-readiness:
@@ -88,6 +90,9 @@ jobs:
     name: Send ZAP report to DefectDojo
     needs: zap
     if: ${{ needs.zap.result == 'success' }}
+    permissions:
+      actions: read
+      contents: read
     uses: ./.github/workflows/defectdojo-upload.yml
     with:
       artifact_name: zap-post-merge
@@ -101,6 +106,9 @@ jobs:
     name: Send ZAP report to Faraday
     needs: zap
     if: ${{ needs.zap.result == 'success' }}
+    permissions:
+      actions: read
+      contents: read
     uses: ./.github/workflows/faraday-upload.yml
     with:
       artifact_name: zap-post-merge
@@ -113,6 +121,8 @@ jobs:
     if: ${{ needs.staging-readiness.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
     env:
       OPENVAS_HOST: ${{ vars.OPENVAS_HOST }}
       OPENVAS_TASK_ID: ${{ vars.OPENVAS_TASK_ID }}
@@ -225,6 +235,9 @@ jobs:
     name: Send OpenVAS report to DefectDojo
     needs: openvas
     if: ${{ needs.openvas.result == 'success' }}
+    permissions:
+      actions: read
+      contents: read
     uses: ./.github/workflows/defectdojo-upload.yml
     with:
       artifact_name: openvas-post-merge
@@ -238,6 +251,9 @@ jobs:
     name: Send OpenVAS report to Faraday
     needs: openvas
     if: ${{ needs.openvas.result == 'success' }}
+    permissions:
+      actions: read
+      contents: read
     uses: ./.github/workflows/faraday-upload.yml
     with:
       artifact_name: openvas-post-merge
@@ -248,5 +264,7 @@ jobs:
     name: Verify Wazuh runtime monitoring
     needs: staging-readiness
     if: ${{ needs.staging-readiness.result == 'success' }}
+    permissions:
+      contents: read
     uses: ./.github/workflows/wazuh-health.yml
     secrets: inherit
