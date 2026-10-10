@@ -14,6 +14,7 @@ public sealed partial class MainPage : Page
     private const string KeyEnter = "enter";
     private const string KeyTab = "tab";
     private const string KeyNone = "none";
+    private const string KeyPrintScreen = "printscreen";
     private const string TyperModeClipboard = "clipboard";
     private const string TyperModeKeystroke = "keystroke";
     private const string TabClicker = "Clicker";
@@ -189,6 +190,8 @@ public sealed partial class MainPage : Page
         UpdateAllActionBtnStates();
 
         GenerateVirtualKeyboard();
+        HolderScrollViewer.SizeChanged += (_, _) => UpdateKeyboardContainerWidth(this);
+        UpdateKeyboardContainerWidth(this);
 
         // Load Settings
         StartOnBootToggle.IsOn = AppSettings.Current.StartOnBoot;
@@ -201,67 +204,154 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private static void UpdateKeyboardContainerWidth(MainPage page)
+    {
+        if (page.KeyboardContainer == null || page.HolderScrollViewer == null) return;
+        double availableWidth = page.HolderScrollViewer.ActualWidth - 36;
+        page.KeyboardContainer.Width = Math.Max(804, availableWidth);
+    }
+
     private void GenerateVirtualKeyboard()
     {
         KeyboardContainer.Children.Clear();
         _keyboardButtons.Clear();
 
-        // ── Row 0: Function Keys ──
+        // ── Main Keyboard Panel (Rows 0 to 5) ──
+        var mainKeyboardPanel = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            Spacing = 4,
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+
+        // Row 0: Function Keys
         var row0 = CreateKeyboardRow();
         AddKeyBtn(row0, "esc", "Esc", width: 44);
-        AddSpacer(row0, 16);
+        AddSpacer(row0, 8);
         AddKeyBtn(row0, "f1", "F1"); AddKeyBtn(row0, "f2", "F2"); AddKeyBtn(row0, "f3", "F3"); AddKeyBtn(row0, "f4", "F4");
-        AddSpacer(row0, 12);
+        AddSpacer(row0, 10);
         AddKeyBtn(row0, "f5", "F5"); AddKeyBtn(row0, "f6", "F6"); AddKeyBtn(row0, "f7", "F7"); AddKeyBtn(row0, "f8", "F8");
-        AddSpacer(row0, 12);
+        AddSpacer(row0, 10);
         AddKeyBtn(row0, "f9", "F9"); AddKeyBtn(row0, "f10", "F10"); AddKeyBtn(row0, "f11", "F11"); AddKeyBtn(row0, "f12", "F12");
-        KeyboardContainer.Children.Add(row0);
+        AddSpacer(row0, 28);
+        mainKeyboardPanel.Children.Add(row0);
 
-        // ── Row 1: Number Row ──
+        // Row 1: Number Row & Backspace
         var row1 = CreateKeyboardRow();
         string[] r1Keys = { "`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=" };
         foreach (var k in r1Keys) AddKeyBtn(row1, k, k);
         AddKeyBtn(row1, "backspace", "Backspace", width: 76);
-        KeyboardContainer.Children.Add(row1);
+        mainKeyboardPanel.Children.Add(row1);
 
-        // ── Row 2: QWERTY Row ──
+        // Row 2: QWERTY Row & \
         var row2 = CreateKeyboardRow();
         AddKeyBtn(row2, KeyTab, "Tab", width: 54);
-        string[] r2Keys = { "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\" };
+        string[] r2Keys = { "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]" };
         foreach (var k in r2Keys) AddKeyBtn(row2, k, k.ToUpper());
-        KeyboardContainer.Children.Add(row2);
+        AddKeyBtn(row2, "\\", "\\", width: 58);
+        mainKeyboardPanel.Children.Add(row2);
 
-        // ── Row 3: Home Row ──
+        // Row 3: Home Row & Enter
         var row3 = CreateKeyboardRow();
         AddKeyBtn(row3, "capslock", "Caps Lock", width: 66);
         string[] r3Keys = { "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" };
         foreach (var k in r3Keys) AddKeyBtn(row3, k, k.ToUpper());
-        AddKeyBtn(row3, KeyEnter, "Enter", width: 80);
-        KeyboardContainer.Children.Add(row3);
+        AddKeyBtn(row3, KeyEnter, "Enter", width: 86);
+        mainKeyboardPanel.Children.Add(row3);
 
-        // ── Row 4: Shift Row ──
+        // Row 4: Shift Row & Up Arrow
         var row4 = CreateKeyboardRow();
         AddKeyBtn(row4, "shift", "Shift", width: 88);
         string[] r4Keys = { "z", "x", "c", "v", "b", "n", "m", ",", ".", "/" };
         foreach (var k in r4Keys) AddKeyBtn(row4, k, k.ToUpper());
-        AddKeyBtn(row4, "shift", "Shift", width: 92);
-        KeyboardContainer.Children.Add(row4);
+        AddKeyBtn(row4, "shift", "Shift", width: 64);
+        AddKeyBtn(row4, "up", "▲"); // Starts at 560, ends at 596px, aligning with Backspace / \ / Enter
+        mainKeyboardPanel.Children.Add(row4);
 
-        // ── Row 5: Control / Space / Navigation Row ──
+        // Row 5: Bottom Row (Ctrl, Win, Alt, Space, Alt, Win, Ctrl, Left Arrow, Down Arrow)
         var row5 = CreateKeyboardRow();
         AddKeyBtn(row5, "ctrl", "Ctrl", width: 48);
         AddKeyBtn(row5, "win", "Win", width: 44);
         AddKeyBtn(row5, "alt", "Alt", width: 44);
-        AddKeyBtn(row5, "space", "Space", width: 240);
-        AddKeyBtn(row5, "alt", "Alt", width: 44);
-        AddKeyBtn(row5, "win", "Win", width: 44);
-        AddKeyBtn(row5, "ctrl", "Ctrl", width: 48);
-        AddSpacer(row5, 12);
-        AddKeyBtn(row5, "left", "◄", width: 36);
-        AddKeyBtn(row5, "up", "▲", width: 36);
-        AddKeyBtn(row5, "down", "▼", width: 36);
-        AddKeyBtn(row5, "right", "►", width: 36);
-        KeyboardContainer.Children.Add(row5);
+        AddKeyBtn(row5, "space", "Space", width: 242);
+        AddKeyBtn(row5, "alt", "Alt", width: 38);
+        AddKeyBtn(row5, "win", "Win", width: 38);
+        AddKeyBtn(row5, "ctrl", "Ctrl", width: 38);
+        AddKeyBtn(row5, "left", "◄"); // Starts at 520, ends at 556px, aligning with Shift
+        AddKeyBtn(row5, "down", "▼"); // Starts at 560, ends at 596px, aligning with ▲
+        mainKeyboardPanel.Children.Add(row5);
+
+        // ── Right Numpad Grid (Rows 0 to 5 x Columns 0 to 4) ──
+        var numpadGrid = new Grid
+        {
+            RowSpacing = 4,
+            ColumnSpacing = 4,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        for (int r = 0; r < 6; r++)
+        {
+            numpadGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(34) });
+        }
+        for (int c = 0; c < 5; c++)
+        {
+            numpadGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(36) });
+        }
+
+        // Row 0: Top control & navigation keys
+        AddGridKeyBtn(numpadGrid, 0, 0, KeyPrintScreen, "PrtSc");
+        AddGridKeyBtn(numpadGrid, 0, 1, "scrolllock", "ScrLk");
+        AddGridKeyBtn(numpadGrid, 0, 2, "pause", "Pause");
+        AddGridKeyBtn(numpadGrid, 0, 3, "insert", "Ins");
+        AddGridKeyBtn(numpadGrid, 0, 4, "delete", "Del");
+
+        // Row 1: Numpad operators & Home
+        AddGridKeyBtn(numpadGrid, 1, 0, "numlock", "NumLk");
+        AddGridKeyBtn(numpadGrid, 1, 1, "divide", "/");
+        AddGridKeyBtn(numpadGrid, 1, 2, "multiply", "*");
+        AddGridKeyBtn(numpadGrid, 1, 3, "subtract", "-");
+        AddGridKeyBtn(numpadGrid, 1, 4, "home", "Home");
+
+        // Row 2: 7 8 9 + PgUp (+ spans Row 2 & 3: 72px)
+        AddGridKeyBtn(numpadGrid, 2, 0, "num7", "7");
+        AddGridKeyBtn(numpadGrid, 2, 1, "num8", "8");
+        AddGridKeyBtn(numpadGrid, 2, 2, "num9", "9");
+        AddSpannedGridKeyBtn(numpadGrid, 2, 3, "add", "+");
+        AddGridKeyBtn(numpadGrid, 2, 4, "pageup", "PgUp");
+
+        // Row 3: 4 5 6 PgDn (+ spans from row 2)
+        AddGridKeyBtn(numpadGrid, 3, 0, "num4", "4");
+        AddGridKeyBtn(numpadGrid, 3, 1, "num5", "5");
+        AddGridKeyBtn(numpadGrid, 3, 2, "num6", "6");
+        AddGridKeyBtn(numpadGrid, 3, 4, "pagedown", "PgDn");
+
+        // Row 4: 1 2 3 NumpadEnter End (Enter and End span Row 4 & 5: 72px)
+        AddGridKeyBtn(numpadGrid, 4, 0, "num1", "1");
+        AddGridKeyBtn(numpadGrid, 4, 1, "num2", "2");
+        AddGridKeyBtn(numpadGrid, 4, 2, "num3", "3");
+        AddSpannedGridKeyBtn(numpadGrid, 4, 3, "numpadenter", "Enter");
+        AddSpannedGridKeyBtn(numpadGrid, 4, 4, "end", "End");
+
+        // Row 5: ► 0 . (Enter and End span from row 4)
+        AddGridKeyBtn(numpadGrid, 5, 0, "right", "►");
+        AddGridKeyBtn(numpadGrid, 5, 1, "num0", "0");
+        AddGridKeyBtn(numpadGrid, 5, 2, "decimal", ".");
+
+        // ── Master Dual-Column Grid ──
+        var masterGrid = new Grid
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+        masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star), MinWidth = 12 });
+        masterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        Grid.SetColumn(mainKeyboardPanel, 0);
+        Grid.SetColumn(numpadGrid, 2);
+
+        masterGrid.Children.Add(mainKeyboardPanel);
+        masterGrid.Children.Add(numpadGrid);
+
+        KeyboardContainer.Children.Add(masterGrid);
 
         UpdateVirtualKeyboardHighlights();
     }
@@ -271,7 +361,8 @@ public sealed partial class MainPage : Page
         return new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Spacing = 4
+            Spacing = 4,
+            HorizontalAlignment = HorizontalAlignment.Left
         };
     }
 
@@ -280,15 +371,15 @@ public sealed partial class MainPage : Page
         row.Children.Add(new Border { Width = width });
     }
 
-    private void AddKeyBtn(StackPanel row, string keyId, string label, double width = 36)
+    private Button CreateKeyBtn(string keyId, string label, double width = 36, double height = 34)
     {
         var btn = new Button
         {
             Content = label,
             Width = width,
-            Height = 34,
+            Height = height,
             Padding = new Thickness(2),
-            FontSize = width > 50 ? 10 : 11,
+            FontSize = width > 50 || height > 50 ? 10 : 11,
             FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Code, Consolas"),
             CornerRadius = new CornerRadius(4),
             Style = Application.Current.Resources["DefaultButtonStyle"] as Style
@@ -310,11 +401,10 @@ public sealed partial class MainPage : Page
             }
             else
             {
-                var keys = current.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                                  .ToList();
-                if (keys.Contains(keyId, StringComparer.OrdinalIgnoreCase))
+                var keys = Keyboard.SplitCombo(current).ToList();
+                if (keys.Any(k => IsKeyMatch(k, keyId)))
                 {
-                    keys.RemoveAll(k => string.Equals(k, keyId, StringComparison.OrdinalIgnoreCase));
+                    keys.RemoveAll(k => IsKeyMatch(k, keyId));
                     HolderKeyBox.Text = string.Join("+", keys);
                 }
                 else
@@ -331,7 +421,101 @@ public sealed partial class MainPage : Page
             _keyboardButtons[keyId] = btnList;
         }
         btnList.Add(btn);
+        return btn;
+    }
+
+    private void AddKeyBtn(StackPanel row, string keyId, string label, double width = 36)
+    {
+        var btn = CreateKeyBtn(keyId, label, width, 34);
         row.Children.Add(btn);
+    }
+
+    private void AddGridKeyBtn(Grid grid, int row, int col, string keyId, string label)
+    {
+        var btn = CreateKeyBtn(keyId, label, 36, 34);
+        Grid.SetRow(btn, row);
+        Grid.SetColumn(btn, col);
+        grid.Children.Add(btn);
+    }
+
+    private void AddSpannedGridKeyBtn(Grid grid, int row, int col, string keyId, string label, int rowSpan = 2)
+    {
+        var btn = CreateKeyBtn(keyId, label, 36, 72);
+        Grid.SetRow(btn, row);
+        Grid.SetColumn(btn, col);
+        Grid.SetRowSpan(btn, rowSpan);
+        grid.Children.Add(btn);
+    }
+
+    private static readonly Dictionary<string, HashSet<string>> KeyAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["delete"] = new(StringComparer.OrdinalIgnoreCase) { "del" },
+        ["del"] = new(StringComparer.OrdinalIgnoreCase) { "delete" },
+        ["insert"] = new(StringComparer.OrdinalIgnoreCase) { "ins" },
+        ["ins"] = new(StringComparer.OrdinalIgnoreCase) { "insert" },
+        ["pageup"] = new(StringComparer.OrdinalIgnoreCase) { "pgup" },
+        ["pgup"] = new(StringComparer.OrdinalIgnoreCase) { "pageup" },
+        ["pagedown"] = new(StringComparer.OrdinalIgnoreCase) { "pgdn" },
+        ["pgdn"] = new(StringComparer.OrdinalIgnoreCase) { "pagedown" },
+        [KeyPrintScreen] = new(StringComparer.OrdinalIgnoreCase) { "prtsc", "prtscr" },
+        ["prtsc"] = new(StringComparer.OrdinalIgnoreCase) { KeyPrintScreen, "prtscr" },
+        ["prtscr"] = new(StringComparer.OrdinalIgnoreCase) { KeyPrintScreen, "prtsc" },
+        ["scrolllock"] = new(StringComparer.OrdinalIgnoreCase) { "scrlk" },
+        ["scrlk"] = new(StringComparer.OrdinalIgnoreCase) { "scrolllock" },
+        ["numlock"] = new(StringComparer.OrdinalIgnoreCase) { "numlk" },
+        ["numlk"] = new(StringComparer.OrdinalIgnoreCase) { "numlock" },
+        ["ctrl"] = new(StringComparer.OrdinalIgnoreCase) { "control" },
+        ["control"] = new(StringComparer.OrdinalIgnoreCase) { "ctrl" },
+        ["win"] = new(StringComparer.OrdinalIgnoreCase) { "windows" },
+        ["windows"] = new(StringComparer.OrdinalIgnoreCase) { "win" },
+        ["esc"] = new(StringComparer.OrdinalIgnoreCase) { "escape" },
+        ["escape"] = new(StringComparer.OrdinalIgnoreCase) { "esc" },
+        ["numpadenter"] = new(StringComparer.OrdinalIgnoreCase) { "numenter" },
+        ["numenter"] = new(StringComparer.OrdinalIgnoreCase) { "numpadenter" },
+        ["add"] = new(StringComparer.OrdinalIgnoreCase) { "num+" },
+        ["num+"] = new(StringComparer.OrdinalIgnoreCase) { "add" },
+    };
+
+    private static bool IsKeyMatch(string a, string b)
+    {
+        if (string.Equals(a, b, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return (KeyAliases.TryGetValue(a, out var aAliases) && aAliases.Contains(b))
+            || (KeyAliases.TryGetValue(b, out var bAliases) && bAliases.Contains(a));
+    }
+
+    private static HashSet<string> GetActiveKeysWithAliases(string rawText)
+    {
+        if (string.IsNullOrWhiteSpace(rawText))
+        {
+            return [];
+        }
+
+        var tokens = Keyboard.SplitCombo(rawText);
+        var activeKeys = new HashSet<string>(tokens, StringComparer.OrdinalIgnoreCase);
+        foreach (var token in tokens)
+        {
+            if (KeyAliases.TryGetValue(token, out var aliases))
+            {
+                activeKeys.UnionWith(aliases);
+            }
+        }
+
+        return activeKeys;
+    }
+
+    private void ResetVirtualKeyboardButtons(Style defaultStyle)
+    {
+        foreach (var list in _keyboardButtons.Values)
+        {
+            foreach (var b in list)
+            {
+                b.Style = defaultStyle;
+            }
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Bug", "S2583:Conditionally executed code should be reachable", Justification = "HolderKeyBox is initialized by XAML InitializeComponent at runtime")]
@@ -343,20 +527,11 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        string rawText = HolderKeyBox?.Text ?? string.Empty;
-        var activeKeys = !string.IsNullOrWhiteSpace(rawText)
-            ? new HashSet<string>(rawText.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase)
-            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
+        string rawText = HolderKeyBox != null ? HolderKeyBox.Text : string.Empty;
+        var activeKeys = GetActiveKeysWithAliases(rawText);
         if (activeKeys.Count == 0)
         {
-            foreach (var list in _keyboardButtons.Values)
-            {
-                foreach (var b in list)
-                {
-                    b.Style = defaultStyle;
-                }
-            }
+            ResetVirtualKeyboardButtons(defaultStyle);
             return;
         }
 
