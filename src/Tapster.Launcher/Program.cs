@@ -14,7 +14,7 @@ internal static class Program
     private static readonly string AppVersion = typeof(Program).Assembly.GetName().Version switch
     {
         { } v when v.Major > 0 => $"{v.Major}.{v.Minor}.{v.Build}",
-        _ => "1.2.0"
+        _ => "1.3.0"
     };
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]

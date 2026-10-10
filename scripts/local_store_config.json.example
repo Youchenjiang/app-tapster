@@ -4,5 +4,5 @@
   "ClientSecret": "YOUR_AZURE_AD_CLIENT_SECRET",
   "SellerId": "00000000",
   "ProductId": "9XXXXXXXXXXX",
-  "MsixPath": "publish/Tapster-v1.2.0.0.msix"
+  "MsixPath": "publish/Tapster-v1.3.0.0.msix"
 }
