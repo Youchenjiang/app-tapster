@@ -65,6 +65,15 @@ public class KeyboardTests
     [InlineData(0x1B, "esc")]
     [InlineData(0x08, "backspace")]
     [InlineData(0x2E, "delete")]
+    [InlineData(0x2D, "insert")]
+    [InlineData(0x24, "home")]
+    [InlineData(0x23, "end")]
+    [InlineData(0x21, "pageup")]
+    [InlineData(0x22, "pagedown")]
+    [InlineData(0x2C, "printscreen")]
+    [InlineData(0x13, "pause")]
+    [InlineData(0x90, "numlock")]
+    [InlineData(0x91, "scrolllock")]
     [InlineData(0x14, "capslock")]
     [InlineData(0x26, "up")]
     [InlineData(0x28, "down")]
@@ -179,9 +188,89 @@ public class KeyboardTests
     [InlineData("num.")]
     [InlineData("divide")]
     [InlineData("num/")]
+    [InlineData("numpadenter")]
+    [InlineData("numenter")]
     public void Keyboard_Tap_NumpadKeysAndAliases_DoesNotThrow(string key)
     {
         var exception = Record.Exception(() => Keyboard.Tap(key));
         Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(0x60, "num0")]
+    [InlineData(0x61, "num1")]
+    [InlineData(0x65, "num5")]
+    [InlineData(0x69, "num9")]
+    [InlineData(0x6A, "multiply")]
+    [InlineData(0x6B, "add")]
+    [InlineData(0x6D, "subtract")]
+    [InlineData(0x6E, "decimal")]
+    [InlineData(0x6F, "divide")]
+    public void GetKeyName_NumpadKeys_ReturnsNumpadFriendlyName(int vk, string expected)
+    {
+        var result = Keyboard.GetKeyName(vk);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void ParseKeys_NumpadPlus_MapsToVkAdd()
+    {
+        var strokes = Keyboard.ParseKeys("num+");
+        Assert.Single(strokes);
+        Assert.Equal(0x6B, strokes[0].Vk);
+        Assert.False(strokes[0].Extended);
+    }
+
+    [Fact]
+    public void ParseKeys_CtrlAndNumpadPlus_MapsToCtrlAndAdd()
+    {
+        var strokes = Keyboard.ParseKeys("ctrl+num+");
+        Assert.Equal(2, strokes.Length);
+        Assert.Equal(0x11, strokes[0].Vk);
+        Assert.Equal(0x6B, strokes[1].Vk);
+    }
+
+    [Fact]
+    public void ParseKeys_PlusKey_MapsToPlusVk()
+    {
+        var strokes = Keyboard.ParseKeys("+");
+        Assert.Single(strokes);
+        Assert.Equal(0xBB, strokes[0].Vk);
+    }
+
+    [Fact]
+    public void ParseKeys_CtrlAndPlus_MapsToCtrlAndPlusVk()
+    {
+        var strokes = Keyboard.ParseKeys("ctrl++");
+        Assert.Equal(2, strokes.Length);
+        Assert.Equal(0x11, strokes[0].Vk);
+        Assert.Equal(0xBB, strokes[1].Vk);
+    }
+
+    [Fact]
+    public void ParseKeys_NumpadEnter_HasExtendedFlag()
+    {
+        var strokes = Keyboard.ParseKeys("numpadenter");
+        Assert.Single(strokes);
+        Assert.Equal(0x0D, strokes[0].Vk);
+        Assert.True(strokes[0].Extended);
+    }
+
+    [Fact]
+    public void ParseKeys_NumEnterAlias_HasExtendedFlag()
+    {
+        var strokes = Keyboard.ParseKeys("numenter");
+        Assert.Single(strokes);
+        Assert.Equal(0x0D, strokes[0].Vk);
+        Assert.True(strokes[0].Extended);
+    }
+
+    [Fact]
+    public void ParseKeys_StandardEnter_DoesNotHaveExtendedFlag()
+    {
+        var strokes = Keyboard.ParseKeys("enter");
+        Assert.Single(strokes);
+        Assert.Equal(0x0D, strokes[0].Vk);
+        Assert.False(strokes[0].Extended);
     }
 }
