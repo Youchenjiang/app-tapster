@@ -235,25 +235,50 @@ public sealed partial class MainPage : Page
 
     private void LanguageCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (LanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string code)
+        if (this.LanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string code)
         {
+            if (string.Equals(AppSettings.Current.Language, code, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
             AppSettings.Current.Language = code;
             AppSettings.Current.Save();
             LocalizationManager.SetLanguage(code);
+            this.UpdateAllActionBtnStates();
         }
     }
 
     private void ApplyLocalization()
     {
-        // Navigation View Items
+        ApplyNavLocalization();
+        ApplyTyperLocalization();
+        ApplyHolderLocalization();
+        ApplyClickerLocalization();
+        ApplyMacroLocalization();
+        ApplySettingsLocalization();
+        ApplyAboutLocalization();
+        ApplyStatusLocalization();
+
+        UpdateAllActionBtnStates();
+        RenderHolderStepCards();
+        if (_macroRecorder?.Actions?.Count > 0)
+        {
+            RefreshMacroActionList();
+        }
+    }
+
+    private void ApplyNavLocalization()
+    {
         if (NavItemTyper != null) NavItemTyper.Content = LocalizationManager.Get("Nav_Typer");
         if (NavItemHolder != null) NavItemHolder.Content = LocalizationManager.Get("Nav_Holder");
         if (NavItemClicker != null) NavItemClicker.Content = LocalizationManager.Get("Nav_Clicker");
         if (NavItemMacro != null) NavItemMacro.Content = LocalizationManager.Get("Nav_Macro");
         if (NavItemAbout != null) NavItemAbout.Content = LocalizationManager.Get("Nav_About");
         if (NavView?.SettingsItem is NavigationViewItem settingsNav) settingsNav.Content = LocalizationManager.Get("Nav_Settings");
+    }
 
-        // Typer Panel
+    private void ApplyTyperLocalization()
+    {
         if (TyperHeaderTitle != null) TyperHeaderTitle.Text = LocalizationManager.Get("Typer_Title");
         if (TyperHeaderDesc != null) TyperHeaderDesc.Text = LocalizationManager.Get("Typer_Desc");
         if (TyperTargetTextLabel != null) TyperTargetTextLabel.Text = LocalizationManager.Get("Typer_TargetText");
@@ -272,8 +297,10 @@ public sealed partial class MainPage : Page
         if (TypeJitterCheck != null) TypeJitterCheck.Content = LocalizationManager.Get("Typer_JitterCheck");
         if (TyperHistoryHeader != null) TyperHistoryHeader.Text = LocalizationManager.Get("Typer_HistoryTitle");
         if (TyperDelayLabel != null) TyperDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+    }
 
-        // Key Holder Panel
+    private void ApplyHolderLocalization()
+    {
         if (HolderHeaderTitle != null) HolderHeaderTitle.Text = LocalizationManager.Get("KeyHolder_Title");
         if (HolderHeaderDesc != null) HolderHeaderDesc.Text = LocalizationManager.Get("KeyHolder_Desc");
         if (HolderPipelineTitle != null) HolderPipelineTitle.Text = LocalizationManager.Get("KeyHolder_PipelineTitle");
@@ -284,8 +311,10 @@ public sealed partial class MainPage : Page
         if (CaptureKeyText != null) CaptureKeyText.Text = _isCapturingKey ? LocalizationManager.Get("KeyHolder_CaptureListening") : LocalizationManager.Get("KeyHolder_CaptureBtn");
         if (ClearActiveStepKeysBtnText != null) ClearActiveStepKeysBtnText.Text = LocalizationManager.Get("KeyHolder_ClearKeysBtn");
         if (HolderDelayLabel != null) HolderDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+    }
 
-        // Clicker Panel
+    private void ApplyClickerLocalization()
+    {
         if (ClickerHeaderTitle != null) ClickerHeaderTitle.Text = LocalizationManager.Get("Clicker_Title");
         if (ClickerHeaderDesc != null) ClickerHeaderDesc.Text = LocalizationManager.Get("Clicker_Desc");
         if (ClickerTargetTypeLabel != null) ClickerTargetTypeLabel.Text = LocalizationManager.Get("Clicker_TargetTypeLabel");
@@ -312,8 +341,10 @@ public sealed partial class MainPage : Page
         if (LocationJitterLabel != null) LocationJitterLabel.Text = LocalizationManager.Get("Clicker_LocationJitterLabel");
         if (LocationJitterHintText != null) LocationJitterHintText.Text = LocalizationManager.Get("Clicker_LocationJitterHint");
         if (ClickerDelayLabel != null) ClickerDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+    }
 
-        // Macro Panel
+    private void ApplyMacroLocalization()
+    {
         if (MacroHeaderTitle != null) MacroHeaderTitle.Text = LocalizationManager.Get("Macro_Title");
         if (MacroHeaderDesc != null) MacroHeaderDesc.Text = LocalizationManager.Get("Macro_Desc");
         if (RecordMacroText != null) RecordMacroText.Text = _isRecordingMacro ? LocalizationManager.Get("Macro_StopRecordBtn") : LocalizationManager.Get("Macro_RecordBtn");
@@ -324,8 +355,10 @@ public sealed partial class MainPage : Page
         if (EditActionBtnText != null) EditActionBtnText.Text = LocalizationManager.Get("Macro_EditStepBtn");
         if (DeleteActionBtnText != null) DeleteActionBtnText.Text = LocalizationManager.Get("Macro_DeleteStepBtn");
         if (MacroDelayLabel != null) MacroDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+    }
 
-        // Settings Panel
+    private void ApplySettingsLocalization()
+    {
         if (SettingsTitleText != null) SettingsTitleText.Text = LocalizationManager.Get("Settings_Title");
         if (SettingsDescText != null) SettingsDescText.Text = LocalizationManager.Get("Settings_Desc");
         if (SettingsLangTitleText != null) SettingsLangTitleText.Text = LocalizationManager.Get("Settings_LangTitle");
@@ -351,8 +384,10 @@ public sealed partial class MainPage : Page
         if (HkPanicEscapeLabel != null) HkPanicEscapeLabel.Text = LocalizationManager.Get("Settings_HkPanicEscape");
         if (SettingsAboutNavTitleText != null) SettingsAboutNavTitleText.Text = LocalizationManager.Get("Settings_AboutNavTitle");
         if (SettingsAboutNavBtn != null) SettingsAboutNavBtn.Content = LocalizationManager.Get("Settings_AboutNavBtn");
+    }
 
-        // About Panel
+    private void ApplyAboutLocalization()
+    {
         if (AboutTitleText != null) AboutTitleText.Text = LocalizationManager.Get("About_Title");
         if (AboutDescText != null) AboutDescText.Text = LocalizationManager.Get("About_Desc");
         if (AboutHeroSubText != null) AboutHeroSubText.Text = LocalizationManager.Get("About_HeroSub");
@@ -368,7 +403,10 @@ public sealed partial class MainPage : Page
         if (AboutPrivacyTitleText != null) AboutPrivacyTitleText.Text = LocalizationManager.Get("About_PrivacyTitle");
         if (AboutPrivacyDescText != null) AboutPrivacyDescText.Text = LocalizationManager.Get("About_PrivacyDesc");
         if (AboutOpenFolderBtn != null) AboutOpenFolderBtn.Content = LocalizationManager.Get("About_OpenFolderBtn");
+    }
 
+    private void ApplyStatusLocalization()
+    {
         if (!_isRunning)
         {
             if (TyperActionText != null) TyperActionText.Text = LocalizationManager.Get("Typer_ActionStart");
@@ -381,13 +419,6 @@ public sealed partial class MainPage : Page
             if (HolderStatusText != null && IsDefaultStatusText(HolderStatusText.Text)) HolderStatusText.Text = readyText;
             if (ClickerStatusText != null && IsDefaultStatusText(ClickerStatusText.Text)) ClickerStatusText.Text = readyText;
             if (MacroStatusText != null && IsDefaultStatusText(MacroStatusText.Text)) MacroStatusText.Text = readyText;
-        }
-
-        UpdateAllActionBtnStates();
-        RenderHolderStepCards();
-        if (_macroRecorder?.Actions?.Count > 0)
-        {
-            RefreshMacroActionList();
         }
     }
 
