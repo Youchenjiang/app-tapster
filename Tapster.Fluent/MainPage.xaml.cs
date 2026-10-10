@@ -334,6 +334,7 @@ public sealed partial class MainPage : Page
         row.Children.Add(btn);
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Bug", "S2583:Conditionally executed code should be reachable", Justification = "HolderKeyBox is initialized by XAML InitializeComponent at runtime")]
     private void UpdateVirtualKeyboardHighlights()
     {
         if (Application.Current.Resources["AccentButtonStyle"] is not Style accentStyle ||
@@ -342,14 +343,10 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        var activeKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (HolderKeyBox != null && !string.IsNullOrWhiteSpace(HolderKeyBox.Text))
-        {
-            foreach (var key in HolderKeyBox.Text.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            {
-                activeKeys.Add(key);
-            }
-        }
+        string rawText = HolderKeyBox?.Text ?? string.Empty;
+        var activeKeys = !string.IsNullOrWhiteSpace(rawText)
+            ? new HashSet<string>(rawText.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         if (activeKeys.Count == 0)
         {
