@@ -140,4 +140,48 @@ public class KeyboardTests
         var exception = Record.Exception(() => Keyboard.Paste());
         Assert.Null(exception);
     }
+
+    [Theory]
+    [InlineData("numlock")]
+    [InlineData("numlk")]
+    [InlineData("scrolllock")]
+    [InlineData("scrlk")]
+    [InlineData("printscreen")]
+    [InlineData("prtsc")]
+    [InlineData("prtscr")]
+    [InlineData("pause")]
+    [InlineData("del")]
+    [InlineData("ins")]
+    [InlineData("pgup")]
+    [InlineData("pgdn")]
+    public void Keyboard_Tap_NavigationAndLockAliases_DoesNotThrow(string key)
+    {
+        var exception = Record.Exception(() => Keyboard.Tap(key));
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("numpad0")]
+    [InlineData("num0")]
+    [InlineData("numpad1")]
+    [InlineData("num1")]
+    [InlineData("numpad5")]
+    [InlineData("num5")]
+    [InlineData("numpad9")]
+    [InlineData("num9")]
+    [InlineData("multiply")]
+    [InlineData("num*")]
+    [InlineData("add")]
+    [InlineData("num+")]
+    [InlineData("subtract")]
+    [InlineData("num-")]
+    [InlineData("decimal")]
+    [InlineData("num.")]
+    [InlineData("divide")]
+    [InlineData("num/")]
+    public void Keyboard_Tap_NumpadKeysAndAliases_DoesNotThrow(string key)
+    {
+        var exception = Record.Exception(() => Keyboard.Tap(key));
+        Assert.Null(exception);
+    }
 }
