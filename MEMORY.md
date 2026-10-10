@@ -43,6 +43,7 @@
 - [x] **Key Holder Step Timeline**: Multi-stage key holding pipeline with step card timeline (feat/key-holder-step-timeline)
 - [x] **Multi-Language Support**: Full localization across 4 languages with clean labels (feat/fluent-localization)
 - [x] **Release 1.3.0.0**: Minor version bump across props, manifests, changelog and memory (chore/bump-version-1.3.0.0)
+- [x] **Post-Merge Security Workflow Permissions**: Grant read permissions to caller workflow and jobs calling reusable workflows (fix/post-merge-security-permissions)
 
 ---
 
@@ -111,3 +112,4 @@
   - Defined `AccentFillBrush` constant replacing repeated string literal `"AccentFillColorDefaultBrush"` (SonarCloud S1192).
   - Extracted nested ternary operations into standalone helper statements for card backgrounds and loop prefixes (SonarCloud S3358).
   - Reduced cognitive complexity in `CaptureKeyBtn_Click` (18 -> 4), `RenderHolderStepCards` (64 -> 3), `RunTaskAsync` (16 -> 8), and `RunKeyHolderAsync` (43 -> 7) below the maximum allowed threshold of 15 (SonarCloud S3776).
+- **Reusable Workflow Permissions Downgrade Ceiling**: In GitHub Actions, when a caller workflow calls a reusable workflow via `uses:`, permissions can only be downgraded, never elevated. An empty top-level `permissions: {}` in the caller workflow sets the permission ceiling to `none`, causing called workflows that request `actions: read` and `contents: read` (such as DefectDojo and Faraday) to fail at startup with an invalid workflow error. The caller workflow must grant `actions: read` and `contents: read` at the top level and job level.
