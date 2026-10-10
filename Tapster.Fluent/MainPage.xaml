@@ -13,6 +13,9 @@
                         IsSettingsVisible="True"
                         IsBackButtonVisible="Collapsed"
                         PaneDisplayMode="Left"
+                        IsPaneToggleButtonVisible="True"
+                        AlwaysShowHeader="False"
+                        Header="{x:Null}"
                         OpenPaneLength="180"
                         CompactPaneLength="48"
                         SelectionChanged="NavView_SelectionChanged">
@@ -47,125 +50,120 @@
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
-            <NavigationView.PaneFooter>
-                <StackPanel Margin="12,4" Spacing="2">
-                    <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Always on top" FontSize="11"/>
-                    <TextBlock Text="(Ctrl+Alt+T to Wake)" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="2,0,0,2"/>
-                </StackPanel>
-            </NavigationView.PaneFooter>
-
             <Grid Padding="20,12,20,16">
                 <!-- ══════════════════════════════════════════════════════════ -->
                 <!-- 1. Auto Typer Panel                                        -->
                 <!-- ══════════════════════════════════════════════════════════ -->
                 <Grid x:Name="TyperPanel" Visibility="Visible">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Header -->
-                    <StackPanel Grid.Row="0" Margin="0,0,0,10" Spacing="2">
-                        <TextBlock Text="Auto Typer" FontSize="18" FontWeight="SemiBold"/>
-                        <TextBlock Text="Simulates keyboard input for VNC, VM consoles, or automated text entry."
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                    </StackPanel>
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                        <StackPanel Spacing="10" Margin="0,0,8,0">
+                            <!-- Header -->
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Auto Typer" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Simulates keyboard input for VNC, VM consoles, or automated text entry."
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
+                            </StackPanel>
 
-                    <!-- Main Text Box Card -->
-                    <Border Grid.Row="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                            CornerRadius="8" Padding="12">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Margin="0,0,0,6">
-                                <TextBlock Text="Target Text:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                    <Button Click="Paste_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Paste from Clipboard">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon Glyph="&#xE77F;" FontSize="12"/>
-                                            <TextBlock Text="Paste"/>
+                            <!-- Main Text Box Card -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                    CornerRadius="8" Padding="12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                                        <TextBlock Text="Target Text:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                            <Button Click="Paste_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Paste from Clipboard">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE77F;" FontSize="12"/>
+                                                    <TextBlock Text="Paste"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="ClearTextBtn" Click="ClearText_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Clear All Text" IsEnabled="False">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE894;" FontSize="12"/>
+                                                    <TextBlock Text="Clear"/>
+                                                </StackPanel>
+                                            </Button>
                                         </StackPanel>
-                                    </Button>
-                                    <Button Click="ClearText_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Clear All Text">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon Glyph="&#xE894;" FontSize="12"/>
-                                            <TextBlock Text="Clear"/>
-                                        </StackPanel>
-                                    </Button>
+                                    </Grid>
+
+                                    <TextBox x:Name="TypeTextBox" Grid.Row="1"
+                                             MinHeight="140"
+                                             AcceptsReturn="True" TextWrapping="NoWrap"
+                                             FontFamily="Cascadia Code, Consolas" FontSize="13"
+                                             Padding="12" PlaceholderText="Enter text to automatically type..."/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Mode & Options Card -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                    CornerRadius="8" Padding="12,10">
+                                <Grid RowSpacing="8" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Input Mode: Keystroke vs Clipboard Paste -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Typing Mode:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <ComboBox x:Name="TypeModeCombo" SelectedIndex="0" Width="200" HorizontalAlignment="Left">
+                                            <ComboBoxItem Content="⌨️ Keystroke Emulation"/>
+                                            <ComboBoxItem Content="📋 Clipboard Paste (Instant)"/>
+                                        </ComboBox>
+                                        <TextBlock x:Name="TypeModeHint" Text="⚡ Instant paste (Ctrl+V) with clipboard auto-restore"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   VerticalAlignment="Center" Visibility="Collapsed"/>
+                                    </StackPanel>
+
+                                    <!-- Trailing Key: None / Enter / Tab -->
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Trailing Key:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <ComboBox x:Name="TypeTrailingKeyCombo" Grid.Row="1" Grid.Column="1" SelectedIndex="0" Width="200" HorizontalAlignment="Left">
+                                        <ComboBoxItem Content="None"/>
+                                        <ComboBoxItem Content="Enter (↵ Send / Newline)"/>
+                                        <ComboBoxItem Content="Tab (⇥ Switch Field)"/>
+                                    </ComboBox>
+
+                                    <!-- Keystroke Interval & Jitter (Keystroke only) -->
+                                    <TextBlock x:Name="TypeIntervalLabel" Grid.Row="2" Grid.Column="0" Text="Interval (sec/char):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel x:Name="TypeIntervalPanel" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <NumberBox x:Name="TypeIntervalBox" Width="80" Value="0.03" Minimum="0.001" Maximum="5" SmallChange="0.01"
+                                                   FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                        <CheckBox x:Name="TypeJitterCheck" Content="Natural Typing Jitter (±15%)" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- History Card -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                    CornerRadius="8" Padding="12,6">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Execution History" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <ListView x:Name="HistoryList" MaxHeight="50"
+                                              FontFamily="Cascadia Code, Consolas" FontSize="11"/>
                                 </StackPanel>
-                            </Grid>
-
-                            <TextBox x:Name="TypeTextBox" Grid.Row="1"
-                                     AcceptsReturn="True" TextWrapping="NoWrap"
-                                     FontFamily="Cascadia Code, Consolas" FontSize="13"
-                                     Padding="12" PlaceholderText="Enter text to automatically type..."/>
-                        </Grid>
-                    </Border>
-
-                    <!-- Mode & Options Card -->
-                    <Border Grid.Row="2" Margin="0,8,0,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,10">
-                        <Grid RowSpacing="8" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Input Mode: Keystroke vs Clipboard Paste -->
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Typing Mode:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <ComboBox x:Name="TypeModeCombo" SelectedIndex="0" Width="200" HorizontalAlignment="Left">
-                                    <ComboBoxItem Content="⌨️ Keystroke Emulation"/>
-                                    <ComboBoxItem Content="📋 Clipboard Paste (Instant)"/>
-                                </ComboBox>
-                                <TextBlock x:Name="TypeModeHint" Text="⚡ Instant paste (Ctrl+V) with clipboard auto-restore"
-                                           FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           VerticalAlignment="Center" Visibility="Collapsed"/>
-                            </StackPanel>
-
-                            <!-- Trailing Key: None / Enter / Tab -->
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Trailing Key:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                            <ComboBox x:Name="TypeTrailingKeyCombo" Grid.Row="1" Grid.Column="1" SelectedIndex="0" Width="200" HorizontalAlignment="Left">
-                                <ComboBoxItem Content="None"/>
-                                <ComboBoxItem Content="Enter (↵ Send / Newline)"/>
-                                <ComboBoxItem Content="Tab (⇥ Switch Field)"/>
-                            </ComboBox>
-
-                            <!-- Keystroke Interval & Jitter (Keystroke only) -->
-                            <TextBlock x:Name="TypeIntervalLabel" Grid.Row="2" Grid.Column="0" Text="Interval (sec/char):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                            <StackPanel x:Name="TypeIntervalPanel" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <NumberBox x:Name="TypeIntervalBox" Width="80" Value="0.03" Minimum="0.001" Maximum="5" SmallChange="0.01"
-                                           FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                <CheckBox x:Name="TypeJitterCheck" Content="Natural Typing Jitter (±15%)" FontSize="12" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- History Card -->
-                    <Border Grid.Row="3" Margin="0,8,0,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                            CornerRadius="8" Padding="12,6">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="Execution History" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <ListView x:Name="HistoryList" MaxHeight="50"
-                                      FontFamily="Cascadia Code, Consolas" FontSize="11"/>
+                            </Border>
                         </StackPanel>
-                    </Border>
+                    </ScrollViewer>
 
                     <!-- Dedicated Action Card for Typer -->
-                    <Border Grid.Row="4" Margin="0,10,0,0" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="14,10">
                         <Grid>
@@ -189,7 +187,7 @@
                             </StackPanel>
 
                             <Button x:Name="TyperActionBtn" Grid.Column="2" Width="136" Height="34" Click="TyperActionBtn_Click"
-                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
+                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6" IsEnabled="False">
                                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                     <FontIcon x:Name="TyperActionIcon" Glyph="&#xE768;" FontSize="12"/>
                                     <TextBlock x:Name="TyperActionText" Text="Start Typer (F8)" FontSize="12" FontWeight="SemiBold"/>
@@ -208,7 +206,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
                         <StackPanel Spacing="10">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Key Holder" FontSize="18" FontWeight="SemiBold"/>
@@ -220,26 +218,29 @@
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                                     CornerRadius="8" Padding="12">
                                 <StackPanel Spacing="10">
-                                    <Grid>
-                                        <TextBlock Text="Target Key / Combo:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                            <Button x:Name="CaptureKeyBtn" Click="CaptureKeyBtn_Click" Style="{StaticResource SubtleButtonStyle}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <FontIcon x:Name="CaptureIcon" Glyph="&#xE7C8;" FontSize="12"/>
-                                                    <TextBlock x:Name="CaptureKeyText" Text="Capture Key"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button Click="ClearHolderKey_Click" Style="{StaticResource SubtleButtonStyle}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <FontIcon Glyph="&#xE894;" FontSize="12"/>
-                                                    <TextBlock Text="Clear"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
+                                    <TextBlock Text="Target Key / Combo:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
 
-                                    <TextBox x:Name="HolderKeyBox" Text="w" PlaceholderText="Target key combo (e.g. w, ctrl+shift+a)..."
-                                             FontFamily="Cascadia Code, Consolas" FontSize="14" Padding="10,6"/>
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="HolderKeyBox" Grid.Column="0" Text="w" PlaceholderText="Target key combo (e.g. w, ctrl+shift+a)..."
+                                                 FontFamily="Cascadia Code, Consolas" FontSize="14" Padding="10,6"/>
+                                        <Button x:Name="CaptureKeyBtn" Grid.Column="1" Click="CaptureKeyBtn_Click" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Stretch">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon x:Name="CaptureIcon" Glyph="&#xE7C8;" FontSize="12"/>
+                                                <TextBlock x:Name="CaptureKeyText" Text="Capture Key"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="ClearHolderKeyBtn" Grid.Column="2" Click="ClearHolderKey_Click" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Stretch">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE894;" FontSize="12"/>
+                                                <TextBlock Text="Clear"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
 
                                     <StackPanel Orientation="Horizontal" Spacing="12">
                                         <TextBlock Text="Hold Duration (seconds, 0 = infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
@@ -255,11 +256,9 @@
                                     CornerRadius="8" Padding="12">
                                 <StackPanel Spacing="10">
                                     <TextBlock Text="Visual Virtual Keyboard (Click keys to build combo)" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                                        <StackPanel x:Name="KeyboardContainer" Spacing="4" HorizontalAlignment="Left">
-                                            <!-- Structured Keyboard Rows generated in MainPage.xaml.cs -->
-                                        </StackPanel>
-                                    </ScrollViewer>
+                                    <StackPanel x:Name="KeyboardContainer" Spacing="4" HorizontalAlignment="Left">
+                                        <!-- Structured Keyboard Rows generated in MainPage.xaml.cs -->
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -309,111 +308,119 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Spacing="12">
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Auto Clicker" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Automates mouse clicks with precise interval and coordinate targeting."
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                        </StackPanel>
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                        <StackPanel Spacing="12" Margin="0,0,8,0">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Auto Clicker" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Automates mouse clicks with precise interval and coordinate targeting."
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
+                            </StackPanel>
 
-                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                                CornerRadius="8" Padding="14">
-                            <Grid RowSpacing="12" ColumnSpacing="16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                    CornerRadius="8" Padding="14">
+                                <Grid RowSpacing="12" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                                <!-- Target Type: Mouse or Keyboard Spammer -->
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Target Type:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <ComboBox x:Name="ClickTargetTypeCombo" Grid.Row="0" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
-                                    <ComboBoxItem Content="🖱️ Mouse Click"/>
-                                    <ComboBoxItem Content="⌨️ Keyboard Spammer"/>
-                                </ComboBox>
-
-                                <!-- Trigger Mode: Toggle or Hold-to-Click -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Trigger Mode:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                    <ComboBox x:Name="ClickTriggerModeCombo" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
-                                        <ComboBoxItem Content="Toggle (Press to Start/Stop)"/>
-                                        <ComboBoxItem Content="Hold to Click (Hold F6)"/>
+                                    <!-- Target Type: Mouse or Keyboard Spammer -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Target Type:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <ComboBox x:Name="ClickTargetTypeCombo" Grid.Row="0" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
+                                        <ComboBoxItem Content="🖱️ Mouse Click"/>
+                                        <ComboBoxItem Content="⌨️ Keyboard Spammer"/>
                                     </ComboBox>
-                                    <TextBlock x:Name="HoldModeHint" Text="💡 Hold hotkey to spam, release to stop"
-                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                               VerticalAlignment="Center" Visibility="Collapsed"/>
-                                </StackPanel>
 
-                                <!-- Mouse Button (Shown for Mouse Click) -->
-                                <TextBlock x:Name="MouseButtonLabel" Grid.Row="2" Grid.Column="0" Text="Mouse Button:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <ComboBox x:Name="MouseButtonCombo" Grid.Row="2" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
-                                    <ComboBoxItem Content="Left Click"/>
-                                    <ComboBoxItem Content="Right Click"/>
-                                    <ComboBoxItem Content="Middle Click"/>
-                                </ComboBox>
-
-                                <!-- Keyboard Key (Shown for Keyboard Spammer) -->
-                                <TextBlock x:Name="SpamKeyLabel" Grid.Row="2" Grid.Column="0" Text="Spam Key / Combo:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium" Visibility="Collapsed"/>
-                                <TextBox x:Name="SpamKeyBox" Grid.Row="2" Grid.Column="1" Text="space" PlaceholderText="Key to spam (e.g. space, f, 1, e)"
-                                         FontFamily="Cascadia Code, Consolas" FontSize="12" Width="200" HorizontalAlignment="Left" Visibility="Collapsed"/>
-
-                                <!-- Click / Spam Interval -->
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Interval (sec):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <NumberBox x:Name="ClickIntervalBox" Grid.Row="3" Grid.Column="1" Value="0.1" Minimum="0.005" SmallChange="0.05"
-                                           FontSize="12" SpinButtonPlacementMode="Compact" HorizontalAlignment="Left" Width="200"/>
-
-                                <!-- Repeat Count -->
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Repeat Count (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <NumberBox x:Name="ClickCountBox" Grid.Row="4" Grid.Column="1" Value="100" Minimum="0"
-                                           FontSize="12" SpinButtonPlacementMode="Compact" HorizontalAlignment="Left" Width="200"/>
-
-                                <!-- Target Coordinates (Mouse only) -->
-                                <TextBlock x:Name="ClickCoordsLabel" Grid.Row="5" Grid.Column="0" Text="Target Coordinates:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel x:Name="ClickCoordsPanel" Grid.Row="5" Grid.Column="1" Orientation="Vertical" Spacing="6" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="X:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <NumberBox x:Name="ClickXBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                        <TextBlock Text="Y:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <NumberBox x:Name="ClickYBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                        <Button x:Name="PickCoordBtn" Click="PickCoordBtn_Click" Style="{StaticResource SubtleButtonStyle}">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <FontIcon x:Name="PickCoordIcon" Glyph="&#xE707;" FontSize="12"/>
-                                                <TextBlock x:Name="PickCoordText" Text="Pick Location"/>
-                                            </StackPanel>
-                                        </Button>
+                                    <!-- Trigger Mode: Toggle or Hold-to-Click -->
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Trigger Mode:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <ComboBox x:Name="ClickTriggerModeCombo" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
+                                            <ComboBoxItem Content="Toggle (Press to Start/Stop)"/>
+                                            <ComboBoxItem Content="Hold to Click (Hold F6)"/>
+                                        </ComboBox>
+                                        <TextBlock x:Name="HoldModeHint" Text="💡 Hold hotkey to spam, release to stop"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   VerticalAlignment="Center" Visibility="Collapsed"/>
                                     </StackPanel>
-                                    <CheckBox x:Name="ShowTargetMarkerCheck" Content="Show Target Marker on Screen" FontSize="12" Margin="0,-2,0,0"/>
-                                </StackPanel>
 
-                                <!-- Time Jitter (Random Interval) -->
-                                <TextBlock x:Name="TimeJitterLabel" Grid.Row="6" Grid.Column="0" Text="Time Jitter (±%):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <CheckBox x:Name="TimeJitterCheck" Content="Randomize interval" FontSize="12" VerticalAlignment="Center"/>
-                                    <NumberBox x:Name="TimeJitterBox" Width="80" Value="15" Minimum="1" Maximum="100"
-                                               FontSize="12" SpinButtonPlacementMode="Compact" IsEnabled="False"/>
-                                    <TextBlock Text="%" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                </StackPanel>
+                                    <!-- Mouse Button (Shown for Mouse Click) -->
+                                    <TextBlock x:Name="MouseButtonLabel" Grid.Row="2" Grid.Column="0" Text="Mouse Button:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <ComboBox x:Name="MouseButtonCombo" Grid.Row="2" Grid.Column="1" SelectedIndex="0" HorizontalAlignment="Left" Width="200">
+                                        <ComboBoxItem Content="Left Click"/>
+                                        <ComboBoxItem Content="Right Click"/>
+                                        <ComboBoxItem Content="Middle Click"/>
+                                    </ComboBox>
 
-                                <!-- Location Jitter (Spatial Randomness) -->
-                                <TextBlock x:Name="LocationJitterLabel" Grid.Row="7" Grid.Column="0" Text="Location Jitter (±px):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                <StackPanel x:Name="LocationJitterPanel" Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <NumberBox x:Name="LocationJitterBox" Width="80" Value="0" Minimum="0" Maximum="100"
-                                               FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                    <TextBlock Text="px radius (0 = exact point)" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </StackPanel>
+                                    <!-- Keyboard Key (Shown for Keyboard Spammer) -->
+                                    <TextBlock x:Name="SpamKeyLabel" Grid.Row="2" Grid.Column="0" Text="Spam Key / Combo:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium" Visibility="Collapsed"/>
+                                    <TextBox x:Name="SpamKeyBox" Grid.Row="2" Grid.Column="1" Text="space" PlaceholderText="Key to spam (e.g. space, f, 1, e)"
+                                             FontFamily="Cascadia Code, Consolas" FontSize="12" Width="200" HorizontalAlignment="Left" Visibility="Collapsed"/>
+
+                                    <!-- Click / Spam Interval -->
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Interval (sec):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <NumberBox x:Name="ClickIntervalBox" Grid.Row="3" Grid.Column="1" Value="0.1" Minimum="0.005" SmallChange="0.05"
+                                               FontSize="12" SpinButtonPlacementMode="Compact" HorizontalAlignment="Left" Width="200"/>
+
+                                    <!-- Repeat Count -->
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Repeat Count (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <NumberBox x:Name="ClickCountBox" Grid.Row="4" Grid.Column="1" Value="100" Minimum="0"
+                                               FontSize="12" SpinButtonPlacementMode="Compact" HorizontalAlignment="Left" Width="200"/>
+
+                                    <!-- Target Coordinates (Mouse only) -->
+                                    <TextBlock x:Name="ClickCoordsLabel" Grid.Row="5" Grid.Column="0" Text="Target Coordinates:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel x:Name="ClickCoordsPanel" Grid.Row="5" Grid.Column="1" Orientation="Vertical" Spacing="6" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="X:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            <NumberBox x:Name="ClickXBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                            <TextBlock Text="Y:" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            <NumberBox x:Name="ClickYBox" Width="70" PlaceholderText="Current" FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                            <Button x:Name="PickCoordBtn" Click="PickCoordBtn_Click" Style="{StaticResource SubtleButtonStyle}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon x:Name="PickCoordIcon" Glyph="&#xE707;" FontSize="12"/>
+                                                    <TextBlock x:Name="PickCoordText" Text="Pick Location"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="ClearCoordsBtn" Click="ClearCoordsBtn_Click" Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Clear coordinates to click at current cursor position" IsEnabled="False">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE894;" FontSize="12"/>
+                                                    <TextBlock Text="Clear"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                        <CheckBox x:Name="ShowTargetMarkerCheck" Content="Show Target Marker on Screen" FontSize="12" Margin="0,-2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Time Jitter (Random Interval) -->
+                                    <TextBlock x:Name="TimeJitterLabel" Grid.Row="6" Grid.Column="0" Text="Time Jitter (±%):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <CheckBox x:Name="TimeJitterCheck" Content="Randomize interval" FontSize="12" VerticalAlignment="Center"/>
+                                        <NumberBox x:Name="TimeJitterBox" Width="80" Value="15" Minimum="1" Maximum="100"
+                                                   FontSize="12" SpinButtonPlacementMode="Compact" IsEnabled="False"/>
+                                        <TextBlock Text="%" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Location Jitter (Spatial Randomness) -->
+                                    <TextBlock x:Name="LocationJitterLabel" Grid.Row="7" Grid.Column="0" Text="Location Jitter (±px):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                    <StackPanel x:Name="LocationJitterPanel" Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <NumberBox x:Name="LocationJitterBox" Width="80" Value="0" Minimum="0" Maximum="100"
+                                                   FontSize="12" SpinButtonPlacementMode="Compact"/>
+                                        <TextBlock Text="px radius (0 = exact point)" VerticalAlignment="Center" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <!-- Dedicated Action Card for Clicker -->
                     <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
@@ -459,79 +466,81 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Spacing="12">
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Macro Recorder" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Record user mouse clicks and keystrokes and replay them back."
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                        </StackPanel>
-
-                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                                CornerRadius="8" Padding="14">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Button x:Name="RecordMacroBtn" Click="RecordMacroBtn_Click" Style="{StaticResource AccentButtonStyle}">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon x:Name="RecordIcon" Glyph="&#xE7C8;" FontSize="12"/>
-                                            <TextBlock x:Name="RecordMacroText" Text="Start Recording"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button Click="ClearMacroBtn_Click" Style="{StaticResource SubtleButtonStyle}">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon Glyph="&#xE894;" FontSize="12"/>
-                                            <TextBlock Text="Clear Macro"/>
-                                        </StackPanel>
-                                    </Button>
-                                    
-                                </StackPanel>
-
-                                <Grid RowSpacing="8" ColumnSpacing="16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Replay Loop Count (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                    <NumberBox x:Name="MacroRepeatBox" Grid.Row="0" Grid.Column="1" Value="1" Minimum="0" Width="100" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact"/>
-
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Replay Speed Multiplier:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                    <NumberBox x:Name="MacroSpeedBox" Grid.Row="1" Grid.Column="1" Value="1.0" Minimum="0.1" Maximum="10.0" SmallChange="0.5" Width="100" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact"/>
-                                </Grid>
-
-                                <StackPanel Spacing="4">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="Recorded Actions (Double-click step to edit):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                            <Button x:Name="EditActionBtn" Click="EditActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <FontIcon Glyph="&#xE70F;" FontSize="11"/>
-                                                    <TextBlock Text="Edit Step" FontSize="11"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button x:Name="DeleteActionBtn" Click="DeleteActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <FontIcon Glyph="&#xE74D;" FontSize="11"/>
-                                                    <TextBlock Text="Delete Step" FontSize="11"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-                                    <ListView x:Name="MacroActionList" MaxHeight="140"
-                                              FontFamily="Cascadia Code, Consolas" FontSize="11"
-                                              SelectionMode="Single" DoubleTapped="MacroActionList_DoubleTapped"/>
-                                </StackPanel>
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
+                        <StackPanel Spacing="12" Margin="0,0,8,0">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Macro Recorder" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Record user mouse clicks and keystrokes and replay them back."
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
                             </StackPanel>
-                        </Border>
-                    </StackPanel>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                    CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <Button x:Name="RecordMacroBtn" Click="RecordMacroBtn_Click" Style="{StaticResource AccentButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon x:Name="RecordIcon" Glyph="&#xE7C8;" FontSize="12"/>
+                                                <TextBlock x:Name="RecordMacroText" Text="Start Recording"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="ClearMacroBtn" Click="ClearMacroBtn_Click" Style="{StaticResource SubtleButtonStyle}" IsEnabled="False">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE894;" FontSize="12"/>
+                                                <TextBlock Text="Clear Macro"/>
+                                            </StackPanel>
+                                        </Button>
+                                        
+                                    </StackPanel>
+
+                                    <Grid RowSpacing="8" ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Replay Loop Count (0 = Infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                        <NumberBox x:Name="MacroRepeatBox" Grid.Row="0" Grid.Column="1" Value="1" Minimum="0" Width="100" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Replay Speed Multiplier:" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                                        <NumberBox x:Name="MacroSpeedBox" Grid.Row="1" Grid.Column="1" Value="1.0" Minimum="0.1" Maximum="10.0" SmallChange="0.5" Width="100" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact"/>
+                                    </Grid>
+
+                                    <StackPanel Spacing="4">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Recorded Actions (Double-click step to edit):" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                                <Button x:Name="EditActionBtn" Click="EditActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <FontIcon Glyph="&#xE70F;" FontSize="11"/>
+                                                        <TextBlock Text="Edit Step" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button x:Name="DeleteActionBtn" Click="DeleteActionBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="6,3" IsEnabled="False">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <FontIcon Glyph="&#xE74D;" FontSize="11"/>
+                                                        <TextBlock Text="Delete Step" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                        <ListView x:Name="MacroActionList" MaxHeight="140"
+                                                  FontFamily="Cascadia Code, Consolas" FontSize="11"
+                                                  SelectionMode="Single" DoubleTapped="MacroActionList_DoubleTapped"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <!-- Dedicated Action Card for Macro Replay -->
                     <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}"
@@ -558,7 +567,7 @@
                             </StackPanel>
 
                             <Button x:Name="MacroActionBtn" Grid.Column="2" Width="136" Height="34" Click="MacroActionBtn_Click"
-                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6">
+                                    Style="{StaticResource AccentButtonStyle}" CornerRadius="6" IsEnabled="False">
                                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                     <FontIcon x:Name="MacroActionIcon" Glyph="&#xE768;" FontSize="12"/>
                                     <TextBlock x:Name="MacroActionText" Text="Replay Macro (F9)" FontSize="12" FontWeight="SemiBold"/>
@@ -583,7 +592,7 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
 
-                    <ScrollViewer Grid.Row="1">
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto">
                         <StackPanel Spacing="12" Margin="0,0,8,0">
                             <!-- Card 1: Start on Boot -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -595,9 +604,9 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-                                        <TextBlock Text="開機自動啟動 (Start with Windows)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="開機自動啟動 (Start with Windows)" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
                                         <TextBlock Text="於 Windows 登入時自動在背景啟動 Tapster 並常駐於系統匣"
-                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <ToggleSwitch x:Name="StartOnBootToggle" Grid.Column="1"
                                                   OnContent="" OffContent="" VerticalAlignment="Center"
@@ -615,9 +624,9 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-                                        <TextBlock Text="啟動時縮小至系統匣 (Start Minimized to Tray)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="啟動時縮小至系統匣 (Start Minimized to Tray)" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
                                         <TextBlock Text="開啟應用程式時直接隱藏至右下角系統匣，不彈出主視窗干擾"
-                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <ToggleSwitch x:Name="StartMinimizedToggle" Grid.Column="1"
                                                   OnContent="" OffContent="" VerticalAlignment="Center"
@@ -635,9 +644,9 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-                                        <TextBlock Text="點擊關閉 (X) 時縮小至系統匣 (Minimize on Close)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="點擊關閉 (X) 時縮小至系統匣 (Minimize on Close)" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
                                         <TextBlock Text="點擊右上角關閉按鈕時縮排至系統匣，保持全域快捷鍵隨叫隨到"
-                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <ToggleSwitch x:Name="MinimizeOnCloseToggle" Grid.Column="1"
                                                   OnContent="" OffContent="" VerticalAlignment="Center"
@@ -645,7 +654,27 @@
                                 </Grid>
                             </Border>
 
-                            <!-- Card 4: Global Hotkey Info -->
+                            <!-- Card 4: Always on Top -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="視窗置頂 (Always on Top)" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
+                                        <TextBlock Text="將 Tapster 視窗固定於其他視窗最上層 (全域喚醒熱鍵 Ctrl+Alt+T)"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="AlwaysOnTopToggle" Grid.Column="1"
+                                                  OnContent="" OffContent="" VerticalAlignment="Center"
+                                                  Toggled="AlwaysOnTopToggle_Toggled"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Card 5: Global Hotkey Info -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1" CornerRadius="8" Padding="16">
@@ -671,37 +700,37 @@
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="喚醒 / 隱藏主視窗 (Wake / Hide)" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="喚醒 / 隱藏主視窗 (Wake / Hide)" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                         <Border Grid.Row="0" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
                                             <TextBlock Text="Ctrl + Alt + T" FontFamily="Cascadia Code, Consolas" FontSize="11" FontWeight="SemiBold"/>
                                         </Border>
 
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="切換滑鼠連點 / 鍵盤連打 (Clicker / Spammer)" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="切換滑鼠連點 / 鍵盤連打 (Clicker / Spammer)" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                         <Border Grid.Row="1" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
                                             <TextBlock Text="F6" FontFamily="Cascadia Code, Consolas" FontSize="11" FontWeight="SemiBold"/>
                                         </Border>
 
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="切換鍵盤長按 (Key Holder)" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="切換鍵盤長按 (Key Holder)" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                         <Border Grid.Row="2" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
                                             <TextBlock Text="F7" FontFamily="Cascadia Code, Consolas" FontSize="11" FontWeight="SemiBold"/>
                                         </Border>
 
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="啟動自動打字機 (Auto Typer)" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="啟動自動打字機 (Auto Typer)" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                         <Border Grid.Row="3" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
                                             <TextBlock Text="F8" FontFamily="Cascadia Code, Consolas" FontSize="11" FontWeight="SemiBold"/>
                                         </Border>
 
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="播放巨集 (Replay Macro)" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="播放巨集 (Replay Macro)" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                         <Border Grid.Row="4" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
                                             <TextBlock Text="F9" FontFamily="Cascadia Code, Consolas" FontSize="11" FontWeight="SemiBold"/>
                                         </Border>
 
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="緊急全部終止 (Panic Kill All)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource SystemFillColorCriticalBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="緊急全部終止 (Panic Kill All)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource SystemFillColorCriticalBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                         <Border Grid.Row="5" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
                                             <TextBlock Text="F10" FontFamily="Cascadia Code, Consolas" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
                                         </Border>
 
-                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="緊急中斷跳出 (Panic Escape)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="緊急中斷跳出 (Panic Escape)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                         <Border Grid.Row="6" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
                                             <TextBlock Text="Esc" FontFamily="Cascadia Code, Consolas" FontSize="11"/>
                                         </Border>
@@ -719,13 +748,13 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-                                        <TextBlock Text="版本與專案資訊 (About &amp; Version)" FontWeight="SemiBold" FontSize="13"/>
-                                        <TextBlock Text="Tapster Fluent v1.1.0 (WinUI 3 + .NET NativeAOT Architecture)"
-                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="版本與專案資訊 (About &amp; Version)" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
+                                        <TextBlock Text="Tapster Fluent v1.2.0.0 (WinUI 3 + .NET NativeAOT Architecture)"
+                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="查看詳情" FontSize="11"
                                             Click="NavigateToAbout_Click" VerticalAlignment="Center"/>
-                                </Grid>
+                                 </Grid>
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
@@ -746,7 +775,7 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
 
-                    <ScrollViewer Grid.Row="1">
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto">
                         <StackPanel Spacing="16" Margin="0,0,8,0">
                             <!-- Hero Card -->
                             <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
@@ -764,7 +793,7 @@
                                             <TextBlock Text="Tapster Fluent" FontSize="20" FontWeight="Bold"
                                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
                                             <Border Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="12" Padding="8,2">
-                                                <TextBlock Text="v1.2.0.0 Release" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                <TextBlock Text="v1.2.0.0 Release" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="Windows 11 原生超輕量自動化助手 (Native Automation Utility)"
@@ -794,16 +823,16 @@
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="UI 框架" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="WinUI 3 (Windows App SDK 2.3.1) Mica &amp; Acrylic" FontSize="11"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="WinUI 3 (Windows App SDK 2.3.1) Mica &amp; Acrylic" FontSize="11" TextWrapping="Wrap"/>
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="底層自動化核心" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="C# .NET 8 + Win32 Native P/Invoke (&lt; 35MB RAM, &lt; 1ms Latency)" FontSize="11"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="C# .NET 8 + Win32 Native P/Invoke (&lt; 35MB RAM, &lt; 1ms Latency)" FontSize="11" TextWrapping="Wrap"/>
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="發布架構" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="雙軌制：Microsoft Store MSIX 封裝 + Standalone 綠色純單檔 EXE" FontSize="11"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="雙軌制：Microsoft Store MSIX 封裝 + Standalone 綠色純單檔 EXE" FontSize="11" TextWrapping="Wrap"/>
 
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="授權條款" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="MIT License (開源且自由使用)" FontSize="11"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="MIT License (開源且自由使用)" FontSize="11" TextWrapping="Wrap"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>

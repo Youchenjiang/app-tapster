@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using WinRT.Interop;
@@ -77,9 +78,70 @@ public sealed partial class MainWindow : Window
                 }
             }
         };
-        Closed += MainWindow_Closed;
+        // Set responsive default window size and center on active display
+        if (AppWindow != null)
+        {
+            var displayArea = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
+            int defaultWidth = 980;
+            int defaultHeight = 680;
+            if (displayArea != null)
+            {
+                int targetWidth = Math.Min(defaultWidth, (int)(displayArea.WorkArea.Width * 0.9));
+                int targetHeight = Math.Min(defaultHeight, (int)(displayArea.WorkArea.Height * 0.9));
+                var centeredPosition = new Windows.Graphics.PointInt32
+                {
+                    X = displayArea.WorkArea.X + (displayArea.WorkArea.Width - targetWidth) / 2,
+                    Y = displayArea.WorkArea.Y + (displayArea.WorkArea.Height - targetHeight) / 2
+                };
+                AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(centeredPosition.X, centeredPosition.Y, targetWidth, targetHeight));
+            }
+            else
+            {
+                AppWindow.Resize(new Windows.Graphics.SizeInt32(defaultWidth, defaultHeight));
+            }
+        }
 
+        Closed += MainWindow_Closed;
+        Activated += MainWindow_Activated;
         RootFrame.Navigate(typeof(MainPage));
+    }
+
+    private bool _hasEnforcedInitialSize = false;
+
+    private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
+    {
+        if (!_hasEnforcedInitialSize)
+        {
+            _hasEnforcedInitialSize = true;
+            EnsureHealthyWindowSize();
+        }
+    }
+
+    public void EnsureHealthyWindowSize()
+    {
+        if (AppWindow == null) return;
+        var currentSize = AppWindow.Size;
+        if (currentSize.Width < 780 || currentSize.Height < 540)
+        {
+            var displayArea = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
+            int targetWidth = 960;
+            int targetHeight = 680;
+            if (displayArea != null)
+            {
+                targetWidth = Math.Min(targetWidth, (int)(displayArea.WorkArea.Width * 0.9));
+                targetHeight = Math.Min(targetHeight, (int)(displayArea.WorkArea.Height * 0.9));
+                var pos = new Windows.Graphics.PointInt32
+                {
+                    X = displayArea.WorkArea.X + (displayArea.WorkArea.Width - targetWidth) / 2,
+                    Y = displayArea.WorkArea.Y + (displayArea.WorkArea.Height - targetHeight) / 2
+                };
+                AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(pos.X, pos.Y, targetWidth, targetHeight));
+            }
+            else
+            {
+                AppWindow.Resize(new Windows.Graphics.SizeInt32(targetWidth, targetHeight));
+            }
+        }
     }
 
     private void RegisterAllGlobalHotkeys()
@@ -113,6 +175,18 @@ public sealed partial class MainWindow : Window
         UIntPtr uIdSubclass,
         IntPtr dwRefData)
     {
+        if (uMsg == NativeMethods.WM_GETMINMAXINFO)
+        {
+            NativeMethods.DefSubclassProc(hWnd, uMsg, wParam, lParam);
+            uint dpi = NativeMethods.GetDpiForWindow(hWnd);
+            double scale = dpi > 0 ? dpi / 96.0 : 1.0;
+            var mmi = Marshal.PtrToStructure<NativeMethods.MINMAXINFO>(lParam);
+            mmi.ptMinTrackSize.X = (int)(680 * scale);
+            mmi.ptMinTrackSize.Y = (int)(480 * scale);
+            Marshal.StructureToPtr(mmi, lParam, true);
+            return IntPtr.Zero;
+        }
+
         if (_hotkeyService != null && _hotkeyService.ProcessWindowMessage(uMsg, wParam))
         {
             return IntPtr.Zero;

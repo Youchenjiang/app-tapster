@@ -97,6 +97,22 @@ public static partial class NativeMethods
     public const int SW_RESTORE = 9;
     public const int SW_HIDE = 0;
     public const int SW_SHOW = 5;
+    public const uint WM_GETMINMAXINFO = 0x0024;
+
+    [StructLayout(LayoutKind.Sequential)]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "S101:Types should be named in PascalCase", Justification = "Win32 MINMAXINFO struct name")]
+    public struct MINMAXINFO
+    {
+        public POINT ptReserved;
+        public POINT ptMaxSize;
+        public POINT ptMaxPosition;
+        public POINT ptMinTrackSize;
+        public POINT ptMaxTrackSize;
+    }
+
+    [LibraryImport("user32.dll")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S4200:Native methods should be wrapped", Justification = "Win32 P/Invoke interop method")]
+    public static partial uint GetDpiForWindow(IntPtr hWnd);
 
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

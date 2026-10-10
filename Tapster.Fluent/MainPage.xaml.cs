@@ -17,9 +17,14 @@ public sealed partial class MainPage : Page
     private const string TyperModeClipboard = "clipboard";
     private const string TyperModeKeystroke = "keystroke";
     private const string TabClicker = "Clicker";
+    private const string TabHolder = "Holder";
+    private const string TabMacro = "Macro";
+    private const string TabTyper = "Typer";
+    private const string TabSettings = "Settings";
+    private const string TabAbout = "About";
 
     public static MainPage? Instance { get; private set; }
-    private string _activeTab = "Typer";
+    private string _activeTab = TabTyper;
     private bool _isRunning = false;
     private CancellationTokenSource? _cts;
 
@@ -28,6 +33,7 @@ public sealed partial class MainPage : Page
     private bool _isCapturingKey = false;
     private readonly TargetMarkerOverlay _targetMarkerOverlay = new();
     private readonly PanicDetector _panicDetector = new();
+    private readonly Dictionary<string, List<Button>> _keyboardButtons = new(StringComparer.OrdinalIgnoreCase);
 
     public MainPage()
     {
@@ -87,6 +93,7 @@ public sealed partial class MainPage : Page
         {
             AppSettings.Current.ClickerSpamKey = SpamKeyBox.Text;
             AppSettings.Current.Save();
+            UpdateClickerActionBtnState();
         };
 
         TimeJitterCheck.IsChecked = AppSettings.Current.ClickerJitterEnabled;
@@ -120,8 +127,16 @@ public sealed partial class MainPage : Page
         ShowTargetMarkerCheck.IsChecked = AppSettings.Current.ClickerShowTargetMarker;
         ShowTargetMarkerCheck.Checked += (_, _) => OnTargetMarkerSettingsChanged();
         ShowTargetMarkerCheck.Unchecked += (_, _) => OnTargetMarkerSettingsChanged();
-        ClickXBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
-        ClickYBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
+        ClickXBox.ValueChanged += (_, _) =>
+        {
+            OnTargetMarkerSettingsChanged();
+            UpdateClearCoordsBtnState();
+        };
+        ClickYBox.ValueChanged += (_, _) =>
+        {
+            OnTargetMarkerSettingsChanged();
+            UpdateClearCoordsBtnState();
+        };
         LocationJitterBox.ValueChanged += (_, _) => OnTargetMarkerSettingsChanged();
         Unloaded += (_, _) => _targetMarkerOverlay.Dispose();
         UpdateTargetMarkerOverlay();
@@ -159,10 +174,19 @@ public sealed partial class MainPage : Page
         };
         UpdateTyperMode(this);
 
-        ClickTargetTypeCombo.SelectionChanged += (_, _) => UpdateClickerTargetType(this);
+        ClickTargetTypeCombo.SelectionChanged += (_, _) =>
+        {
+            UpdateClickerTargetType(this);
+            UpdateClickerActionBtnState();
+        };
         ClickTriggerModeCombo.SelectionChanged += (_, _) => UpdateClickerTriggerMode(this);
         UpdateClickerTargetType(this);
         UpdateClickerTriggerMode(this);
+
+        TypeTextBox.TextChanged += (_, _) => UpdateTyperActionBtnState();
+        HolderKeyBox.TextChanged += (_, _) => UpdateHolderActionBtnState();
+        MacroActionList.SelectionChanged += (_, _) => UpdateMacroItemActionBtns();
+        UpdateAllActionBtnStates();
 
         GenerateVirtualKeyboard();
 
@@ -172,21 +196,19 @@ public sealed partial class MainPage : Page
         MinimizeOnCloseToggle.IsOn = AppSettings.Current.MinimizeToTrayOnClose;
         if (MainWindow.Instance != null)
         {
-            AlwaysOnTopCheckBox.IsChecked = MainWindow.Instance.IsAlwaysOnTop;
+            AlwaysOnTopToggle.IsOn = MainWindow.Instance.IsAlwaysOnTop;
             MainWindow.Instance.AlwaysOnTopChanged += OnMainWindowAlwaysOnTopChanged;
         }
-
-        AlwaysOnTopCheckBox.Checked += (_, _) => MainWindow.Instance?.SetAlwaysOnTop(true);
-        AlwaysOnTopCheckBox.Unchecked += (_, _) => MainWindow.Instance?.SetAlwaysOnTop(false);
     }
 
     private void GenerateVirtualKeyboard()
     {
         KeyboardContainer.Children.Clear();
+        _keyboardButtons.Clear();
 
         // ── Row 0: Function Keys ──
         var row0 = CreateKeyboardRow();
-        AddKeyBtn(row0, "esc", "Esc", width: 44, isAccent: true);
+        AddKeyBtn(row0, "esc", "Esc", width: 44);
         AddSpacer(row0, 16);
         AddKeyBtn(row0, "f1", "F1"); AddKeyBtn(row0, "f2", "F2"); AddKeyBtn(row0, "f3", "F3"); AddKeyBtn(row0, "f4", "F4");
         AddSpacer(row0, 12);
@@ -214,7 +236,7 @@ public sealed partial class MainPage : Page
         AddKeyBtn(row3, "capslock", "Caps Lock", width: 66);
         string[] r3Keys = { "a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'" };
         foreach (var k in r3Keys) AddKeyBtn(row3, k, k.ToUpper());
-        AddKeyBtn(row3, KeyEnter, "Enter", width: 80, isAccent: true);
+        AddKeyBtn(row3, KeyEnter, "Enter", width: 80);
         KeyboardContainer.Children.Add(row3);
 
         // ── Row 4: Shift Row ──
@@ -240,6 +262,8 @@ public sealed partial class MainPage : Page
         AddKeyBtn(row5, "down", "▼", width: 36);
         AddKeyBtn(row5, "right", "►", width: 36);
         KeyboardContainer.Children.Add(row5);
+
+        UpdateVirtualKeyboardHighlights();
     }
 
     private static StackPanel CreateKeyboardRow()
@@ -256,7 +280,7 @@ public sealed partial class MainPage : Page
         row.Children.Add(new Border { Width = width });
     }
 
-    private void AddKeyBtn(StackPanel row, string keyId, string label, double width = 36, bool isAccent = false)
+    private void AddKeyBtn(StackPanel row, string keyId, string label, double width = 36)
     {
         var btn = new Button
         {
@@ -267,30 +291,90 @@ public sealed partial class MainPage : Page
             FontSize = width > 50 ? 10 : 11,
             FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Code, Consolas"),
             CornerRadius = new CornerRadius(4),
-            Style = Application.Current.Resources[isAccent ? "AccentButtonStyle" : "DefaultButtonStyle"] as Style
+            Style = Application.Current.Resources["DefaultButtonStyle"] as Style
         };
 
         btn.Click += (s, e) =>
         {
             string current = HolderKeyBox.Text.Trim();
-            if (string.IsNullOrEmpty(current) || current == "w")
+            if (string.IsNullOrEmpty(current) || string.Equals(current, "w", StringComparison.OrdinalIgnoreCase))
             {
-                HolderKeyBox.Text = keyId;
+                if (string.Equals(current, keyId, StringComparison.OrdinalIgnoreCase))
+                {
+                    HolderKeyBox.Text = string.Empty;
+                }
+                else
+                {
+                    HolderKeyBox.Text = keyId;
+                }
             }
-            else if (!current.Split('+').Contains(keyId))
+            else
             {
-                HolderKeyBox.Text = $"{current}+{keyId}";
+                var keys = current.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                  .ToList();
+                if (keys.Contains(keyId, StringComparer.OrdinalIgnoreCase))
+                {
+                    keys.RemoveAll(k => string.Equals(k, keyId, StringComparison.OrdinalIgnoreCase));
+                    HolderKeyBox.Text = string.Join("+", keys);
+                }
+                else
+                {
+                    keys.Add(keyId);
+                    HolderKeyBox.Text = string.Join("+", keys);
+                }
             }
         };
 
+        if (!_keyboardButtons.TryGetValue(keyId, out var btnList))
+        {
+            btnList = [];
+            _keyboardButtons[keyId] = btnList;
+        }
+        btnList.Add(btn);
         row.Children.Add(btn);
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Bug", "S2583:Conditionally executed code should be reachable", Justification = "HolderKeyBox is initialized by XAML InitializeComponent at runtime")]
+    private void UpdateVirtualKeyboardHighlights()
+    {
+        if (Application.Current.Resources["AccentButtonStyle"] is not Style accentStyle ||
+            Application.Current.Resources["DefaultButtonStyle"] is not Style defaultStyle)
+        {
+            return;
+        }
+
+        string rawText = HolderKeyBox?.Text ?? string.Empty;
+        var activeKeys = !string.IsNullOrWhiteSpace(rawText)
+            ? new HashSet<string>(rawText.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (activeKeys.Count == 0)
+        {
+            foreach (var list in _keyboardButtons.Values)
+            {
+                foreach (var b in list)
+                {
+                    b.Style = defaultStyle;
+                }
+            }
+            return;
+        }
+
+        foreach (var (keyId, list) in _keyboardButtons)
+        {
+            var targetStyle = activeKeys.Contains(keyId) ? accentStyle : defaultStyle;
+            foreach (var b in list)
+            {
+                b.Style = targetStyle;
+            }
+        }
     }
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         if (args.IsSettingsSelected)
         {
-            _activeTab = "Settings";
+            _activeTab = TabSettings;
             TyperPanel.Visibility = Visibility.Collapsed;
             HolderPanel.Visibility = Visibility.Collapsed;
             ClickerPanel.Visibility = Visibility.Collapsed;
@@ -303,12 +387,12 @@ public sealed partial class MainPage : Page
         if (args.SelectedItem is NavigationViewItem item && item.Tag is string tag)
         {
             _activeTab = tag;
-            TyperPanel.Visibility = tag == "Typer" ? Visibility.Visible : Visibility.Collapsed;
-            HolderPanel.Visibility = tag == "Holder" ? Visibility.Visible : Visibility.Collapsed;
+            TyperPanel.Visibility = tag == TabTyper ? Visibility.Visible : Visibility.Collapsed;
+            HolderPanel.Visibility = tag == TabHolder ? Visibility.Visible : Visibility.Collapsed;
             ClickerPanel.Visibility = tag == TabClicker ? Visibility.Visible : Visibility.Collapsed;
-            MacroPanel.Visibility = tag == "Macro" ? Visibility.Visible : Visibility.Collapsed;
+            MacroPanel.Visibility = tag == TabMacro ? Visibility.Visible : Visibility.Collapsed;
             SettingsPanel.Visibility = Visibility.Collapsed;
-            AboutPanel.Visibility = tag == "About" ? Visibility.Visible : Visibility.Collapsed;
+            AboutPanel.Visibility = tag == TabAbout ? Visibility.Visible : Visibility.Collapsed;
 
             UpdateTargetMarkerOverlay();
         }
@@ -316,7 +400,7 @@ public sealed partial class MainPage : Page
 
     private void NavigateToAbout_Click(object sender, RoutedEventArgs e)
     {
-        _activeTab = "About";
+        _activeTab = TabAbout;
         TyperPanel.Visibility = Visibility.Collapsed;
         HolderPanel.Visibility = Visibility.Collapsed;
         ClickerPanel.Visibility = Visibility.Collapsed;
@@ -379,6 +463,7 @@ public sealed partial class MainPage : Page
             {
                 string text = await dataPackageView.GetTextAsync();
                 TypeTextBox.Text = text;
+                UpdateTyperActionBtnState();
             }
         }
         catch (Exception ex)
@@ -390,11 +475,13 @@ public sealed partial class MainPage : Page
     private void ClearText_Click(object sender, RoutedEventArgs e)
     {
         TypeTextBox.Text = "";
+        UpdateTyperActionBtnState();
     }
 
     private void ClearHolderKey_Click(object sender, RoutedEventArgs e)
     {
         HolderKeyBox.Text = "";
+        UpdateHolderActionBtnState();
     }
 
     private async void CaptureKeyBtn_Click(object sender, RoutedEventArgs e)
@@ -463,6 +550,15 @@ public sealed partial class MainPage : Page
         ClickerStatusText.Text = $"Locked target coordinates: ({x}, {y})";
     }
 
+    private void ClearCoordsBtn_Click(object sender, RoutedEventArgs e)
+    {
+        ClickXBox.Value = double.NaN;
+        ClickYBox.Value = double.NaN;
+        OnTargetMarkerSettingsChanged();
+        UpdateClearCoordsBtnState();
+        ClickerStatusText.Text = "Coordinates cleared (clicking at current cursor location)";
+    }
+
     private static async Task<(bool Picked, bool Canceled, int X, int Y)> PollTargetCoordinatesAsync()
     {
         const int VK_SPACE = 0x20;
@@ -518,11 +614,13 @@ public sealed partial class MainPage : Page
         RecordMacroText.Text = "Start Recording";
         MacroStatusText.Text = $"Macro recorded: {_macroRecorder.Actions.Count} actions";
         RefreshMacroActionList();
+        UpdateMacroActionBtnState();
     }
 
     private void StartMacroRecording()
     {
         _isRecordingMacro = true;
+        UpdateMacroActionBtnState();
         MacroActionList.Items.Clear();
         _targetMarkerOverlay.ClearAndHide();
         int clickOrder = 0;
@@ -575,6 +673,7 @@ public sealed partial class MainPage : Page
         MacroActionList.Items.Clear();
         _targetMarkerOverlay.ClearAndHide();
         MacroStatusText.Text = "Macro cleared";
+        UpdateMacroActionBtnState();
     }
 
     private void RefreshMacroActionList()
@@ -607,6 +706,7 @@ public sealed partial class MainPage : Page
         {
             _targetMarkerOverlay.ClearAndHide();
             RefreshMacroActionList();
+            UpdateMacroActionBtnState();
             MacroStatusText.Text = $"Deleted step #{index + 1}";
         }
         else
@@ -878,6 +978,12 @@ public sealed partial class MainPage : Page
         DispatcherQueue.TryEnqueue(() =>
         {
             NavView.SelectedItem = NavView.MenuItems[1];
+            if (!_isRunning && string.IsNullOrWhiteSpace(HolderKeyBox.Text))
+            {
+                HolderStatusText.Text = "Please enter a key to hold";
+                UpdateAllActionBtnStates();
+                return;
+            }
             HolderActionBtn_Click(this, new RoutedEventArgs());
         });
     }
@@ -887,6 +993,12 @@ public sealed partial class MainPage : Page
         DispatcherQueue.TryEnqueue(() =>
         {
             NavView.SelectedItem = NavView.MenuItems[0];
+            if (!_isRunning && string.IsNullOrWhiteSpace(TypeTextBox.Text))
+            {
+                TyperStatusText.Text = "Please enter text to type";
+                UpdateAllActionBtnStates();
+                return;
+            }
             TyperActionBtn_Click(this, new RoutedEventArgs());
         });
     }
@@ -896,6 +1008,12 @@ public sealed partial class MainPage : Page
         DispatcherQueue.TryEnqueue(() =>
         {
             NavView.SelectedItem = NavView.MenuItems[3];
+            if (!_isRunning && _macroRecorder.Actions.Count == 0)
+            {
+                MacroStatusText.Text = "No recorded macro actions to replay! Please record first.";
+                UpdateAllActionBtnStates();
+                return;
+            }
             MacroActionBtn_Click(this, new RoutedEventArgs());
         });
     }
@@ -917,10 +1035,106 @@ public sealed partial class MainPage : Page
 
     private string? _runningTaskName = null;
 
+    private void UpdateAllActionBtnStates()
+    {
+        UpdateTyperActionBtnState();
+        UpdateHolderActionBtnState();
+        UpdateClickerActionBtnState();
+        UpdateMacroActionBtnState();
+    }
+
+    private void UpdateTyperActionBtnState()
+    {
+        if (_isRunning && _runningTaskName == TabTyper)
+        {
+            TyperActionBtn.IsEnabled = true;
+            if (ClearTextBtn != null) ClearTextBtn.IsEnabled = false;
+            return;
+        }
+
+        bool hasText = !string.IsNullOrWhiteSpace(TypeTextBox?.Text);
+        TyperActionBtn.IsEnabled = hasText;
+        if (ClearTextBtn != null) ClearTextBtn.IsEnabled = hasText;
+    }
+
+    private void UpdateHolderActionBtnState()
+    {
+        UpdateVirtualKeyboardHighlights();
+
+        if (_isRunning && _runningTaskName == TabHolder)
+        {
+            HolderActionBtn.IsEnabled = true;
+            if (ClearHolderKeyBtn != null) ClearHolderKeyBtn.IsEnabled = false;
+            return;
+        }
+
+        bool hasKey = !string.IsNullOrWhiteSpace(HolderKeyBox?.Text);
+        HolderActionBtn.IsEnabled = hasKey;
+        if (ClearHolderKeyBtn != null) ClearHolderKeyBtn.IsEnabled = hasKey;
+    }
+
+    private void UpdateClickerActionBtnState()
+    {
+        if (_isRunning && _runningTaskName == TabClicker)
+        {
+            ClickerActionBtn.IsEnabled = true;
+            return;
+        }
+
+        bool isSpammer = ClickTargetTypeCombo?.SelectedIndex == 1;
+        if (isSpammer)
+        {
+            ClickerActionBtn.IsEnabled = !string.IsNullOrWhiteSpace(SpamKeyBox?.Text);
+        }
+        else
+        {
+            ClickerActionBtn.IsEnabled = true;
+        }
+
+        UpdateClearCoordsBtnState();
+    }
+
+    private void UpdateClearCoordsBtnState()
+    {
+        if (ClearCoordsBtn != null && ClickXBox != null && ClickYBox != null)
+        {
+            bool hasCoords = !double.IsNaN(ClickXBox.Value) || !double.IsNaN(ClickYBox.Value);
+            ClearCoordsBtn.IsEnabled = !_isRunning && hasCoords;
+        }
+    }
+
+    private void UpdateMacroItemActionBtns()
+    {
+        bool hasSelection = !_isRunning && !_isRecordingMacro && MacroActionList != null && MacroActionList.SelectedIndex >= 0;
+        if (EditActionBtn != null) EditActionBtn.IsEnabled = hasSelection;
+        if (DeleteActionBtn != null) DeleteActionBtn.IsEnabled = hasSelection;
+        if (ClearMacroBtn != null) ClearMacroBtn.IsEnabled = !_isRunning && (_macroRecorder.Actions.Count > 0 || _isRecordingMacro);
+    }
+
+    private void UpdateMacroActionBtnState()
+    {
+        if (_isRunning && _runningTaskName == TabMacro)
+        {
+            MacroActionBtn.IsEnabled = true;
+            UpdateMacroItemActionBtns();
+            return;
+        }
+
+        if (_isRecordingMacro)
+        {
+            MacroActionBtn.IsEnabled = false;
+            UpdateMacroItemActionBtns();
+            return;
+        }
+
+        MacroActionBtn.IsEnabled = _macroRecorder.Actions.Count > 0;
+        UpdateMacroItemActionBtns();
+    }
+
     private async void TyperActionBtn_Click(object sender, RoutedEventArgs e)
     {
         await RunTaskAsync(
-            "Typer",
+            TabTyper,
             TyperDelayBox,
             TyperStatusText,
             TyperProgressBar,
@@ -934,7 +1148,7 @@ public sealed partial class MainPage : Page
     private async void HolderActionBtn_Click(object sender, RoutedEventArgs e)
     {
         await RunTaskAsync(
-            "Holder",
+            TabHolder,
             HolderDelayBox,
             HolderStatusText,
             HolderProgressBar,
@@ -962,7 +1176,7 @@ public sealed partial class MainPage : Page
     private async void MacroActionBtn_Click(object sender, RoutedEventArgs e)
     {
         await RunTaskAsync(
-            "Macro",
+            TabMacro,
             MacroDelayBox,
             MacroStatusText,
             MacroProgressBar,
@@ -971,6 +1185,51 @@ public sealed partial class MainPage : Page
             MacroActionText,
             "Replay Macro (F9)",
             RunMacroReplayAsync);
+    }
+
+    private bool ValidatePreflightTaskInputs(string taskName, TextBlock statusText)
+    {
+        if (taskName == TabTyper && string.IsNullOrWhiteSpace(TypeTextBox.Text))
+        {
+            statusText.Text = "Please enter text to type";
+            UpdateAllActionBtnStates();
+            return false;
+        }
+
+        if (taskName == TabHolder && string.IsNullOrWhiteSpace(HolderKeyBox.Text))
+        {
+            statusText.Text = "Please enter a key to hold";
+            UpdateAllActionBtnStates();
+            return false;
+        }
+
+        if (taskName == TabMacro && _macroRecorder.Actions.Count == 0)
+        {
+            statusText.Text = "No recorded macro actions to replay! Please record first.";
+            UpdateAllActionBtnStates();
+            return false;
+        }
+
+        if (taskName == TabClicker && ClickTargetTypeCombo.SelectedIndex == 1 && string.IsNullOrWhiteSpace(SpamKeyBox.Text))
+        {
+            statusText.Text = "Please enter a key to spam";
+            UpdateAllActionBtnStates();
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task RunCountdownAsync(double delay, TextBlock statusText, ProgressBar progressBar, CancellationToken token)
+    {
+        for (int remaining = (int)delay; remaining > 0; remaining--)
+        {
+            token.ThrowIfCancellationRequested();
+            CheckPanicSafety();
+            statusText.Text = $"Starting in {remaining}s... Switch to target app!";
+            progressBar.Value = (delay - remaining) / delay * 100;
+            await Task.Delay(1000, token);
+        }
     }
 
     private async Task RunTaskAsync(
@@ -986,40 +1245,33 @@ public sealed partial class MainPage : Page
     {
         if (_isRunning)
         {
-            if (_runningTaskName == taskName)
-            {
-                StopTask("Stopped by user");
-            }
-            else
-            {
-                StopTask($"Switched task from {_runningTaskName}");
-            }
+            StopTask(_runningTaskName == taskName ? "Stopped by user" : $"Switched task from {_runningTaskName}");
+            return;
+        }
+
+        if (!ValidatePreflightTaskInputs(taskName, statusText))
+        {
             return;
         }
 
         _isRunning = true;
         _runningTaskName = taskName;
+        UpdateAllActionBtnStates();
+
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
         _panicDetector.Reset();
 
         actionText.Text = "Stop";
         actionIcon.Glyph = "\uE71A";
+        actionBtn.IsEnabled = true;
 
         double delay = delayBox.Value;
         if (double.IsNaN(delay) || delay < 0) delay = 0;
 
         try
         {
-            // Countdown phase
-            for (int remaining = (int)delay; remaining > 0; remaining--)
-            {
-                token.ThrowIfCancellationRequested();
-                CheckPanicSafety();
-                statusText.Text = $"Starting in {remaining}s... Switch to target app!";
-                progressBar.Value = (delay - remaining) / delay * 100;
-                await Task.Delay(1000, token);
-            }
+            await RunCountdownAsync(delay, statusText, progressBar, token);
 
             progressBar.Value = 100;
             statusText.Text = "Running...";
@@ -1469,20 +1721,30 @@ public sealed partial class MainPage : Page
         MacroProgressBar.Value = 0;
 
         // Set status message on the active/relevant panel
-        if (_runningTaskName == "Typer") TyperStatusText.Text = message;
-        else if (_runningTaskName == "Holder") HolderStatusText.Text = message;
+        if (_runningTaskName == TabTyper) TyperStatusText.Text = message;
+        else if (_runningTaskName == TabHolder) HolderStatusText.Text = message;
         else if (_runningTaskName == TabClicker) ClickerStatusText.Text = message;
-        else if (_runningTaskName == "Macro") MacroStatusText.Text = message;
+        else if (_runningTaskName == TabMacro) MacroStatusText.Text = message;
 
         _runningTaskName = null;
         Keyboard.ReleaseAllModifiers();
+        UpdateAllActionBtnStates();
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "XAML event handler")]
+    private void AlwaysOnTopToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (MainWindow.Instance != null && MainWindow.Instance.IsAlwaysOnTop != AlwaysOnTopToggle.IsOn)
+        {
+            MainWindow.Instance.SetAlwaysOnTop(AlwaysOnTopToggle.IsOn);
+        }
     }
 
     private void OnMainWindowAlwaysOnTopChanged(bool isTop)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            AlwaysOnTopCheckBox.IsChecked = isTop;
+            AlwaysOnTopToggle.IsOn = isTop;
         });
     }
 }
