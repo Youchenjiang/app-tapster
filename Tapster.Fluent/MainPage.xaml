@@ -207,56 +207,89 @@
                     </Grid.RowDefinitions>
 
                     <ScrollViewer x:Name="HolderScrollViewer" Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0,0,0,10">
-                        <StackPanel Spacing="10">
+                        <StackPanel Spacing="10" Padding="0,0,0,16">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Key Holder" FontSize="18" FontWeight="SemiBold"/>
                                 <TextBlock Text="Holds down specified key or key combination continuously."
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
                             </StackPanel>
 
+                            <!-- Step Timeline Pipeline Card -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                                     CornerRadius="8" Padding="12">
                                 <StackPanel Spacing="10">
-                                    <TextBlock Text="Target Key / Combo:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
-
-                                    <Grid ColumnSpacing="8">
+                                    <!-- Pipeline Header -->
+                                    <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="HolderKeyBox" Grid.Column="0" Text="w" PlaceholderText="Target key combo (e.g. w, ctrl+shift+a)..."
-                                                 FontFamily="Cascadia Code, Consolas" FontSize="14" Padding="10,6"/>
-                                        <Button x:Name="CaptureKeyBtn" Grid.Column="1" Click="CaptureKeyBtn_Click" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Stretch">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <FontIcon x:Name="CaptureIcon" Glyph="&#xE7C8;" FontSize="12"/>
-                                                <TextBlock x:Name="CaptureKeyText" Text="Capture Key"/>
-                                            </StackPanel>
-                                        </Button>
-                                        <Button x:Name="ClearHolderKeyBtn" Grid.Column="2" Click="ClearHolderKey_Click" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Stretch">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <FontIcon Glyph="&#xE894;" FontSize="12"/>
-                                                <TextBlock Text="Clear"/>
-                                            </StackPanel>
-                                        </Button>
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <FontIcon Glyph="&#xE8D7;" FontSize="13" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
+                                            <TextBlock Text="Key Pipeline Sequence" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="• Click any step to edit its combo using the keyboard below"
+                                                       FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel x:Name="HolderRepeatPanel" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Visibility="Collapsed">
+                                            <TextBlock Text="Repeat Loops:" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                            <NumberBox x:Name="HolderRepeatBox" Width="72" Value="1" Minimum="0" SmallChange="1"
+                                                       FontSize="12" SpinButtonPlacementMode="Compact"
+                                                       ToolTipService.ToolTip="Number of sequence loops (0 = Infinite)"/>
+                                        </StackPanel>
                                     </Grid>
 
-                                    <StackPanel Orientation="Horizontal" Spacing="12">
-                                        <TextBlock Text="Hold Duration (seconds, 0 = infinite):" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-                                        <NumberBox x:Name="HoldDurationBox" Width="100" Value="10" Minimum="0"
-                                                   FontSize="12" SpinButtonPlacementMode="Compact"/>
-                                    </StackPanel>
+                                    <!-- Interactive Step Cards Container -->
+                                    <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <StackPanel x:Name="HolderStepsContainer" Spacing="6"/>
+                                    </ScrollViewer>
+
+                                    <!-- Add Step Button -->
+                                    <Button x:Name="AddStepBtn" Click="AddStepBtn_Click" HorizontalAlignment="Stretch"
+                                            Style="{StaticResource SubtleButtonStyle}" CornerRadius="6" Padding="10,6"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                            <FontIcon Glyph="&#xE710;" FontSize="12" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
+                                            <TextBlock Text="Add Step to Sequence" FontSize="12" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </Button>
                                 </StackPanel>
                             </Border>
 
-                            <!-- On-Screen Realistic Visual Virtual Keyboard -->
+                            <!-- Visual Virtual Keyboard Controller Card -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                                     CornerRadius="8" Padding="12">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="Visual Virtual Keyboard (Click keys to build combo)" FontSize="12" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <StackPanel x:Name="KeyboardContainer" Spacing="4" HorizontalAlignment="Stretch">
+                                <StackPanel Spacing="8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <TextBlock Text="Virtual Keyboard Controller" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBlock x:Name="ActiveStepTargetHint" Text="(Editing Step #1)" FontSize="11"
+                                                       Foreground="{ThemeResource AccentFillColorDefaultBrush}" FontWeight="Medium" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="CaptureKeyBtn" Click="CaptureKeyBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="8,4">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <FontIcon x:Name="CaptureIcon" Glyph="&#xE7C8;" FontSize="11"/>
+                                                    <TextBlock x:Name="CaptureKeyText" Text="Capture Physical Key" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="ClearActiveStepKeysBtn" Click="ClearActiveStepKeysBtn_Click" Style="{StaticResource SubtleButtonStyle}" Padding="8,4">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <FontIcon Glyph="&#xE894;" FontSize="11"/>
+                                                    <TextBlock Text="Clear Keys" FontSize="11"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel x:Name="KeyboardContainer" Spacing="4" HorizontalAlignment="Center">
                                         <!-- Structured Keyboard Rows generated in MainPage.xaml.cs -->
                                     </StackPanel>
                                 </StackPanel>
