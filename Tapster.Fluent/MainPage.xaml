@@ -20,22 +20,22 @@
                         CompactPaneLength="48"
                         SelectionChanged="NavView_SelectionChanged">
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Name="NavItemTyper" Content="Auto Typer" Tag="Typer">
+                <NavigationViewItem x:Name="NavItemTyper" Content="打字" Tag="Typer">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE765;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Name="NavItemHolder" Content="Key Holder" Tag="Holder">
+                <NavigationViewItem x:Name="NavItemHolder" Content="長按" Tag="Holder">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8D7;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Name="NavItemClicker" Content="Auto Clicker" Tag="Clicker">
+                <NavigationViewItem x:Name="NavItemClicker" Content="連點" Tag="Clicker">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE962;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Name="NavItemMacro" Content="Macro Recorder" Tag="Macro">
+                <NavigationViewItem x:Name="NavItemMacro" Content="重放" Tag="Macro">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE7C8;"/>
                     </NavigationViewItem.Icon>
@@ -43,7 +43,7 @@
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem x:Name="NavItemAbout" Content="About" Tag="About">
+                <NavigationViewItem x:Name="NavItemAbout" Content="關於" Tag="About">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;"/>
                     </NavigationViewItem.Icon>
