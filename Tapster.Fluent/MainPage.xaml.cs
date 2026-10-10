@@ -189,8 +189,8 @@ public sealed partial class MainPage : Page
         UpdateAllActionBtnStates();
 
         GenerateVirtualKeyboard();
-        HolderScrollViewer.SizeChanged += (_, _) => UpdateKeyboardContainerWidth();
-        UpdateKeyboardContainerWidth();
+        HolderScrollViewer.SizeChanged += (_, _) => UpdateKeyboardContainerWidth(this);
+        UpdateKeyboardContainerWidth(this);
 
         // Load Settings
         StartOnBootToggle.IsOn = AppSettings.Current.StartOnBoot;
@@ -203,11 +203,11 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void UpdateKeyboardContainerWidth()
+    private static void UpdateKeyboardContainerWidth(MainPage page)
     {
-        if (KeyboardContainer == null || HolderScrollViewer == null) return;
-        double availableWidth = HolderScrollViewer.ActualWidth - 36;
-        KeyboardContainer.Width = Math.Max(764, availableWidth);
+        if (page.KeyboardContainer == null || page.HolderScrollViewer == null) return;
+        double availableWidth = page.HolderScrollViewer.ActualWidth - 36;
+        page.KeyboardContainer.Width = Math.Max(764, availableWidth);
     }
 
     private void GenerateVirtualKeyboard()
@@ -312,7 +312,7 @@ public sealed partial class MainPage : Page
         AddGridKeyBtn(numpadGrid, 2, 0, "num7", "7");
         AddGridKeyBtn(numpadGrid, 2, 1, "num8", "8");
         AddGridKeyBtn(numpadGrid, 2, 2, "num9", "9");
-        AddGridKeyBtn(numpadGrid, 2, 3, "add", "+", height: 72, rowSpan: 2);
+        AddSpannedGridKeyBtn(numpadGrid, 2, 3, "add", "+");
 
         // Row 3: 4 5 6 (+ spans from row 2)
         AddGridKeyBtn(numpadGrid, 3, 0, "num4", "4");
@@ -323,7 +323,7 @@ public sealed partial class MainPage : Page
         AddGridKeyBtn(numpadGrid, 4, 0, "num1", "1");
         AddGridKeyBtn(numpadGrid, 4, 1, "num2", "2");
         AddGridKeyBtn(numpadGrid, 4, 2, "num3", "3");
-        AddGridKeyBtn(numpadGrid, 4, 3, "enter", "Enter", height: 72, rowSpan: 2);
+        AddSpannedGridKeyBtn(numpadGrid, 4, 3, "enter", "Enter");
 
         // Row 5: ► 0 . (Enter spans from row 4)
         AddGridKeyBtn(numpadGrid, 5, 0, "right", "►");
@@ -425,15 +425,20 @@ public sealed partial class MainPage : Page
         row.Children.Add(btn);
     }
 
-    private void AddGridKeyBtn(Grid grid, int row, int col, string keyId, string label, double width = 36, double height = 34, int rowSpan = 1)
+    private void AddGridKeyBtn(Grid grid, int row, int col, string keyId, string label)
     {
-        var btn = CreateKeyBtn(keyId, label, width, height);
+        var btn = CreateKeyBtn(keyId, label, 36, 34);
         Grid.SetRow(btn, row);
         Grid.SetColumn(btn, col);
-        if (rowSpan > 1)
-        {
-            Grid.SetRowSpan(btn, rowSpan);
-        }
+        grid.Children.Add(btn);
+    }
+
+    private void AddSpannedGridKeyBtn(Grid grid, int row, int col, string keyId, string label, int rowSpan = 2)
+    {
+        var btn = CreateKeyBtn(keyId, label, 36, 72);
+        Grid.SetRow(btn, row);
+        Grid.SetColumn(btn, col);
+        Grid.SetRowSpan(btn, rowSpan);
         grid.Children.Add(btn);
     }
 
