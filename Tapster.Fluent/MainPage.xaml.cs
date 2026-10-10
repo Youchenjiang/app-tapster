@@ -797,7 +797,7 @@ public sealed partial class MainPage : Page
                     return;
                 }
             }
-        });
+        }, CancellationToken.None);
     }
 
     private void RenderHolderStepCards()
@@ -843,9 +843,7 @@ public sealed partial class MainPage : Page
         bool isActive = (stepIndex == _activeStageIndex);
         bool isRunning = (stepIndex == _runningStageIndex);
 
-        string cardBackgroundKey = isRunning ? "AccentFillColorTertiaryBrush"
-            : isActive ? "CardBackgroundFillColorSecondaryBrush"
-            : "CardBackgroundFillColorDefaultBrush";
+        string cardBackgroundKey = GetStepCardBackgroundKey(isRunning, isActive);
         var cardBorder = new Border
         {
             CornerRadius = new CornerRadius(6),
@@ -882,6 +880,21 @@ public sealed partial class MainPage : Page
 
         cardBorder.Child = grid;
         return cardBorder;
+    }
+
+    private static string GetStepCardBackgroundKey(bool isRunning, bool isActive)
+    {
+        if (isRunning)
+        {
+            return "AccentFillColorTertiaryBrush";
+        }
+
+        if (isActive)
+        {
+            return "CardBackgroundFillColorSecondaryBrush";
+        }
+
+        return "CardBackgroundFillColorDefaultBrush";
     }
 
     private static Grid CreateStepCardGrid()
