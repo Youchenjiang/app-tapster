@@ -39,6 +39,10 @@
 - [x] **Hardware Safety Safeguards**: Panic Kill, Mouse Shake & Triple-Esc (PR #44)
 - [x] **Release 1.2.0.0**: Minor version bump across props, manifests and changelog (chore/bump-version-1.2.0.0)
 - [x] **UI Scrollability Fix**: Wrap Typer, Clicker & Macro panels in ScrollViewer for small screen accessibility (fix/fluent-scrollable-panels)
+- [x] **Fluent 96% Virtual Keyboard**: Add full arrow cluster and numpad with dynamic highlights (feat/fluent-96-percent-virtual-keyboard)
+- [x] **Key Holder Step Timeline**: Multi-stage key holding pipeline with step card timeline (feat/key-holder-step-timeline)
+- [x] **Multi-Language Support**: Full localization across 4 languages with clean labels (feat/fluent-localization)
+- [x] **Release 1.3.0.0**: Minor version bump across props, manifests, changelog and memory (chore/bump-version-1.3.0.0)
 
 ---
 
