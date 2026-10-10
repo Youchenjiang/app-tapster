@@ -539,7 +539,7 @@ public sealed partial class MainPage : Page
         }
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Bug", "S2583:Conditionally executed code should be reachable", Justification = "HolderKeyBox is initialized by XAML InitializeComponent at runtime")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Bug", "S2583:Conditionally executed code should be reachable", Justification = "XAML controls are initialized by InitializeComponent at runtime")]
     private void UpdateVirtualKeyboardHighlights()
     {
         if (Application.Current.Resources["AccentButtonStyle"] is not Style accentStyle ||
@@ -1761,9 +1761,9 @@ public sealed partial class MainPage : Page
             return false;
         }
 
-        if (taskName == TabHolder && string.IsNullOrWhiteSpace(HolderKeyBox.Text))
+        if (taskName == TabHolder && !_holderStages.Any(s => !string.IsNullOrWhiteSpace(s.KeyCombo)))
         {
-            statusText.Text = "Please enter a key to hold";
+            statusText.Text = "Please configure a key combo for the sequence";
             UpdateAllActionBtnStates();
             return false;
         }
@@ -1816,22 +1816,6 @@ public sealed partial class MainPage : Page
 
         if (!ValidatePreflightTaskInputs(taskName, statusText))
         {
-            statusText.Text = "Please enter text to type";
-            UpdateAllActionBtnStates();
-            return;
-        }
-
-        if (taskName == "Holder" && !_holderStages.Any(s => !string.IsNullOrWhiteSpace(s.KeyCombo)))
-        {
-            statusText.Text = "Please configure a key combo for the sequence";
-            UpdateAllActionBtnStates();
-            return;
-        }
-
-        if (taskName == "Macro" && _macroRecorder.Actions.Count == 0)
-        {
-            statusText.Text = "No recorded macro actions to replay! Please record first.";
-            UpdateAllActionBtnStates();
             return;
         }
 
