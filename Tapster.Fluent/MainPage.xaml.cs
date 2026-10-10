@@ -249,16 +249,50 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private const string KeyCommonDelay = "Common_Delay";
+
+    private static void SetText(TextBlock? tb, string key)
+    {
+        if (tb != null)
+        {
+            tb.Text = LocalizationManager.Get(key);
+        }
+    }
+
+    private static void SetPlaceholder(TextBox? tb, string key)
+    {
+        if (tb != null)
+        {
+            tb.PlaceholderText = LocalizationManager.Get(key);
+        }
+    }
+
+    private static void SetContent(ContentControl? cc, string key)
+    {
+        if (cc != null)
+        {
+            cc.Content = LocalizationManager.Get(key);
+        }
+    }
+
+    private static void SetDefaultStatusText(TextBlock? tb, string readyText)
+    {
+        if (tb != null && IsDefaultStatusText(tb.Text))
+        {
+            tb.Text = readyText;
+        }
+    }
+
     private void ApplyLocalization()
     {
-        ApplyNavLocalization();
-        ApplyTyperLocalization();
-        ApplyHolderLocalization();
-        ApplyClickerLocalization();
-        ApplyMacroLocalization();
-        ApplySettingsLocalization();
-        ApplyAboutLocalization();
-        ApplyStatusLocalization();
+        ApplyNavLocalization(this);
+        ApplyTyperLocalization(this);
+        ApplyHolderLocalization(this);
+        ApplyClickerLocalization(this);
+        ApplyMacroLocalization(this);
+        ApplySettingsLocalization(this);
+        ApplyAboutLocalization(this);
+        ApplyStatusLocalization(this);
 
         UpdateAllActionBtnStates();
         RenderHolderStepCards();
@@ -268,131 +302,131 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void ApplyNavLocalization()
+    private static void ApplyNavLocalization(MainPage page)
     {
-        if (NavItemTyper != null) NavItemTyper.Content = LocalizationManager.Get("Nav_Typer");
-        if (NavItemHolder != null) NavItemHolder.Content = LocalizationManager.Get("Nav_Holder");
-        if (NavItemClicker != null) NavItemClicker.Content = LocalizationManager.Get("Nav_Clicker");
-        if (NavItemMacro != null) NavItemMacro.Content = LocalizationManager.Get("Nav_Macro");
-        if (NavItemAbout != null) NavItemAbout.Content = LocalizationManager.Get("Nav_About");
-        if (NavView?.SettingsItem is NavigationViewItem settingsNav) settingsNav.Content = LocalizationManager.Get("Nav_Settings");
+        SetContent(page.NavItemTyper, "Nav_Typer");
+        SetContent(page.NavItemHolder, "Nav_Holder");
+        SetContent(page.NavItemClicker, "Nav_Clicker");
+        SetContent(page.NavItemMacro, "Nav_Macro");
+        SetContent(page.NavItemAbout, "Nav_About");
+        SetContent(page.NavView?.SettingsItem as ContentControl, "Nav_Settings");
     }
 
-    private void ApplyTyperLocalization()
+    private static void ApplyTyperLocalization(MainPage page)
     {
-        if (TyperHeaderTitle != null) TyperHeaderTitle.Text = LocalizationManager.Get("Typer_Title");
-        if (TyperHeaderDesc != null) TyperHeaderDesc.Text = LocalizationManager.Get("Typer_Desc");
-        if (TyperTargetTextLabel != null) TyperTargetTextLabel.Text = LocalizationManager.Get("Typer_TargetText");
-        if (PasteTextBtnLabel != null) PasteTextBtnLabel.Text = LocalizationManager.Get("Typer_PasteBtn");
-        if (ClearTextBtnLabel != null) ClearTextBtnLabel.Text = LocalizationManager.Get("Typer_ClearBtn");
-        if (TypeTextBox != null) TypeTextBox.PlaceholderText = LocalizationManager.Get("Typer_TextPlaceholder");
-        if (TyperModeLabel != null) TyperModeLabel.Text = LocalizationManager.Get("Typer_ModeLabel");
-        if (TypeModeKeystrokeItem != null) TypeModeKeystrokeItem.Content = LocalizationManager.Get("Typer_ModeKeystroke");
-        if (TypeModeClipboardItem != null) TypeModeClipboardItem.Content = LocalizationManager.Get("Typer_ModeClipboard");
-        if (TypeModeHint != null) TypeModeHint.Text = LocalizationManager.Get("Typer_ClipboardHint");
-        if (TyperTrailingKeyLabel != null) TyperTrailingKeyLabel.Text = LocalizationManager.Get("Typer_TrailingKeyLabel");
-        if (TypeTrailingNoneItem != null) TypeTrailingNoneItem.Content = LocalizationManager.Get("Typer_TrailingNone");
-        if (TypeTrailingEnterItem != null) TypeTrailingEnterItem.Content = LocalizationManager.Get("Typer_TrailingEnter");
-        if (TypeTrailingTabItem != null) TypeTrailingTabItem.Content = LocalizationManager.Get("Typer_TrailingTab");
-        if (TypeIntervalLabel != null) TypeIntervalLabel.Text = LocalizationManager.Get("Typer_IntervalLabel");
-        if (TypeJitterCheck != null) TypeJitterCheck.Content = LocalizationManager.Get("Typer_JitterCheck");
-        if (TyperHistoryHeader != null) TyperHistoryHeader.Text = LocalizationManager.Get("Typer_HistoryTitle");
-        if (TyperDelayLabel != null) TyperDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+        SetText(page.TyperHeaderTitle, "Typer_Title");
+        SetText(page.TyperHeaderDesc, "Typer_Desc");
+        SetText(page.TyperTargetTextLabel, "Typer_TargetText");
+        SetText(page.PasteTextBtnLabel, "Typer_PasteBtn");
+        SetText(page.ClearTextBtnLabel, "Typer_ClearBtn");
+        SetPlaceholder(page.TypeTextBox, "Typer_TextPlaceholder");
+        SetText(page.TyperModeLabel, "Typer_ModeLabel");
+        SetContent(page.TypeModeKeystrokeItem, "Typer_ModeKeystroke");
+        SetContent(page.TypeModeClipboardItem, "Typer_ModeClipboard");
+        SetText(page.TypeModeHint, "Typer_ClipboardHint");
+        SetText(page.TyperTrailingKeyLabel, "Typer_TrailingKeyLabel");
+        SetContent(page.TypeTrailingNoneItem, "Typer_TrailingNone");
+        SetContent(page.TypeTrailingEnterItem, "Typer_TrailingEnter");
+        SetContent(page.TypeTrailingTabItem, "Typer_TrailingTab");
+        SetText(page.TypeIntervalLabel, "Typer_IntervalLabel");
+        SetContent(page.TypeJitterCheck, "Typer_JitterCheck");
+        SetText(page.TyperHistoryHeader, "Typer_HistoryTitle");
+        SetText(page.TyperDelayLabel, KeyCommonDelay);
     }
 
-    private void ApplyHolderLocalization()
+    private static void ApplyHolderLocalization(MainPage page)
     {
-        if (HolderHeaderTitle != null) HolderHeaderTitle.Text = LocalizationManager.Get("KeyHolder_Title");
-        if (HolderHeaderDesc != null) HolderHeaderDesc.Text = LocalizationManager.Get("KeyHolder_Desc");
-        if (HolderPipelineTitle != null) HolderPipelineTitle.Text = LocalizationManager.Get("KeyHolder_PipelineTitle");
-        if (HolderPipelineHint != null) HolderPipelineHint.Text = LocalizationManager.Get("KeyHolder_PipelineHint");
-        if (HolderRepeatLabel != null) HolderRepeatLabel.Text = LocalizationManager.Get("KeyHolder_RepeatTitle");
-        if (AddStepBtnText != null) AddStepBtnText.Text = LocalizationManager.Get("KeyHolder_AddStepBtn");
-        if (HolderVkTitle != null) HolderVkTitle.Text = LocalizationManager.Get("KeyHolder_VkTitle");
-        if (CaptureKeyText != null) CaptureKeyText.Text = _isCapturingKey ? LocalizationManager.Get("KeyHolder_CaptureListening") : LocalizationManager.Get("KeyHolder_CaptureBtn");
-        if (ClearActiveStepKeysBtnText != null) ClearActiveStepKeysBtnText.Text = LocalizationManager.Get("KeyHolder_ClearKeysBtn");
-        if (HolderDelayLabel != null) HolderDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+        SetText(page.HolderHeaderTitle, "KeyHolder_Title");
+        SetText(page.HolderHeaderDesc, "KeyHolder_Desc");
+        SetText(page.HolderPipelineTitle, "KeyHolder_PipelineTitle");
+        SetText(page.HolderPipelineHint, "KeyHolder_PipelineHint");
+        SetText(page.HolderRepeatLabel, "KeyHolder_RepeatTitle");
+        SetText(page.AddStepBtnText, "KeyHolder_AddStepBtn");
+        SetText(page.HolderVkTitle, "KeyHolder_VkTitle");
+        SetText(page.CaptureKeyText, page._isCapturingKey ? "KeyHolder_CaptureListening" : "KeyHolder_CaptureBtn");
+        SetText(page.ClearActiveStepKeysBtnText, "KeyHolder_ClearKeysBtn");
+        SetText(page.HolderDelayLabel, KeyCommonDelay);
     }
 
-    private void ApplyClickerLocalization()
+    private static void ApplyClickerLocalization(MainPage page)
     {
-        if (ClickerHeaderTitle != null) ClickerHeaderTitle.Text = LocalizationManager.Get("Clicker_Title");
-        if (ClickerHeaderDesc != null) ClickerHeaderDesc.Text = LocalizationManager.Get("Clicker_Desc");
-        if (ClickerTargetTypeLabel != null) ClickerTargetTypeLabel.Text = LocalizationManager.Get("Clicker_TargetTypeLabel");
-        if (ClickTargetMouseItem != null) ClickTargetMouseItem.Content = LocalizationManager.Get("Clicker_TargetMouse");
-        if (ClickTargetKeyboardItem != null) ClickTargetKeyboardItem.Content = LocalizationManager.Get("Clicker_TargetKeyboard");
-        if (ClickerTriggerModeLabel != null) ClickerTriggerModeLabel.Text = LocalizationManager.Get("Clicker_TriggerModeLabel");
-        if (ClickTriggerToggleItem != null) ClickTriggerToggleItem.Content = LocalizationManager.Get("Clicker_TriggerToggle");
-        if (ClickTriggerHoldItem != null) ClickTriggerHoldItem.Content = LocalizationManager.Get("Clicker_TriggerHold");
-        if (HoldModeHint != null) HoldModeHint.Text = LocalizationManager.Get("Clicker_HoldModeHint");
-        if (MouseButtonLabel != null) MouseButtonLabel.Text = LocalizationManager.Get("Clicker_MouseButtonLabel");
-        if (MouseLeftItem != null) MouseLeftItem.Content = LocalizationManager.Get("Clicker_MouseLeft");
-        if (MouseRightItem != null) MouseRightItem.Content = LocalizationManager.Get("Clicker_MouseRight");
-        if (MouseMiddleItem != null) MouseMiddleItem.Content = LocalizationManager.Get("Clicker_MouseMiddle");
-        if (SpamKeyLabel != null) SpamKeyLabel.Text = LocalizationManager.Get("Clicker_SpamKeyLabel");
-        if (SpamKeyBox != null) SpamKeyBox.PlaceholderText = LocalizationManager.Get("Clicker_SpamKeyPlaceholder");
-        if (ClickerIntervalLabel != null) ClickerIntervalLabel.Text = LocalizationManager.Get("Clicker_IntervalLabel");
-        if (ClickerCountLabel != null) ClickerCountLabel.Text = LocalizationManager.Get("Clicker_CountLabel");
-        if (ClickCoordsLabel != null) ClickCoordsLabel.Text = LocalizationManager.Get("Clicker_TargetCoordsLabel");
-        if (PickCoordText != null) PickCoordText.Text = LocalizationManager.Get("Clicker_PickCoordBtn");
-        if (ClearCoordsBtnText != null) ClearCoordsBtnText.Text = LocalizationManager.Get("Clicker_ClearCoordBtn");
-        if (ShowTargetMarkerCheck != null) ShowTargetMarkerCheck.Content = LocalizationManager.Get("Clicker_ShowMarkerCheck");
-        if (TimeJitterLabel != null) TimeJitterLabel.Text = LocalizationManager.Get("Clicker_TimeJitterLabel");
-        if (TimeJitterCheck != null) TimeJitterCheck.Content = LocalizationManager.Get("Clicker_TimeJitterCheck");
-        if (LocationJitterLabel != null) LocationJitterLabel.Text = LocalizationManager.Get("Clicker_LocationJitterLabel");
-        if (LocationJitterHintText != null) LocationJitterHintText.Text = LocalizationManager.Get("Clicker_LocationJitterHint");
-        if (ClickerDelayLabel != null) ClickerDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+        SetText(page.ClickerHeaderTitle, "Clicker_Title");
+        SetText(page.ClickerHeaderDesc, "Clicker_Desc");
+        SetText(page.ClickerTargetTypeLabel, "Clicker_TargetTypeLabel");
+        SetContent(page.ClickTargetMouseItem, "Clicker_TargetMouse");
+        SetContent(page.ClickTargetKeyboardItem, "Clicker_TargetKeyboard");
+        SetText(page.ClickerTriggerModeLabel, "Clicker_TriggerModeLabel");
+        SetContent(page.ClickTriggerToggleItem, "Clicker_TriggerToggle");
+        SetContent(page.ClickTriggerHoldItem, "Clicker_TriggerHold");
+        SetText(page.HoldModeHint, "Clicker_HoldModeHint");
+        SetText(page.MouseButtonLabel, "Clicker_MouseButtonLabel");
+        SetContent(page.MouseLeftItem, "Clicker_MouseLeft");
+        SetContent(page.MouseRightItem, "Clicker_MouseRight");
+        SetContent(page.MouseMiddleItem, "Clicker_MouseMiddle");
+        SetText(page.SpamKeyLabel, "Clicker_SpamKeyLabel");
+        SetPlaceholder(page.SpamKeyBox, "Clicker_SpamKeyPlaceholder");
+        SetText(page.ClickerIntervalLabel, "Clicker_IntervalLabel");
+        SetText(page.ClickerCountLabel, "Clicker_CountLabel");
+        SetText(page.ClickCoordsLabel, "Clicker_TargetCoordsLabel");
+        SetText(page.PickCoordText, "Clicker_PickCoordBtn");
+        SetText(page.ClearCoordsBtnText, "Clicker_ClearCoordBtn");
+        SetContent(page.ShowTargetMarkerCheck, "Clicker_ShowMarkerCheck");
+        SetText(page.TimeJitterLabel, "Clicker_TimeJitterLabel");
+        SetContent(page.TimeJitterCheck, "Clicker_TimeJitterCheck");
+        SetText(page.LocationJitterLabel, "Clicker_LocationJitterLabel");
+        SetText(page.LocationJitterHintText, "Clicker_LocationJitterHint");
+        SetText(page.ClickerDelayLabel, KeyCommonDelay);
     }
 
-    private void ApplyMacroLocalization()
+    private static void ApplyMacroLocalization(MainPage page)
     {
-        if (MacroHeaderTitle != null) MacroHeaderTitle.Text = LocalizationManager.Get("Macro_Title");
-        if (MacroHeaderDesc != null) MacroHeaderDesc.Text = LocalizationManager.Get("Macro_Desc");
-        if (RecordMacroText != null) RecordMacroText.Text = _isRecordingMacro ? LocalizationManager.Get("Macro_StopRecordBtn") : LocalizationManager.Get("Macro_RecordBtn");
-        if (ClearMacroBtnText != null) ClearMacroBtnText.Text = LocalizationManager.Get("Macro_ClearBtn");
-        if (MacroRepeatLabel != null) MacroRepeatLabel.Text = LocalizationManager.Get("Macro_RepeatLabel");
-        if (MacroSpeedLabel != null) MacroSpeedLabel.Text = LocalizationManager.Get("Macro_SpeedLabel");
-        if (MacroActionsHeader != null) MacroActionsHeader.Text = LocalizationManager.Get("Macro_RecordedActionsTitle");
-        if (EditActionBtnText != null) EditActionBtnText.Text = LocalizationManager.Get("Macro_EditStepBtn");
-        if (DeleteActionBtnText != null) DeleteActionBtnText.Text = LocalizationManager.Get("Macro_DeleteStepBtn");
-        if (MacroDelayLabel != null) MacroDelayLabel.Text = LocalizationManager.Get("Common_Delay");
+        SetText(page.MacroHeaderTitle, "Macro_Title");
+        SetText(page.MacroHeaderDesc, "Macro_Desc");
+        SetText(page.RecordMacroText, page._isRecordingMacro ? "Macro_StopRecordBtn" : "Macro_RecordBtn");
+        SetText(page.ClearMacroBtnText, "Macro_ClearBtn");
+        SetText(page.MacroRepeatLabel, "Macro_RepeatLabel");
+        SetText(page.MacroSpeedLabel, "Macro_SpeedLabel");
+        SetText(page.MacroActionsHeader, "Macro_RecordedActionsTitle");
+        SetText(page.EditActionBtnText, "Macro_EditStepBtn");
+        SetText(page.DeleteActionBtnText, "Macro_DeleteStepBtn");
+        SetText(page.MacroDelayLabel, KeyCommonDelay);
     }
 
-    private void ApplySettingsLocalization()
+    private static void ApplySettingsLocalization(MainPage page)
     {
-        if (SettingsTitleText != null) SettingsTitleText.Text = LocalizationManager.Get("Settings_Title");
-        if (SettingsDescText != null) SettingsDescText.Text = LocalizationManager.Get("Settings_Desc");
-        if (SettingsLangTitleText != null) SettingsLangTitleText.Text = LocalizationManager.Get("Settings_LangTitle");
-        if (SettingsLangDescText != null) SettingsLangDescText.Text = LocalizationManager.Get("Settings_LangDesc");
-        if (SettingsBootTitleText != null) SettingsBootTitleText.Text = LocalizationManager.Get("Settings_BootTitle");
-        if (SettingsBootDescText != null) SettingsBootDescText.Text = LocalizationManager.Get("Settings_BootDesc");
-        if (SettingsStartMinTitleText != null) SettingsStartMinTitleText.Text = LocalizationManager.Get("Settings_StartMinimizedTitle");
-        if (SettingsStartMinDescText != null) SettingsStartMinDescText.Text = LocalizationManager.Get("Settings_StartMinimizedDesc");
-        if (SettingsCloseToTrayTitleText != null) SettingsCloseToTrayTitleText.Text = LocalizationManager.Get("Settings_CloseToTrayTitle");
-        if (SettingsCloseToTrayDescText != null) SettingsCloseToTrayDescText.Text = LocalizationManager.Get("Settings_CloseToTrayDesc");
-        if (SettingsTopTitleText != null) SettingsTopTitleText.Text = LocalizationManager.Get("Settings_AlwaysOnTopTitle");
-        if (SettingsTopDescText != null) SettingsTopDescText.Text = LocalizationManager.Get("Settings_AlwaysOnTopDesc");
+        SetText(page.SettingsTitleText, "Settings_Title");
+        SetText(page.SettingsDescText, "Settings_Desc");
+        SetText(page.SettingsLangTitleText, "Settings_LangTitle");
+        SetText(page.SettingsLangDescText, "Settings_LangDesc");
+        SetText(page.SettingsBootTitleText, "Settings_BootTitle");
+        SetText(page.SettingsBootDescText, "Settings_BootDesc");
+        SetText(page.SettingsStartMinTitleText, "Settings_StartMinimizedTitle");
+        SetText(page.SettingsStartMinDescText, "Settings_StartMinimizedDesc");
+        SetText(page.SettingsCloseToTrayTitleText, "Settings_CloseToTrayTitle");
+        SetText(page.SettingsCloseToTrayDescText, "Settings_CloseToTrayDesc");
+        SetText(page.SettingsTopTitleText, "Settings_AlwaysOnTopTitle");
+        SetText(page.SettingsTopDescText, "Settings_AlwaysOnTopDesc");
 
-        UpdateLanguageComboItems();
+        UpdateLanguageComboItems(page.LanguageCombo);
 
         // Settings Hotkeys
-        if (SettingsHkTitleText != null) SettingsHkTitleText.Text = LocalizationManager.Get("Settings_HotkeysTitle");
-        if (SettingsHkDescText != null) SettingsHkDescText.Text = LocalizationManager.Get("Settings_HotkeysDesc");
-        if (HkWakeLabel != null) HkWakeLabel.Text = LocalizationManager.Get("Settings_HkWake");
-        if (HkClickerLabel != null) HkClickerLabel.Text = LocalizationManager.Get("Settings_HkClicker");
-        if (HkHolderLabel != null) HkHolderLabel.Text = LocalizationManager.Get("Settings_HkHolder");
-        if (HkTyperLabel != null) HkTyperLabel.Text = LocalizationManager.Get("Settings_HkTyper");
-        if (HkMacroLabel != null) HkMacroLabel.Text = LocalizationManager.Get("Settings_HkMacro");
-        if (HkPanicKillLabel != null) HkPanicKillLabel.Text = LocalizationManager.Get("Settings_HkPanicKill");
-        if (HkPanicEscapeLabel != null) HkPanicEscapeLabel.Text = LocalizationManager.Get("Settings_HkPanicEscape");
-        if (SettingsAboutNavTitleText != null) SettingsAboutNavTitleText.Text = LocalizationManager.Get("Settings_AboutNavTitle");
-        if (SettingsAboutNavBtn != null) SettingsAboutNavBtn.Content = LocalizationManager.Get("Settings_AboutNavBtn");
+        SetText(page.SettingsHkTitleText, "Settings_HotkeysTitle");
+        SetText(page.SettingsHkDescText, "Settings_HotkeysDesc");
+        SetText(page.HkWakeLabel, "Settings_HkWake");
+        SetText(page.HkClickerLabel, "Settings_HkClicker");
+        SetText(page.HkHolderLabel, "Settings_HkHolder");
+        SetText(page.HkTyperLabel, "Settings_HkTyper");
+        SetText(page.HkMacroLabel, "Settings_HkMacro");
+        SetText(page.HkPanicKillLabel, "Settings_HkPanicKill");
+        SetText(page.HkPanicEscapeLabel, "Settings_HkPanicEscape");
+        SetText(page.SettingsAboutNavTitleText, "Settings_AboutNavTitle");
+        SetContent(page.SettingsAboutNavBtn, "Settings_AboutNavBtn");
     }
 
-    private void UpdateLanguageComboItems()
+    private static void UpdateLanguageComboItems(ComboBox? combo)
     {
-        if (LanguageCombo == null) return;
-        foreach (var obj in LanguageCombo.Items)
+        if (combo == null) return;
+        foreach (var obj in combo.Items)
         {
             if (obj is ComboBoxItem item && item.Tag is string code)
             {
@@ -401,39 +435,39 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void ApplyAboutLocalization()
+    private static void ApplyAboutLocalization(MainPage page)
     {
-        if (AboutTitleText != null) AboutTitleText.Text = LocalizationManager.Get("About_Title");
-        if (AboutDescText != null) AboutDescText.Text = LocalizationManager.Get("About_Desc");
-        if (AboutHeroSubText != null) AboutHeroSubText.Text = LocalizationManager.Get("About_HeroSub");
-        if (AboutHeroSub2Text != null) AboutHeroSub2Text.Text = LocalizationManager.Get("About_HeroSub2");
-        if (AboutSpecsTitleText != null) AboutSpecsTitleText.Text = LocalizationManager.Get("About_SpecsTitle");
-        if (AboutSpecsUiLabel != null) AboutSpecsUiLabel.Text = LocalizationManager.Get("About_SpecsUiLabel");
-        if (AboutSpecsCoreLabel != null) AboutSpecsCoreLabel.Text = LocalizationManager.Get("About_SpecsCoreLabel");
-        if (AboutSpecsCoreValueText != null) AboutSpecsCoreValueText.Text = LocalizationManager.Get("About_SpecsCoreValue");
-        if (AboutSpecsPublishLabel != null) AboutSpecsPublishLabel.Text = LocalizationManager.Get("About_SpecsPublishLabel");
-        if (AboutSpecsPublishValueText != null) AboutSpecsPublishValueText.Text = LocalizationManager.Get("About_SpecsPublishValue");
-        if (AboutSpecsLicenseLabel != null) AboutSpecsLicenseLabel.Text = LocalizationManager.Get("About_SpecsLicenseLabel");
-        if (AboutSpecsLicenseValueText != null) AboutSpecsLicenseValueText.Text = LocalizationManager.Get("About_SpecsLicenseValue");
-        if (AboutPrivacyTitleText != null) AboutPrivacyTitleText.Text = LocalizationManager.Get("About_PrivacyTitle");
-        if (AboutPrivacyDescText != null) AboutPrivacyDescText.Text = LocalizationManager.Get("About_PrivacyDesc");
-        if (AboutOpenFolderBtn != null) AboutOpenFolderBtn.Content = LocalizationManager.Get("About_OpenFolderBtn");
+        SetText(page.AboutTitleText, "About_Title");
+        SetText(page.AboutDescText, "About_Desc");
+        SetText(page.AboutHeroSubText, "About_HeroSub");
+        SetText(page.AboutHeroSub2Text, "About_HeroSub2");
+        SetText(page.AboutSpecsTitleText, "About_SpecsTitle");
+        SetText(page.AboutSpecsUiLabel, "About_SpecsUiLabel");
+        SetText(page.AboutSpecsCoreLabel, "About_SpecsCoreLabel");
+        SetText(page.AboutSpecsCoreValueText, "About_SpecsCoreValue");
+        SetText(page.AboutSpecsPublishLabel, "About_SpecsPublishLabel");
+        SetText(page.AboutSpecsPublishValueText, "About_SpecsPublishValue");
+        SetText(page.AboutSpecsLicenseLabel, "About_SpecsLicenseLabel");
+        SetText(page.AboutSpecsLicenseValueText, "About_SpecsLicenseValue");
+        SetText(page.AboutPrivacyTitleText, "About_PrivacyTitle");
+        SetText(page.AboutPrivacyDescText, "About_PrivacyDesc");
+        SetContent(page.AboutOpenFolderBtn, "About_OpenFolderBtn");
     }
 
-    private void ApplyStatusLocalization()
+    private static void ApplyStatusLocalization(MainPage page)
     {
-        if (!_isRunning)
+        if (!page._isRunning)
         {
-            if (TyperActionText != null) TyperActionText.Text = LocalizationManager.Get("Typer_ActionStart");
-            if (HolderActionText != null) HolderActionText.Text = LocalizationManager.Get("KeyHolder_ActionStart");
-            if (ClickerActionText != null) ClickerActionText.Text = LocalizationManager.Get("Clicker_ActionStart");
-            if (MacroActionText != null) MacroActionText.Text = LocalizationManager.Get("Macro_ActionReplay");
+            SetText(page.TyperActionText, "Typer_ActionStart");
+            SetText(page.HolderActionText, "KeyHolder_ActionStart");
+            SetText(page.ClickerActionText, "Clicker_ActionStart");
+            SetText(page.MacroActionText, "Macro_ActionReplay");
 
             string readyText = LocalizationManager.Get("Common_Ready");
-            if (TyperStatusText != null && IsDefaultStatusText(TyperStatusText.Text)) TyperStatusText.Text = readyText;
-            if (HolderStatusText != null && IsDefaultStatusText(HolderStatusText.Text)) HolderStatusText.Text = readyText;
-            if (ClickerStatusText != null && IsDefaultStatusText(ClickerStatusText.Text)) ClickerStatusText.Text = readyText;
-            if (MacroStatusText != null && IsDefaultStatusText(MacroStatusText.Text)) MacroStatusText.Text = readyText;
+            SetDefaultStatusText(page.TyperStatusText, readyText);
+            SetDefaultStatusText(page.HolderStatusText, readyText);
+            SetDefaultStatusText(page.ClickerStatusText, readyText);
+            SetDefaultStatusText(page.MacroStatusText, readyText);
         }
     }
 
