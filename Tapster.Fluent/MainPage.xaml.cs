@@ -207,7 +207,7 @@ public sealed partial class MainPage : Page
     {
         if (page.KeyboardContainer == null || page.HolderScrollViewer == null) return;
         double availableWidth = page.HolderScrollViewer.ActualWidth - 36;
-        page.KeyboardContainer.Width = Math.Max(764, availableWidth);
+        page.KeyboardContainer.Width = Math.Max(804, availableWidth);
     }
 
     private void GenerateVirtualKeyboard()
@@ -280,7 +280,7 @@ public sealed partial class MainPage : Page
         AddKeyBtn(row5, "down", "▼"); // Starts at 560, ends at 596px, aligning with ▲
         mainKeyboardPanel.Children.Add(row5);
 
-        // ── Right Numpad Grid (Rows 0 to 5 x Columns 0 to 3) ──
+        // ── Right Numpad Grid (Rows 0 to 5 x Columns 0 to 4) ──
         var numpadGrid = new Grid
         {
             RowSpacing = 4,
@@ -291,41 +291,46 @@ public sealed partial class MainPage : Page
         {
             numpadGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(34) });
         }
-        for (int c = 0; c < 4; c++)
+        for (int c = 0; c < 5; c++)
         {
             numpadGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(36) });
         }
 
-        // Row 0: Top control keys
+        // Row 0: Top control & navigation keys
         AddGridKeyBtn(numpadGrid, 0, 0, "printscreen", "PrtSc");
         AddGridKeyBtn(numpadGrid, 0, 1, "scrolllock", "ScrLk");
         AddGridKeyBtn(numpadGrid, 0, 2, "pause", "Pause");
-        AddGridKeyBtn(numpadGrid, 0, 3, "delete", "Del");
+        AddGridKeyBtn(numpadGrid, 0, 3, "insert", "Ins");
+        AddGridKeyBtn(numpadGrid, 0, 4, "delete", "Del");
 
-        // Row 1: Numpad operators
+        // Row 1: Numpad operators & Home
         AddGridKeyBtn(numpadGrid, 1, 0, "numlock", "NumLk");
         AddGridKeyBtn(numpadGrid, 1, 1, "divide", "/");
         AddGridKeyBtn(numpadGrid, 1, 2, "multiply", "*");
         AddGridKeyBtn(numpadGrid, 1, 3, "subtract", "-");
+        AddGridKeyBtn(numpadGrid, 1, 4, "home", "Home");
 
-        // Row 2: 7 8 9 + (+ spans Row 2 & 3: 72px)
+        // Row 2: 7 8 9 + PgUp (+ spans Row 2 & 3: 72px)
         AddGridKeyBtn(numpadGrid, 2, 0, "num7", "7");
         AddGridKeyBtn(numpadGrid, 2, 1, "num8", "8");
         AddGridKeyBtn(numpadGrid, 2, 2, "num9", "9");
         AddSpannedGridKeyBtn(numpadGrid, 2, 3, "add", "+");
+        AddGridKeyBtn(numpadGrid, 2, 4, "pageup", "PgUp");
 
-        // Row 3: 4 5 6 (+ spans from row 2)
+        // Row 3: 4 5 6 PgDn (+ spans from row 2)
         AddGridKeyBtn(numpadGrid, 3, 0, "num4", "4");
         AddGridKeyBtn(numpadGrid, 3, 1, "num5", "5");
         AddGridKeyBtn(numpadGrid, 3, 2, "num6", "6");
+        AddGridKeyBtn(numpadGrid, 3, 4, "pagedown", "PgDn");
 
-        // Row 4: 1 2 3 Enter (Enter spans Row 4 & 5: 72px)
+        // Row 4: 1 2 3 NumpadEnter End (Enter and End span Row 4 & 5: 72px)
         AddGridKeyBtn(numpadGrid, 4, 0, "num1", "1");
         AddGridKeyBtn(numpadGrid, 4, 1, "num2", "2");
         AddGridKeyBtn(numpadGrid, 4, 2, "num3", "3");
-        AddSpannedGridKeyBtn(numpadGrid, 4, 3, "enter", "Enter");
+        AddSpannedGridKeyBtn(numpadGrid, 4, 3, "numpadenter", "Enter");
+        AddSpannedGridKeyBtn(numpadGrid, 4, 4, "end", "End");
 
-        // Row 5: ► 0 . (Enter spans from row 4)
+        // Row 5: ► 0 . (Enter and End span from row 4)
         AddGridKeyBtn(numpadGrid, 5, 0, "right", "►");
         AddGridKeyBtn(numpadGrid, 5, 1, "num0", "0");
         AddGridKeyBtn(numpadGrid, 5, 2, "decimal", ".");
@@ -395,11 +400,10 @@ public sealed partial class MainPage : Page
             }
             else
             {
-                var keys = current.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                                  .ToList();
-                if (keys.Contains(keyId, StringComparer.OrdinalIgnoreCase))
+                var keys = Keyboard.SplitCombo(current).ToList();
+                if (keys.Any(k => IsKeyMatch(k, keyId)))
                 {
-                    keys.RemoveAll(k => string.Equals(k, keyId, StringComparison.OrdinalIgnoreCase));
+                    keys.RemoveAll(k => IsKeyMatch(k, keyId));
                     HolderKeyBox.Text = string.Join("+", keys);
                 }
                 else
@@ -442,6 +446,46 @@ public sealed partial class MainPage : Page
         grid.Children.Add(btn);
     }
 
+    private static readonly Dictionary<string, HashSet<string>> KeyAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["delete"] = new(StringComparer.OrdinalIgnoreCase) { "del" },
+        ["del"] = new(StringComparer.OrdinalIgnoreCase) { "delete" },
+        ["insert"] = new(StringComparer.OrdinalIgnoreCase) { "ins" },
+        ["ins"] = new(StringComparer.OrdinalIgnoreCase) { "insert" },
+        ["pageup"] = new(StringComparer.OrdinalIgnoreCase) { "pgup" },
+        ["pgup"] = new(StringComparer.OrdinalIgnoreCase) { "pageup" },
+        ["pagedown"] = new(StringComparer.OrdinalIgnoreCase) { "pgdn" },
+        ["pgdn"] = new(StringComparer.OrdinalIgnoreCase) { "pagedown" },
+        ["printscreen"] = new(StringComparer.OrdinalIgnoreCase) { "prtsc", "prtscr" },
+        ["prtsc"] = new(StringComparer.OrdinalIgnoreCase) { "printscreen", "prtscr" },
+        ["prtscr"] = new(StringComparer.OrdinalIgnoreCase) { "printscreen", "prtsc" },
+        ["scrolllock"] = new(StringComparer.OrdinalIgnoreCase) { "scrlk" },
+        ["scrlk"] = new(StringComparer.OrdinalIgnoreCase) { "scrolllock" },
+        ["numlock"] = new(StringComparer.OrdinalIgnoreCase) { "numlk" },
+        ["numlk"] = new(StringComparer.OrdinalIgnoreCase) { "numlock" },
+        ["ctrl"] = new(StringComparer.OrdinalIgnoreCase) { "control" },
+        ["control"] = new(StringComparer.OrdinalIgnoreCase) { "ctrl" },
+        ["win"] = new(StringComparer.OrdinalIgnoreCase) { "windows" },
+        ["windows"] = new(StringComparer.OrdinalIgnoreCase) { "win" },
+        ["esc"] = new(StringComparer.OrdinalIgnoreCase) { "escape" },
+        ["escape"] = new(StringComparer.OrdinalIgnoreCase) { "esc" },
+        ["numpadenter"] = new(StringComparer.OrdinalIgnoreCase) { "numenter" },
+        ["numenter"] = new(StringComparer.OrdinalIgnoreCase) { "numpadenter" },
+        ["add"] = new(StringComparer.OrdinalIgnoreCase) { "num+" },
+        ["num+"] = new(StringComparer.OrdinalIgnoreCase) { "add" },
+    };
+
+    private static bool IsKeyMatch(string a, string b)
+    {
+        if (string.Equals(a, b, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return (KeyAliases.TryGetValue(a, out var aAliases) && aAliases.Contains(b))
+            || (KeyAliases.TryGetValue(b, out var bAliases) && bAliases.Contains(a));
+    }
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Bug", "S2583:Conditionally executed code should be reachable", Justification = "HolderKeyBox is initialized by XAML InitializeComponent at runtime")]
     private void UpdateVirtualKeyboardHighlights()
     {
@@ -452,11 +496,11 @@ public sealed partial class MainPage : Page
         }
 
         string rawText = HolderKeyBox?.Text ?? string.Empty;
-        var activeKeys = !string.IsNullOrWhiteSpace(rawText)
-            ? new HashSet<string>(rawText.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase)
-            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var activeTokens = !string.IsNullOrWhiteSpace(rawText)
+            ? Keyboard.SplitCombo(rawText)
+            : [];
 
-        if (activeKeys.Count == 0)
+        if (activeTokens.Length == 0)
         {
             foreach (var list in _keyboardButtons.Values)
             {
@@ -466,6 +510,18 @@ public sealed partial class MainPage : Page
                 }
             }
             return;
+        }
+
+        var activeKeys = new HashSet<string>(activeTokens, StringComparer.OrdinalIgnoreCase);
+        foreach (var token in activeTokens)
+        {
+            if (KeyAliases.TryGetValue(token, out var aliases))
+            {
+                foreach (var alias in aliases)
+                {
+                    activeKeys.Add(alias);
+                }
+            }
         }
 
         foreach (var (keyId, list) in _keyboardButtons)
