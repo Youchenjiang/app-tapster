@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0.0] - 2026-10-10
+
+### Added
+- **Multi-Language Localization Engine**: Full runtime dynamic UI localization across Traditional Chinese (繁體中文), Simplified Chinese (简体中文), English, and Japanese (日本語), supporting persistent app settings and automatic system default language matching (PR #49).
+- **Multi-Stage Key Holder Pipeline**: Interactive step timeline with live step cards, customizable repeat counts, configurable step durations, and seamless combo-to-pipeline additions (PR #48).
+- **96% Compact Virtual Keyboard**: Integrated full 4-key navigation arrow cluster and dedicated 17-key numpad with dual-column responsive grid layout and bidirectional key state highlights (PR #47).
+
+### Changed
+- **Unified Navigation Labels**: Streamlined navigation tabs into concise two-character Chinese labels (打字, 長按, 連點, 重放) and eliminated mixed English/Chinese labels throughout all panels (PR #49).
+- **Fluent UI Accessibility & Layout**: Added full scrollviewer wrapping across all main functional panels (Typer, Holder, Clicker, Macro) with minimum window height and width safeguards to prevent UI clipping on compact screens (PR #46).
+- **Input Validation & Safety Guards**: Disabled execution buttons when necessary inputs are empty to prevent invalid operations (PR #46).
+
+### Fixed
+- **Code Quality & Cognitive Complexity**: Decomposed large UI localization and step rendering methods into static null-safe setters, reducing SonarCloud cognitive complexity to 0 and eliminating duplicated string literals (PR #49).
+- **Virtual Keyboard Spacing & Layout Alignment**: Fixed numpad alignment gap, eliminated unwanted nested scrollviewers, and centered the virtual keyboard in the step card pipeline (PR #47, PR #48).
+
 ## [1.2.0.0] - 2026-10-08
 
 ### Added
