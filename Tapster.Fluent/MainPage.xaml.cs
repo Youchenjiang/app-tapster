@@ -689,21 +689,40 @@ public sealed partial class MainPage : Page
 
     private void AddStepBtn_Click(object sender, RoutedEventArgs e)
     {
-        double holdSec = _holderStages.Count > 0 && _holderStages[^1].HoldDurationSec > 0 ? _holderStages[^1].HoldDurationSec : 2.0;
-        var newStage = new KeyHolderStage("", holdSec, 0);
+        string comboToCopy = "";
+        double holdSec = 2.0;
+        double restSec = 0;
+
+        if (_activeStageIndex >= 0 && _activeStageIndex < _holderStages.Count)
+        {
+            var active = _holderStages[_activeStageIndex];
+            comboToCopy = active.KeyCombo;
+            holdSec = active.HoldDurationSec;
+            restSec = active.RestDurationSec;
+        }
+        else if (_holderStages.Count > 0)
+        {
+            var last = _holderStages[^1];
+            holdSec = last.HoldDurationSec > 0 ? last.HoldDurationSec : 2.0;
+            restSec = last.RestDurationSec;
+        }
+
+        var newStage = new KeyHolderStage(comboToCopy, holdSec, restSec);
         _holderStages.Add(newStage);
         _activeStageIndex = _holderStages.Count - 1;
         RenderHolderStepCards();
         UpdateVirtualKeyboardHighlights();
         UpdateHolderActionBtnState();
         UpdateHolderRepeatPanelVisibility();
-        HolderStatusText.Text = $"Added Step #{_holderStages.Count}. Click keys on virtual keyboard below to configure.";
+        HolderStatusText.Text = string.IsNullOrWhiteSpace(comboToCopy)
+            ? $"Added Step #{_holderStages.Count}. Click keys on virtual keyboard below to configure."
+            : $"Added Step #{_holderStages.Count} with copied combo [{comboToCopy}].";
     }
 
     private void UpdateHolderRepeatPanelVisibility()
     {
         if (HolderRepeatPanel == null) return;
-        bool show = _holderStages.Count > 1 || _holderStages.Any(s => s.HoldDurationSec > 0 && s.RestDurationSec > 0);
+        bool show = _holderStages.Count > 1 || _holderStages.Any(s => s.HoldDurationSec > 0);
         HolderRepeatPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -838,8 +857,13 @@ public sealed partial class MainPage : Page
             BorderThickness = new Thickness(isActive || isRunning ? 2 : 1)
         };
 
-        cardBorder.PointerPressed += (_, _) =>
+        cardBorder.PointerPressed += (s, e) =>
         {
+            if (!ReferenceEquals(e.OriginalSource, cardBorder))
+            {
+                return;
+            }
+
             if (_activeStageIndex != stepIndex)
             {
                 _activeStageIndex = stepIndex;
@@ -973,7 +997,9 @@ public sealed partial class MainPage : Page
         {
             if (modeCombo.SelectedIndex == 1)
             {
-                stage.HoldDurationSec = Math.Max(0.1, holdBox.Value);
+                double val = holdBox.Value;
+                stage.HoldDurationSec = (!double.IsNaN(val) && !double.IsInfinity(val) && val > 0) ? Math.Max(0.1, val) : 3.0;
+                holdBox.Value = stage.HoldDurationSec;
                 holdBox.Visibility = Visibility.Visible;
             }
             else
@@ -1109,6 +1135,10 @@ public sealed partial class MainPage : Page
         {
             if (_holderStages.Count <= 1) return;
             _holderStages.RemoveAt(stepIndex);
+            if (stepIndex < _activeStageIndex)
+            {
+                _activeStageIndex--;
+            }
             _activeStageIndex = Math.Clamp(_activeStageIndex, 0, _holderStages.Count - 1);
             RenderHolderStepCards();
             UpdateVirtualKeyboardHighlights();
@@ -2052,13 +2082,20 @@ public sealed partial class MainPage : Page
 
     private async Task RunKeyHolderAsync(CancellationToken token, Action<string, double> reportProgress)
     {
-        var stagesToRun = _holderStages.Where(s => !string.IsNullOrWhiteSpace(s.KeyCombo)).Select(s => s.Clone()).ToList();
-        if (stagesToRun.Count == 0)
+        var indexedStagesToRun = _holderStages
+            .Select((stage, index) => (OriginalIndex: index, Stage: stage.Clone()))
+            .Where(x => !string.IsNullOrWhiteSpace(x.Stage.KeyCombo))
+            .ToList();
+
+        if (indexedStagesToRun.Count == 0)
         {
             throw new InvalidOperationException("No valid steps in pipeline!");
         }
 
-        int repeatLoops = Math.Max(0, (int)HolderRepeatBox.Value);
+        double repeatVal = HolderRepeatBox.Value;
+        int repeatLoops = (!double.IsNaN(repeatVal) && !double.IsInfinity(repeatVal) && repeatVal >= 0)
+            ? (int)Math.Floor(repeatVal)
+            : 1;
 
         await Task.Run(() =>
         {
@@ -2068,8 +2105,9 @@ public sealed partial class MainPage : Page
                 while (!token.IsCancellationRequested && (repeatLoops == 0 || currentLoop < repeatLoops))
                 {
                     currentLoop++;
+                    bool isFinalLoop = (repeatLoops > 0 && currentLoop == repeatLoops);
                     string loopPrefix = FormatHolderLoopPrefix(currentLoop, repeatLoops);
-                    ExecuteHolderStagesPipeline(stagesToRun, loopPrefix, token, reportProgress);
+                    ExecuteHolderStagesPipeline(indexedStagesToRun, loopPrefix, isFinalLoop, token, reportProgress);
                 }
             }
             finally
@@ -2087,8 +2125,9 @@ public sealed partial class MainPage : Page
     }
 
     private void ExecuteHolderStagesPipeline(
-        List<KeyHolderStage> stagesToRun,
+        List<(int OriginalIndex, KeyHolderStage Stage)> stagesToRun,
         string loopPrefix,
+        bool isFinalLoop,
         CancellationToken token,
         Action<string, double> reportProgress)
     {
@@ -2097,14 +2136,18 @@ public sealed partial class MainPage : Page
             token.ThrowIfCancellationRequested();
             CheckPanicSafety();
 
-            int activeIdx = i;
-            DispatcherQueue.TryEnqueue(() => HighlightRunningStage(activeIdx));
+            var (originalIdx, stage) = stagesToRun[i];
+            DispatcherQueue.TryEnqueue(() => HighlightRunningStage(originalIdx));
 
-            var stage = stagesToRun[i];
             string stepPrefix = stagesToRun.Count > 1 ? $"{loopPrefix}Step {i + 1}/{stagesToRun.Count}: " : loopPrefix;
+            bool isLastStepOfRun = isFinalLoop && (i == stagesToRun.Count - 1);
 
             ExecuteHolderStageHoldPhase(stage, stepPrefix, token, reportProgress);
-            ExecuteHolderStageRestPhase(stage, stepPrefix, token, reportProgress);
+
+            if (!isLastStepOfRun)
+            {
+                ExecuteHolderStageRestPhase(stage, stepPrefix, token, reportProgress);
+            }
         }
     }
 
