@@ -84,4 +84,6 @@
   - Locked input clearing and macro step editing during active tasks by invoking `UpdateAllActionBtnStates()` immediately after setting `_isRunning = true`.
   - Extracted pre-flight validation and countdown loop from `RunTaskAsync` to helper methods, reducing cognitive complexity below SonarCloud S3776 threshold.
   - Replaced repetitive `"Holder"` and `"Macro"` tab literals with constant identifiers (SonarCloud S1192).
+  - Suppressed false-positive unreachable code analysis (SonarCloud S2583) on XAML control state in virtual keyboard highlights.
+
 
