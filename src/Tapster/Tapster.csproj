@@ -10,4 +10,9 @@
     <RootNamespace>Tapster</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tapster.Core.Tests" />
+    <InternalsVisibleTo Include="Tapster.Fluent" />
+  </ItemGroup>
+
 </Project>

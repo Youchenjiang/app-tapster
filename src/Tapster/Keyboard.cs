@@ -1,7 +1,10 @@
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using static Tapster.NativeMethods;
 
 namespace Tapster;
+
+internal readonly record struct KeyStroke(ushort Vk, bool Extended = false);
 
 /// <summary>
 /// Simulates keyboard input using Windows SendInput API.
@@ -13,9 +16,9 @@ public static partial class Keyboard
     /// </summary>
     public static void Press(string keys)
     {
-        foreach (var vk in ParseKeys(keys))
+        foreach (var stroke in ParseKeys(keys))
         {
-            SendKey(vk, down: true);
+            SendKey(stroke, down: true);
         }
     }
 
@@ -24,9 +27,9 @@ public static partial class Keyboard
     /// </summary>
     public static void Release(string keys)
     {
-        foreach (var vk in ParseKeys(keys))
+        foreach (var stroke in ParseKeys(keys))
         {
-            SendKey(vk, down: false);
+            SendKey(stroke, down: false);
         }
     }
 
@@ -132,6 +135,7 @@ public static partial class Keyboard
     {
         if (vk >= 0x41 && vk <= 0x5A) return ((char)('a' + (vk - 0x41))).ToString();
         if (vk >= 0x30 && vk <= 0x39) return ((char)('0' + (vk - 0x30))).ToString();
+        if (vk >= 0x60 && vk <= 0x69) return $"num{vk - 0x60}";
         if (vk >= 0x70 && vk <= 0x7B) return $"f{vk - 0x70 + 1}";
 
         return vk switch
@@ -156,6 +160,15 @@ public static partial class Keyboard
             0x28 => "down",
             0x25 => "left",
             0x27 => "right",
+            0x2C => "printscreen",
+            0x13 => "pause",
+            0x90 => "numlock",
+            0x91 => "scrolllock",
+            0x6A => "multiply",
+            0x6B => "add",
+            0x6D => "subtract",
+            0x6E => "decimal",
+            0x6F => "divide",
             0xC0 => "`",
             0xBD => "-",
             0xBB => "=",
@@ -173,8 +186,14 @@ public static partial class Keyboard
 
     // ── Private helpers ───────────────────────────────────────────────────────
 
-    private static void SendKey(ushort vk, bool down)
+    private static void SendKey(KeyStroke stroke, bool down)
     {
+        uint flags = down ? 0u : KEYEVENTF_KEYUP;
+        if (stroke.Extended)
+        {
+            flags |= KEYEVENTF_EXTENDEDKEY;
+        }
+
         var input = new INPUT
         {
             type = INPUT_KEYBOARD,
@@ -182,8 +201,8 @@ public static partial class Keyboard
             {
                 ki = new KEYBDINPUT
                 {
-                    wVk = vk,
-                    dwFlags = down ? 0 : KEYEVENTF_KEYUP
+                    wVk = stroke.Vk,
+                    dwFlags = flags
                 }
             }
         };
@@ -191,117 +210,155 @@ public static partial class Keyboard
         SendInput(1, [input], Marshal.SizeOf<INPUT>());
     }
 
-    private static ushort[] ParseKeys(string combo)
+    private static void SendKey(ushort vk, bool down, bool extended = false)
     {
-        return combo.Split('+')
-            .Select(k => k.Trim().ToLower())
-            .Where(k => !string.IsNullOrEmpty(k))
+        SendKey(new KeyStroke(vk, extended), down);
+    }
+
+    [GeneratedRegex(@"(?i)\b(numpad|num)\+")]
+    private static partial Regex NumpadPlusRegex();
+
+    internal static string[] SplitCombo(string combo)
+    {
+        if (string.IsNullOrWhiteSpace(combo))
+        {
+            return [];
+        }
+
+        string trimmed = combo.Trim();
+        if (trimmed == "+")
+        {
+            return ["+"];
+        }
+
+        string normalized = NumpadPlusRegex().Replace(trimmed, "add");
+        if (normalized == "+")
+        {
+            return ["+"];
+        }
+
+        bool endsWithDoublePlus = normalized.EndsWith("++", StringComparison.Ordinal);
+        string toSplit = endsWithDoublePlus ? normalized[..^1] : normalized;
+
+        var tokens = toSplit.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
+        if (endsWithDoublePlus)
+        {
+            tokens.Add("+");
+        }
+
+        return tokens.ToArray();
+    }
+
+    internal static KeyStroke[] ParseKeys(string combo)
+    {
+        return SplitCombo(combo)
             .Select(MapKeyName)
+            .Where(k => k.Vk != 0)
             .ToArray();
     }
 
-    private static ushort MapKeyName(string name)
+    private static KeyStroke MapKeyName(string name)
     {
-        string k = name.ToLower();
+        string k = name.ToLowerInvariant();
         if (k.StartsWith("vk_") && int.TryParse(k[3..], out int parsedVk))
         {
-            return (ushort)parsedVk;
+            return new KeyStroke((ushort)parsedVk);
+        }
+
+        if (NamedKeyMap.TryGetValue(k, out KeyStroke stroke))
+        {
+            return stroke;
         }
 
         if (k.Length == 1)
         {
             char ch = k[0];
-            if (ch >= 'a' && ch <= 'z') return (ushort)(ch - 'a' + 0x41); // VK_A .. VK_Z
-            if (ch >= '0' && ch <= '9') return (ushort)(ch - '0' + 0x30); // VK_0 .. VK_9
+            if (ch >= 'a' && ch <= 'z') return new KeyStroke((ushort)(ch - 'a' + 0x41)); // VK_A .. VK_Z
+            if (ch >= '0' && ch <= '9') return new KeyStroke((ushort)(ch - '0' + 0x30)); // VK_0 .. VK_9
         }
 
-        ushort namedKey = MapNamedKey(k);
-        if (namedKey != 0)
-        {
-            return namedKey;
-        }
-
-        return ResolveFallbackKey(k);
+        return new KeyStroke(ResolveFallbackKey(k));
     }
 
-    private static readonly System.Collections.Generic.Dictionary<string, ushort> NamedKeyMap = new(System.StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, KeyStroke> NamedKeyMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["shift"] = 0x10,
-        ["ctrl"] = 0x11,
-        ["control"] = 0x11,
-        ["alt"] = 0x12,
-        ["windows"] = 0x5B,
-        ["win"] = 0x5B,
-        ["enter"] = 0x0D,
-        ["return"] = 0x0D,
-        ["space"] = 0x20,
-        ["tab"] = 0x09,
-        ["esc"] = 0x1B,
-        ["escape"] = 0x1B,
-        ["backspace"] = 0x08,
-        ["delete"] = 0x2E,
-        ["del"] = 0x2E,
-        ["insert"] = 0x2D,
-        ["ins"] = 0x2D,
-        ["home"] = 0x24,
-        ["end"] = 0x23,
-        ["pageup"] = 0x21,
-        ["pgup"] = 0x21,
-        ["pagedown"] = 0x22,
-        ["pgdn"] = 0x22,
-        ["capslock"] = 0x14,
-        ["up"] = 0x26,
-        ["down"] = 0x28,
-        ["left"] = 0x25,
-        ["right"] = 0x27,
-        ["`"] = 0xC0,
-        ["~"] = 0xC0,
-        ["-"] = 0xBD,
-        ["_"] = 0xBD,
-        ["="] = 0xBB,
-        ["+"] = 0xBB,
-        ["["] = 0xDB,
-        ["{"] = 0xDB,
-        ["]"] = 0xDD,
-        ["}"] = 0xDD,
-        ["\\"] = 0xDC,
-        ["|"] = 0xDC,
-        [";"] = 0xBA,
-        [":"] = 0xBA,
-        ["'"] = 0xDE,
-        ["\""] = 0xDE,
-        [","] = 0xBC,
-        ["<"] = 0xBC,
-        ["."] = 0xBE,
-        [">"] = 0xBE,
-        ["/"] = 0xBF,
-        ["?"] = 0xBF,
-        ["f1"] = 0x70, ["f2"] = 0x71, ["f3"] = 0x72, ["f4"] = 0x73,
-        ["f5"] = 0x74, ["f6"] = 0x75, ["f7"] = 0x76, ["f8"] = 0x77,
-        ["f9"] = 0x78, ["f10"] = 0x79, ["f11"] = 0x7A, ["f12"] = 0x7B,
-        ["numlock"] = 0x90, ["numlk"] = 0x90,
-        ["scrolllock"] = 0x91, ["scrlk"] = 0x91,
-        ["printscreen"] = 0x2C, ["prtsc"] = 0x2C, ["prtscr"] = 0x2C,
-        ["pause"] = 0x13,
-        ["numpad0"] = 0x60, ["num0"] = 0x60,
-        ["numpad1"] = 0x61, ["num1"] = 0x61,
-        ["numpad2"] = 0x62, ["num2"] = 0x62,
-        ["numpad3"] = 0x63, ["num3"] = 0x63,
-        ["numpad4"] = 0x64, ["num4"] = 0x64,
-        ["numpad5"] = 0x65, ["num5"] = 0x65,
-        ["numpad6"] = 0x66, ["num6"] = 0x66,
-        ["numpad7"] = 0x67, ["num7"] = 0x67,
-        ["numpad8"] = 0x68, ["num8"] = 0x68,
-        ["numpad9"] = 0x69, ["num9"] = 0x69,
-        ["multiply"] = 0x6A, ["num*"] = 0x6A,
-        ["add"] = 0x6B, ["num+"] = 0x6B,
-        ["subtract"] = 0x6D, ["num-"] = 0x6D,
-        ["decimal"] = 0x6E, ["num."] = 0x6E,
-        ["divide"] = 0x6F, ["num/"] = 0x6F
+        ["shift"] = new(0x10),
+        ["ctrl"] = new(0x11),
+        ["control"] = new(0x11),
+        ["alt"] = new(0x12),
+        ["windows"] = new(0x5B),
+        ["win"] = new(0x5B),
+        ["enter"] = new(0x0D),
+        ["return"] = new(0x0D),
+        ["numpadenter"] = new(0x0D, Extended: true),
+        ["numenter"] = new(0x0D, Extended: true),
+        ["space"] = new(0x20),
+        ["tab"] = new(0x09),
+        ["esc"] = new(0x1B),
+        ["escape"] = new(0x1B),
+        ["backspace"] = new(0x08),
+        ["delete"] = new(0x2E, Extended: true),
+        ["del"] = new(0x2E, Extended: true),
+        ["insert"] = new(0x2D, Extended: true),
+        ["ins"] = new(0x2D, Extended: true),
+        ["home"] = new(0x24, Extended: true),
+        ["end"] = new(0x23, Extended: true),
+        ["pageup"] = new(0x21, Extended: true),
+        ["pgup"] = new(0x21, Extended: true),
+        ["pagedown"] = new(0x22, Extended: true),
+        ["pgdn"] = new(0x22, Extended: true),
+        ["capslock"] = new(0x14),
+        ["up"] = new(0x26, Extended: true),
+        ["down"] = new(0x28, Extended: true),
+        ["left"] = new(0x25, Extended: true),
+        ["right"] = new(0x27, Extended: true),
+        ["`"] = new(0xC0),
+        ["~"] = new(0xC0),
+        ["-"] = new(0xBD),
+        ["_"] = new(0xBD),
+        ["="] = new(0xBB),
+        ["+"] = new(0xBB),
+        ["["] = new(0xDB),
+        ["{"] = new(0xDB),
+        ["]"] = new(0xDD),
+        ["}"] = new(0xDD),
+        ["\\"] = new(0xDC),
+        ["|"] = new(0xDC),
+        [";"] = new(0xBA),
+        [":"] = new(0xBA),
+        ["'"] = new(0xDE),
+        ["\""] = new(0xDE),
+        [","] = new(0xBC),
+        ["<"] = new(0xBC),
+        ["."] = new(0xBE),
+        [">"] = new(0xBE),
+        ["/"] = new(0xBF),
+        ["?"] = new(0xBF),
+        ["f1"] = new(0x70), ["f2"] = new(0x71), ["f3"] = new(0x72), ["f4"] = new(0x73),
+        ["f5"] = new(0x74), ["f6"] = new(0x75), ["f7"] = new(0x76), ["f8"] = new(0x77),
+        ["f9"] = new(0x78), ["f10"] = new(0x79), ["f11"] = new(0x7A), ["f12"] = new(0x7B),
+        ["numlock"] = new(0x90, Extended: true), ["numlk"] = new(0x90, Extended: true),
+        ["scrolllock"] = new(0x91), ["scrlk"] = new(0x91),
+        ["printscreen"] = new(0x2C, Extended: true), ["prtsc"] = new(0x2C, Extended: true), ["prtscr"] = new(0x2C, Extended: true),
+        ["pause"] = new(0x13),
+        ["numpad0"] = new(0x60), ["num0"] = new(0x60),
+        ["numpad1"] = new(0x61), ["num1"] = new(0x61),
+        ["numpad2"] = new(0x62), ["num2"] = new(0x62),
+        ["numpad3"] = new(0x63), ["num3"] = new(0x63),
+        ["numpad4"] = new(0x64), ["num4"] = new(0x64),
+        ["numpad5"] = new(0x65), ["num5"] = new(0x65),
+        ["numpad6"] = new(0x66), ["num6"] = new(0x66),
+        ["numpad7"] = new(0x67), ["num7"] = new(0x67),
+        ["numpad8"] = new(0x68), ["num8"] = new(0x68),
+        ["numpad9"] = new(0x69), ["num9"] = new(0x69),
+        ["multiply"] = new(0x6A), ["num*"] = new(0x6A),
+        ["add"] = new(0x6B), ["num+"] = new(0x6B), ["numpad+"] = new(0x6B),
+        ["subtract"] = new(0x6D), ["num-"] = new(0x6D),
+        ["decimal"] = new(0x6E), ["num."] = new(0x6E),
+        ["divide"] = new(0x6F, Extended: true), ["num/"] = new(0x6F, Extended: true)
     };
-
-    private static ushort MapNamedKey(string k) =>
-        NamedKeyMap.TryGetValue(k, out ushort vk) ? vk : (ushort)0;
 
     private static ushort ResolveFallbackKey(string k)
     {
